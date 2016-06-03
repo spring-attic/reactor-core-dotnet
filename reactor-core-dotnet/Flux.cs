@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace reactor_core_dotnet
+namespace Reactor.Core
 {
-    public class Class1
+    public sealed class Flux<T>
     {
     }
 }
