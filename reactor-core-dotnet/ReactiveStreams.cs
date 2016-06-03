@@ -2,14 +2,14 @@
 
 namespace Reactive.Streams
 {
-    public interface Publisher<out T>
+    public interface IPublisher<out T>
     {
-        void Subscribe(Subscriber<T> s);
+        void Subscribe(ISubscriber<T> s);
     }
 
-    public interface Subscriber<in T>
+    public interface ISubscriber<in T>
     {
-        void OnSubscribe(Subscription s);
+        void OnSubscribe(ISubscription s);
 
         void OnNext(T t);
 
@@ -18,14 +18,14 @@ namespace Reactive.Streams
         void OnComplete();
     }
 
-    public interface Subscription
+    public interface ISubscription
     {
         void Request(long n);
 
         void Cancel();
     }
 
-    public interface Processor<in T, out R> : Subscriber<T>, Publisher<R>
+    public interface IProcessor<in T, out R> : ISubscriber<T>, IPublisher<R>
     {
 
     }

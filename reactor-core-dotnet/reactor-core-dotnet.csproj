@@ -36,12 +36,26 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .NET Framework is automatically included -->
+    <Folder Include="parallel\" />
+    <Folder Include="publisher\" />
+    <Folder Include="scheduler\" />
+    <Folder Include="subscriber\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="flow\IFuseable.cs" />
+    <Compile Include="flow\IQueue.cs" />
+    <Compile Include="flow\IQueueSubscription.cs" />
+    <Compile Include="IParallelFlux.cs" />
     <Compile Include="Mono.cs" />
     <Compile Include="Flux.cs" />
+    <Compile Include="OrderedItem.cs" />
+    <Compile Include="ParallelFlux.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReactiveStreams.cs" />
+    <Compile Include="ExceptionHelper.cs" />
+    <Compile Include="subscription\EmptySubscription.cs" />
+    <Compile Include="subscription\SubscriptionHelper.cs" />
+    <Compile Include="util\BackpressureHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
