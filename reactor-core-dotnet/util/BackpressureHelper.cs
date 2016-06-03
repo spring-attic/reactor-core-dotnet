@@ -100,5 +100,53 @@ namespace Reactor.Core.util
                 }
             }
         }
+
+        /// <summary>
+        /// Atomically set the new ISubscription once on the current field and request
+        /// any accumulated value.
+        /// </summary>
+        /// <param name="current">The current ISubscription field</param>
+        /// <param name="requested">The requested amount field</param>
+        /// <param name="s">The new ISubscription to set once</param>
+        public static void DeferredSetOnce(ref ISubscription current, ref long requested, ISubscription s)
+        {
+            if (SubscriptionHelper.SetOnce(ref current, s))
+            {
+                long r = Interlocked.Exchange(ref requested, 0L);
+                if (r != 0L)
+                {
+                    s.Request(r);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Accumulate the request amounts until the current field is null or
+        /// request directly from the ISubscription.
+        /// </summary>
+        /// <param name="current">The current ISubscription field</param>
+        /// <param name="requested">The requested amount field</param>
+        /// <param name="n">The requested amount to request directly or accumulate until the current field is not null.</param>
+        public static void DeferredRequest(ref ISubscription current, ref long requested, long n)
+        {
+            var a = Volatile.Read(ref current);
+            if (a != null)
+            {
+                a.Request(n);
+            }
+            else
+            {
+                GetAndAddCap(ref requested, n);
+                a = Volatile.Read(ref current);
+                if (a != null)
+                {
+                    long r = Interlocked.Exchange(ref requested, 0L);
+                    if (r != 0L)
+                    {
+                        a.Request(r);
+                    }
+                }
+            }
+        }
     }
 }

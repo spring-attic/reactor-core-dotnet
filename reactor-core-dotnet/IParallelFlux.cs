@@ -15,10 +15,21 @@ namespace Reactor.Core
     /// <typeparam name="T">The value type.</typeparam>
     public interface IParallelFlux<out T>
     {
+        /// <summary>
+        /// True if the underlying implementation is ordered.
+        /// </summary>
         bool IsOrdered { get; }
 
+        /// <summary>
+        /// The parallelism level of this IParallelFlux.
+        /// </summary>
         int Parallelism { get; }
 
+        /// <summary>
+        /// Subscribes an array of ISubscribers, one for each rail.
+        /// </summary>
+        /// <param name="subscribers">The array of subscribers, its length must be equal
+        /// to the <see cref="Parallelism"/> value.</param>
         void Subscribe(ISubscriber<T>[] subscribers);
 
     }
@@ -129,7 +140,8 @@ namespace Reactor.Core
 
         public void OnSubscribe(ISubscription s)
         {
-            actual.OnSubscribe(s);
+            this.s = s;
+            actual.OnSubscribe(this);
         }
 
         public void Request(long n)

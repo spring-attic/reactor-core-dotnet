@@ -83,7 +83,7 @@ namespace Reactor.Core.subscription
         /// <returns>True if it contains the Cancelled instance.</returns>
         public static bool IsCancelled(ref ISubscription s)
         {
-            return s == Cancelled;
+            return Volatile.Read(ref s) == Cancelled;
         }
 
         /// <summary>

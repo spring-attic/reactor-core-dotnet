@@ -21,14 +21,30 @@ namespace Reactor.Core.flow
     /// </summary>
     public static class FuseableHelper
     {
+        /// <summary>
+        /// Returned by the <see cref="IQueueSubscription{T}.RequestFusion(int)"/> method to indicate no fusion will take place.
+        /// </summary>
         public static readonly int NONE = 0;
 
+        /// <summary>
+        /// Requested and returned by the <see cref="IQueueSubscription{T}.RequestFusion(int)"/> to indicate synchronous fusion.
+        /// </summary>
         public static readonly int SYNC = 1;
 
+        /// <summary>
+        /// Requested and returned by the <see cref="IQueueSubscription{T}.RequestFusion(int)"/> method to indicate asynchronous fusion.
+        /// </summary>
         public static readonly int ASYNC = 2;
 
+        /// <summary>
+        /// Combination of <see cref="SYNC"/> and <see cref="ASYNC"/> constants.
+        /// </summary>
         public static readonly int ANY = SYNC | ASYNC;
 
+        /// <summary>
+        /// Requested and returned by the <see cref="IQueueSubscription{T}.RequestFusion(int)"/> method 
+        /// to indicate that the requestor is a thread-boundary.
+        /// </summary>
         public static readonly int BOUNDARY = 4;
 
     }
