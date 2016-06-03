@@ -8,7 +8,7 @@
     <ProjectGuid>{575C82D9-2A77-4BBF-AA31-A52B0EE8B32A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>reactor_core_dotnet</RootNamespace>
+    <RootNamespace>Reactor.Core</RootNamespace>
     <AssemblyName>reactor-core-dotnet</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\reactor-core-dotnet.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -37,6 +38,7 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Mono.cs" />
     <Compile Include="Flux.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReactiveStreams.cs" />
