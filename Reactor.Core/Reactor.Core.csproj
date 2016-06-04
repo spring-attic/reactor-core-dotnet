@@ -49,6 +49,7 @@
     <Compile Include="IFluxEmitter.cs" />
     <Compile Include="IFluxProcessor.cs" />
     <Compile Include="IFlux.cs" />
+    <Compile Include="IGroupedFlux.cs" />
     <Compile Include="IMono.cs" />
     <Compile Include="IParallelFlux.cs" />
     <Compile Include="ISignal.cs" />
@@ -66,6 +67,8 @@
     <Compile Include="publisher\PublisherDefer.cs" />
     <Compile Include="publisher\PublisherEmpty.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
+    <Compile Include="publisher\PublisherHide.cs" />
+    <Compile Include="publisher\PublisherIgnoreElements.cs" />
     <Compile Include="publisher\PublisherInterval.cs" />
     <Compile Include="publisher\PublisherJust.cs" />
     <Compile Include="publisher\PublisherMapFuseable.cs" />

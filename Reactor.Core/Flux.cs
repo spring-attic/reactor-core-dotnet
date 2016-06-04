@@ -7,6 +7,7 @@ using Reactor.Core.publisher;
 using Reactor.Core.subscriber;
 using Reactor.Core.flow;
 using Reactor.Core.scheduler;
+using Reactor.Core.util;
 
 namespace Reactor.Core
 {
@@ -842,6 +843,511 @@ namespace Reactor.Core
         public static IMono<T> ElementAt<T>(this IFlux<T> source, T defaultValue)
         {
             // TODO implement ElementAt
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Every<T>(this IFlux<T> source, int batchSize)
+        {
+            return source.Window(batchSize).FlatMap(w => w.Last());
+        }
+
+        public static IFlux<T> EveryFirst<T>(this IFlux<T> source, int batchSize)
+        {
+            return source.Window(batchSize).FlatMap(w => w.Next());
+        }
+
+        public static IFlux<T> FirstEmittingWith<T>(this IFlux<T> source, IFlux<T> other)
+        {
+            // TODO implement Last
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, bool delayError = false)
+        {
+            return FlatMap(source, mapper, BufferSize, BufferSize, delayError);
+        }
+
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, bool delayError = false)
+        {
+            return FlatMap(source, mapper, maxConcurrency, BufferSize, delayError);
+        }
+
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, int prefetch, bool delayError = false)
+        {
+            // TODO implement FlatMap
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapperOnNext, Func<Exception, IPublisher<R>> mapperOnError, Func<IPublisher<R>> mapperOnComplete)
+        {
+            // TODO implement FlatMap
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper)
+        {
+            // TODO implement FlatMap
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, int prefetch)
+        {
+            // TODO implement FlatMap
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<IGroupedFlux<K, T>> GroupBy<T, K>(this IFlux<T> source, Func<T, K> keySelector)
+        {
+            return GroupBy(source, keySelector, v => v, BufferSize);
+        }
+
+        public static IFlux<IGroupedFlux<K, V>> GroupBy<T, K, V>(this IFlux<T> source, Func<T, K> keySelector, Func<T, V> valueSelector)
+        {
+            return GroupBy(source, keySelector, valueSelector, BufferSize);
+        }
+
+        public static IFlux<IGroupedFlux<K, V>> GroupBy<T, K, V>(this IFlux<T> source, Func<T, K> keySelector, Func<T, V> valueSelector, int prefetch)
+        {
+            // TODO implement GroupBy
+            throw new NotImplementedException();
+        }
+
+        public static IMono<bool> HasElement<T>(this IFlux<T> source, T element)
+        {
+            return HasElement(source, element, EqualityComparer<T>.Default);
+        }
+
+        public static IMono<bool> HasElement<T>(this IFlux<T> source, T element, IEqualityComparer<T> comparer)
+        {
+            return Any(source, v => comparer.Equals(v, element));
+        }
+
+        public static IMono<bool> HasElements<T>(this IFlux<T> source)
+        {
+            // TODO implement HasElements
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Hide<T>(this IFlux<T> source)
+        {
+            return new PublisherHide<T>(source);
+        }
+
+        public static IMono<T> IgnoreElements<T>(this IFlux<T> source)
+        {
+            return new PublisherIgnoreElements<T>(source);
+        }
+
+        public static IMono<T> Last<T>(this IFlux<T> source)
+        {
+            // TODO implement Last
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> MapError<T>(this IFlux<T> source, Func<Exception, Exception> mapper)
+        {
+            return MapError(source, e => true, mapper);
+        }
+
+        public static IFlux<T> MapError<T, E>(this IFlux<T> source, Func<E, Exception> mapper) where E : Exception
+        {
+            return MapError(source, e => e is E, e => mapper(e as E));
+        }
+
+        public static IFlux<T> MapError<T>(this IFlux<T> source, Func<Exception, bool> predicate, Func<Exception, Exception> mapper)
+        {
+            // TODO implement MapError
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<ISignal<T>> Materialize<T>(this IFlux<T> source)
+        {
+            // TODO implement Materialize
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> MergeWith<T>(this IFlux<T> source, IFlux<T> other)
+        {
+            // TODO implement MergeWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> Multiplex<T, R>(this IFlux<T> source, int concurrency, Func<IGroupedFlux<int, T>, IPublisher<R>> mapper)
+        {
+            // TODO implement Multiplex
+            throw new NotImplementedException();
+        }
+
+        public static IMono<IFlux<T>> Nest<T>(this IFlux<T> source)
+        {
+            return Mono.Just(source);
+        }
+
+        public static IMono<T> Next<T>(this IFlux<T> source)
+        {
+            // TODO implement Last
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> OnBackpressureBuffer<T>(this IFlux<T> source)
+        {
+            // TODO implement OnBackpressureBuffer
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> OnBackpressureDrop<T>(this IFlux<T> source, Action<T> onDrop = null)
+        {
+            // TODO implement OnBackpressureDrop
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> OnBackpressureError<T>(this IFlux<T> source)
+        {
+            return OnBackpressureDrop(source, e => { throw BackpressureHelper.MissingBackpressureException(); });
+        }
+
+        public static IFlux<T> OnBackpressureLatest<T>(this IFlux<T> source)
+        {
+            // TODO implement OnBackpressureLatest
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> OnErrorResumeWith<T>(this IFlux<T> source, Func<Exception, IPublisher<T>> resumeFunction)
+        {
+            return OnErrorResumeWith(source, e => true, resumeFunction);
+        }
+
+        public static IFlux<T> OnErrorResumeWith<T, E>(this IFlux<T> source, Func<E, IPublisher<T>> resumeFunction) where E : Exception
+        {
+            return OnErrorResumeWith(source, e => e is E, e => resumeFunction(e as E));
+        }
+
+        public static IFlux<T> OnErrorResumeWith<T>(this IFlux<T> source, Func<Exception, bool> predicate, Func<Exception, IPublisher<T>> resumeFunction)
+        {
+            // TODO implement OnErrorResumeWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> OnErrorReturn<T>(this IFlux<T> source, T value)
+        {
+            return OnErrorReturn(source, e => true, value);
+        }
+
+        public static IFlux<T> OnErrorReturn<T, E>(this IFlux<T> source, T value) where E : Exception
+        {
+            return OnErrorReturn(source, e => e is E, value);
+        }
+
+        public static IFlux<T> OnErrorReturn<T>(this IFlux<T> source, Func<Exception, bool> predicate, T value)
+        {
+            // TODO implement OnErrorReturn
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> OnTerminateDetach<T>(this IFlux<T> source)
+        {
+            // TODO implement OnTerminateDetach
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<IGroupedFlux<int, T>> Partition<T>(this IFlux<T> source)
+        {
+            return Partition(source, Environment.ProcessorCount);
+        }
+
+        public static IFlux<IGroupedFlux<int, T>> Partition<T>(this IFlux<T> source, int partitions)
+        {
+            // TODO implement Partition
+            throw new NotImplementedException();
+        }
+
+        public static IConnectableFlux<T> Process<T>(this IFlux<T> source, IProcessor<T, T> processor)
+        {
+            return Process(source, () => processor);
+        }
+
+        public static IConnectableFlux<T> Process<T>(this IFlux<T> source, Func<IProcessor<T, T>> processorSupplier)
+        {
+            // TODO implement Process
+            throw new NotImplementedException();
+        }
+
+        public static IConnectableFlux<T> Process<T, U>(this IFlux<T> source, IProcessor<T, T> processor, Func<IFlux<T>, IPublisher<U>> selector)
+        {
+            return Process(source, () => processor, selector);
+        }
+
+        public static IConnectableFlux<T> Process<T, U>(this IFlux<T> source, Func<IProcessor<T, T>> processorSupplier, Func<IFlux<T>, IPublisher<U>> selector)
+        {
+            // TODO implement Process
+            throw new NotImplementedException();
+        }
+
+        public static IConnectableFlux<T> Publish<T>(this IFlux<T> source)
+        {
+            return Publish(source, BufferSize);
+        }
+
+        public static IConnectableFlux<T> Publish<T>(this IFlux<T> source, int prefetch)
+        {
+            // TODO implement Publish
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> Publish<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> transformer)
+        {
+            return Publish(source, transformer, BufferSize);
+        }
+
+        public static IFlux<T> Publish<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> transformer, int prefetch)
+        {
+            // TODO implement Publish
+            throw new NotImplementedException();
+        }
+
+        public static IMono<T> PublishNext<T>(this IFlux<T> source)
+        {
+            // TODO implement PublishNext
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> PublishOn<T>(this IFlux<T> source, Scheduler scheduler, bool delayError = true)
+        {
+            return PublishOn(source, scheduler, BufferSize, delayError);
+        }
+
+        public static IFlux<T> PublishOn<T>(this IFlux<T> source, Scheduler scheduler, int prefetch, bool delayError = true)
+        {
+            // TODO implement PublishOn
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Reduce<T>(this IFlux<T> source, Func<T, T, T> reducer)
+        {
+            // TODO implement Reduce
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<A> Reduce<T, A>(this IFlux<T> source, A initial, Func<A, T, A> reducer)
+        {
+            // TODO implement Reduce
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<A> ReduceWith<T, A>(this IFlux<T> source, Func<A> initialSupplier, Func<A, T, A> reducer)
+        {
+            // TODO implement ReduceWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Repeat<T>(this IFlux<T> source)
+        {
+            // TODO implement Repeat
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Repeat<T>(this IFlux<T> source, long times)
+        {
+            // TODO implement Repeat
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Repeat<T>(this IFlux<T> source, Func<bool> predicate)
+        {
+            // TODO implement Repeat
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Repeat<T>(this IFlux<T> source, long times, Func<bool> predicate)
+        {
+            // TODO implement Repeat
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> RepeatWhen<T>(this IFlux<T> source, Func<IFlux<long>, IFlux<object>> whenFunction)
+        {
+            // TODO implement RepeatWhen
+            throw new NotImplementedException();
+        }
+
+        public static IConnectableFlux<T> Replay<T>(this IFlux<T> source)
+        {
+            // TODO implement Replay
+            throw new NotImplementedException();
+        }
+
+        public static IConnectableFlux<T> Replay<T>(this IFlux<T> source, int history)
+        {
+            // TODO implement Replay
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> Replay<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> transformer)
+        {
+            // TODO implement Replay
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Retry<T>(this IFlux<T> source)
+        {
+            // TODO implement Retry
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Retry<T>(this IFlux<T> source, long times)
+        {
+            // TODO implement Retry
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Retry<T>(this IFlux<T> source, Func<Exception> predicate)
+        {
+            // TODO implement Retry
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Retry<T>(this IFlux<T> source, long times, Func<Exception> predicate)
+        {
+            // TODO implement Retry
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> RetryWhen<T>(this IFlux<T> source, Func<IFlux<Exception>, IFlux<object>> whenFunction)
+        {
+            // TODO implement RepeatWhen
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Sample<T>(this IFlux<T> source, TimeSpan timespan)
+        {
+            return Sample(source, timespan, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<T> Sample<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
+        {
+            // TODO implement Sample
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Sample<T, U>(this IFlux<T> source, IPublisher<U> sampler)
+        {
+            // TODO implement Sample
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SampleFirst<T>(this IFlux<T> source, TimeSpan timespan)
+        {
+            return SampleFirst(source, timespan, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<T> SampleFirst<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
+        {
+            // TODO implement Sample
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SampleFirst<T, U>(this IFlux<T> source, Func<T, IPublisher<U>> samplerFactory)
+        {
+            // TODO implement Sample
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SampleTimeout<T>(this IFlux<T> source, TimeSpan timespan)
+        {
+            return SampleTimeout(source, timespan, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<T> SampleTimeout<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
+        {
+            // TODO implement Sample
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SampleTimeout<T, U>(this IFlux<T> source, Func<T, IPublisher<U>> samplerFactory)
+        {
+            // TODO implement Sample
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SampleTimeout<T, U>(this IFlux<T> source, Func<T, IPublisher<U>> samplerFactory, int maxConcurrency)
+        {
+            // TODO implement Sample
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Scan<T>(this IFlux<T> source, Func<T, T, T> scanner)
+        {
+            // TODO implement Reduce
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<A> Scan<T, A>(this IFlux<T> source, A initial, Func<A, T, A> scanner)
+        {
+            // TODO implement Reduce
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<A> ScanWith<T, A>(this IFlux<T> source, Func<A> initialSupplier, Func<A, T, A> scanner)
+        {
+            // TODO implement ReduceWith
+            throw new NotImplementedException();
+        }
+
+        public static IMono<T> Single<T>(this IFlux<T> source)
+        {
+            // TODO implement Single
+            throw new NotImplementedException();
+        }
+
+        public static IMono<T> Single<T>(this IFlux<T> source, T defaultValue)
+        {
+            // TODO implement Single
+            throw new NotImplementedException();
+        }
+
+        public static IMono<T> SingleOrEmpty<T>(this IFlux<T> source)
+        {
+            // TODO implement Single
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Skip<T>(this IFlux<T> source, long n)
+        {
+            // TODO implement Skip
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Skip<T>(this IFlux<T> source, TimeSpan timespan)
+        {
+            return Skip(source, timespan, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<T> Skip<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
+        {
+            // TODO implement Skip
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SkipLast<T>(this IFlux<T> source, long n)
+        {
+            // TODO implement SkipLast
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SkipUntil<T, U>(this IFlux<T> source, IPublisher<U> other)
+        {
+            // TODO implement SkipUntil
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SkipWhile<T, U>(this IFlux<T> source, Func<T, bool> predicate)
+        {
+            // TODO implement SkipWhile
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, int size) {
+            // TODO implement Window
             throw new NotImplementedException();
         }
 
