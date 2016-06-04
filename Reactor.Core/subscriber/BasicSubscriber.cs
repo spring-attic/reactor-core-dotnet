@@ -44,6 +44,8 @@ namespace Reactor.Core.subscriber
             if (SubscriptionHelper.Validate(ref this.s, s))
             {
 
+                OnSubscribe();
+
                 actual.OnSubscribe(this);
 
                 OnStart();
@@ -56,10 +58,22 @@ namespace Reactor.Core.subscriber
         }
 
         /// <summary>
+        /// Called after a successful OnSubscribe call but
+        /// before the downstream's OnSubscribe is called with this.
+        /// </summary>
+        protected virtual void OnSubscribe()
+        {
+
+        }
+
+        /// <summary>
         /// Called once the OnSubscribe has been called the first time
         /// and this has been set on the child ISubscriber.
         /// </summary>
-        protected abstract void OnStart();
+        protected virtual void OnStart()
+        {
+
+        }
 
         /// <summary>
         /// Complete the actual ISubscriber if the sequence is not already done.

@@ -12,13 +12,7 @@ using Reactor.Core.subscription;
 
 namespace Reactor.Core.subscriber
 {
-    /// <summary>
-    /// Base class for conditional subscribers, referencing a downstream
-    /// conditional subscriber and having a done and ISubscription field.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <typeparam name="U"></typeparam>
-    internal abstract class BasicConditionalSubscriber<T, U> : IConditionalSubscriber<T>, ISubscription
+    internal abstract class BasicFuseableConditionalSubscriber<T, U> : IConditionalSubscriber<T>, IQueueSubscription<U>
     {
         /// <summary>
         /// The actual child ISubscriber.
@@ -29,12 +23,19 @@ namespace Reactor.Core.subscriber
 
         protected ISubscription s;
 
-        internal BasicConditionalSubscriber(IConditionalSubscriber<U> actual)
+        /// <summary>
+        /// If not null, the upstream is fuseable.
+        /// </summary>
+        protected IQueueSubscription<T> qs;
+
+        protected int fusionMode;
+
+        internal BasicFuseableConditionalSubscriber(IConditionalSubscriber<U> actual)
         {
             this.actual = actual;
         }
 
-        public void Cancel()
+        public virtual void Cancel()
         {
             s.Cancel();
         }
@@ -51,6 +52,8 @@ namespace Reactor.Core.subscriber
         {
             if (SubscriptionHelper.Validate(ref this.s, s))
             {
+                qs = s as IQueueSubscription<T>;
+
                 OnSubscribe();
 
                 actual.OnSubscribe(this);
@@ -59,7 +62,7 @@ namespace Reactor.Core.subscriber
             }
         }
 
-        public void Request(long n)
+        public virtual void Request(long n)
         {
             s.Request(n);
         }
@@ -119,6 +122,58 @@ namespace Reactor.Core.subscriber
             ExceptionHelper.ThrowIfFatal(ex);
             s.Cancel();
             Error(ex);
+        }
+
+        public abstract int RequestFusion(int mode);
+
+        public bool Offer(U value)
+        {
+            return FuseableHelper.DontCallOffer();
+        }
+
+        public abstract bool Poll(out U value);
+
+        /// <inheritdoc/>
+        public virtual bool IsEmpty()
+        {
+            return qs.IsEmpty();
+        }
+
+        /// <inheritdoc/>
+        public virtual void Clear()
+        {
+            qs.Clear();
+        }
+
+        /// <summary>
+        /// Forward the mode request to the upstream IQueueSubscription and
+        /// set the mode it returns.
+        /// </summary>
+        /// <param name="mode">The incoming fusion mode.</param>
+        /// <returns>The established fusion mode</returns>
+        protected int TransitiveAnyFusion(int mode)
+        {
+            int m = qs.RequestFusion(mode);
+            fusionMode = m;
+            return m;
+        }
+
+        /// <summary>
+        /// Unless the mode contains the <see cref="FuseableHelper.BOUNDARY"/> flag,
+        /// forward the mode request to the upstream IQueueSubscription and
+        /// set the mode it returns.
+        /// </summary>
+        /// <param name="mode">The incoming fusion mode.</param>
+        /// <returns>The established fusion mode</returns>
+        protected int TransitiveBoundaryFusion(int mode)
+        {
+            if ((mode & FuseableHelper.BOUNDARY) != 0)
+            {
+                return FuseableHelper.NONE;
+            }
+            int m = qs.RequestFusion(mode);
+            fusionMode = m;
+            return m;
         }
     }
 }

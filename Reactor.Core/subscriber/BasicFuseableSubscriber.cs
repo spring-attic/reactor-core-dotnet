@@ -21,7 +21,12 @@ namespace Reactor.Core.subscriber
 
         protected bool done;
 
-        protected IQueueSubscription<T> s;
+        protected ISubscription s;
+
+        /// <summary>
+        /// If not null, the upstream is fuseable.
+        /// </summary>
+        protected IQueueSubscription<T> qs;
 
         protected int fusionMode;
 
@@ -30,7 +35,7 @@ namespace Reactor.Core.subscriber
             this.actual = actual;
         }
 
-        public void Cancel()
+        public virtual void Cancel()
         {
             s.Cancel();
         }
@@ -43,8 +48,11 @@ namespace Reactor.Core.subscriber
 
         public void OnSubscribe(ISubscription s)
         {
-            if (SubscriptionHelper.Validate(ref this.s, s as IQueueSubscription<T>))
+            if (SubscriptionHelper.Validate(ref this.s, s))
             {
+                qs = s as IQueueSubscription<T>;
+
+                OnSubscribe();
 
                 actual.OnSubscribe(this);
 
@@ -52,16 +60,28 @@ namespace Reactor.Core.subscriber
             }
         }
 
-        public void Request(long n)
+        public virtual void Request(long n)
         {
             s.Request(n);
+        }
+
+        /// <summary>
+        /// Called after a successful OnSubscribe call but
+        /// before the downstream's OnSubscribe is called with this.
+        /// </summary>
+        protected virtual void OnSubscribe()
+        {
+
         }
 
         /// <summary>
         /// Called once the OnSubscribe has been called the first time
         /// and this has been set on the child ISubscriber.
         /// </summary>
-        protected abstract void OnStart();
+        protected virtual void OnStart()
+        {
+
+        }
 
         /// <summary>
         /// Complete the actual ISubscriber if the sequence is not already done.
@@ -111,9 +131,17 @@ namespace Reactor.Core.subscriber
 
         public abstract bool Poll(out U value);
 
-        public abstract bool IsEmpty();
+        /// <inheritdoc/>
+        public virtual bool IsEmpty()
+        {
+            return qs.IsEmpty();
+        }
 
-        public abstract void Clear();
+        /// <inheritdoc/>
+        public virtual void Clear()
+        {
+            qs.Clear();
+        }
 
         /// <summary>
         /// Forward the mode request to the upstream IQueueSubscription and
@@ -123,7 +151,7 @@ namespace Reactor.Core.subscriber
         /// <returns>The established fusion mode</returns>
         protected int TransitiveAnyFusion(int mode)
         {
-            int m = s.RequestFusion(mode);
+            int m = qs.RequestFusion(mode);
             fusionMode = m;
             return m;
         }
@@ -141,7 +169,7 @@ namespace Reactor.Core.subscriber
             {
                 return FuseableHelper.NONE;
             }
-            int m = s.RequestFusion(mode);
+            int m = qs.RequestFusion(mode);
             fusionMode = m;
             return m;
         }

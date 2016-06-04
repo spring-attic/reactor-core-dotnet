@@ -126,5 +126,15 @@ namespace Reactor.Core
             done = true;
             subscriber.OnError(ex);
         }
+
+        /// <summary>
+        /// Throw if a fatal exception or else drop it.
+        /// </summary>
+        /// <param name="ex">The exception.</param>
+        public static void ThrowOrDrop(Exception ex)
+        {
+            ThrowIfFatal(ex);
+            OnErrorDropped(ex);
+        }
     }
 }
