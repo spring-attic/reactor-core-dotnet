@@ -17,7 +17,7 @@ namespace Reactor.Core.scheduler
     /// <summary>
     /// A scheduler that runs tasks on the task pool.
     /// </summary>
-    public sealed class DefaultScheduler : Scheduler
+    public sealed class DefaultScheduler : TimedScheduler
     {
 
         private DefaultScheduler()
@@ -33,6 +33,21 @@ namespace Reactor.Core.scheduler
         public static DefaultScheduler Instance { get { return INSTANCE; } }
 
         /// <inheritdoc/>
+        public long NowUtc
+        {
+            get
+            {
+                return DateTimeOffset.UtcNow.UtcMillis();
+            }
+        }
+
+        /// <inheritdoc/>
+        public TimedWorker CreateTimedWorker()
+        {
+            return new DefaultWorker();
+        }
+
+        /// <inheritdoc/>
         public Worker CreateWorker()
         {
             return new DefaultWorker();
@@ -42,6 +57,30 @@ namespace Reactor.Core.scheduler
         public IDisposable Schedule(Action task)
         {
             return ScheduleNow(task);
+        }
+
+        /// <inheritdoc/>
+        public IDisposable Schedule(Action task, TimeSpan delay)
+        {
+            var tokenSource = new CancellationTokenSource();
+            CancellationToken ct = tokenSource.Token;
+
+            Task.Delay(delay, ct).ContinueWith(t => task(), ct);
+
+            return tokenSource;
+        }
+
+        /// <inheritdoc/>
+        public IDisposable Schedule(Action task, TimeSpan initialDelay, TimeSpan period)
+        {
+            IndexedMultipleDisposable d = new IndexedMultipleDisposable();
+
+            long start = NowUtc + (long)initialDelay.TotalMilliseconds;
+            PeriodicTask t = new PeriodicTask(task, d, start, period, this);
+
+            d.Replace(Schedule(t.Run, initialDelay), 0);
+
+            return d;
         }
 
         internal static IDisposable ScheduleNow(Action task)
@@ -67,7 +106,7 @@ namespace Reactor.Core.scheduler
         }
     }
 
-    sealed class DefaultWorker : Worker
+    sealed class DefaultWorker : TimedWorker
     {
 
         readonly ConcurrentQueue<DefaultTask> queue;
@@ -79,6 +118,15 @@ namespace Reactor.Core.scheduler
         internal DefaultWorker()
         {
             this.queue = new ConcurrentQueue<DefaultTask>();
+        }
+
+        /// <inheritdoc/>
+        public long NowUtc
+        {
+            get
+            {
+                return DateTimeOffset.UtcNow.UtcMillis();
+            }
         }
 
         public void Dispose()
@@ -158,6 +206,35 @@ namespace Reactor.Core.scheduler
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public IDisposable Schedule(Action task, TimeSpan delay)
+        {
+            var tokenSource = new CancellationTokenSource();
+            CancellationToken ct = tokenSource.Token;
+
+            Task.Delay(delay, ct).ContinueWith(t => {
+
+                IDisposable d = Schedule(task);
+
+                ct.Register(() => d.Dispose());
+            }, ct);
+
+            return tokenSource;
+        }
+
+        /// <inheritdoc/>
+        public IDisposable Schedule(Action task, TimeSpan initialDelay, TimeSpan period)
+        {
+            IndexedMultipleDisposable d = new IndexedMultipleDisposable();
+
+            long start = NowUtc + (long)initialDelay.TotalMilliseconds;
+            PeriodicTask t = new PeriodicTask(task, d, start, period, this);
+
+            d.Replace(Schedule(t.Run, initialDelay), 0);
+
+            return d;
+        }
     }
 
     /// <summary>
@@ -196,6 +273,60 @@ namespace Reactor.Core.scheduler
                     ExceptionHelper.ThrowIfFatal(ex);
                     ExceptionHelper.OnErrorDropped(ex);
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Wraps an action and manages a fixed-rate periodic execution of it.
+    /// </summary>
+    internal sealed class PeriodicTask
+    {
+        readonly Action task;
+
+        readonly IndexedMultipleDisposable d;
+
+        readonly TimeSpan period;
+
+        readonly ITimedScheduling scheduler;
+
+        readonly long start;
+
+        long count;
+
+        public PeriodicTask(Action task, IndexedMultipleDisposable d, long start, TimeSpan period, ITimedScheduling scheduler)
+        {
+            this.task = task;
+            this.start = start;
+            this.d = d;
+            this.scheduler = scheduler;
+        }
+
+        internal void Run()
+        {
+            try
+            {
+                task();
+            }
+            catch (Exception ex)
+            {
+                ExceptionHelper.ThrowIfFatal(ex);
+                ExceptionHelper.OnErrorDropped(ex);
+                return;
+            }
+
+            long c = count + 1;
+            long next = start + c * (long)period.TotalMilliseconds;
+
+            long delay = next - scheduler.NowUtc;
+
+            if (delay > 0L)
+            {
+                d.Replace(scheduler.Schedule(this.Run, TimeSpan.FromMilliseconds(delay)), c);
+            }
+            else
+            {
+                d.Replace(scheduler.Schedule(this.Run), c);
             }
         }
     }

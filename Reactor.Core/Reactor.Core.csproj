@@ -38,29 +38,42 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BackpressureHandling.cs" />
+    <Compile Include="ConcatErrorMode.cs" />
+    <Compile Include="IConnectableFlux.cs" />
     <Compile Include="flow\ICallable.cs" />
     <Compile Include="flow\IConditionalSubscriber.cs" />
     <Compile Include="flow\IFuseable.cs" />
     <Compile Include="flow\IQueue.cs" />
     <Compile Include="flow\IQueueSubscription.cs" />
+    <Compile Include="IFluxEmitter.cs" />
+    <Compile Include="IFluxProcessor.cs" />
     <Compile Include="IFlux.cs" />
     <Compile Include="IMono.cs" />
     <Compile Include="IParallelFlux.cs" />
     <Compile Include="Mono.cs" />
     <Compile Include="Flux.cs" />
-    <Compile Include="OrderedItem.cs" />
+    <Compile Include="IOrderedItem.cs" />
     <Compile Include="ParallelFlux.cs" />
     <Compile Include="parallel\ParallelUnorderedFork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="publisher\PublisherEnumerable.cs" />
+    <Compile Include="publisher\PublisherDefer.cs" />
     <Compile Include="publisher\PublisherEmpty.cs" />
+    <Compile Include="publisher\PublisherInterval.cs" />
     <Compile Include="publisher\PublisherJust.cs" />
     <Compile Include="publisher\PublisherMapFuseable.cs" />
     <Compile Include="publisher\PublisherMap.cs" />
     <Compile Include="publisher\PublisherNever.cs" />
-    <Compile Include="ReactiveStreams.cs" />
+    <Compile Include="publisher\PublisherArray.cs" />
+    <Compile Include="publisher\PublisherRange.cs" />
+    <Compile Include="publisher\PublisherWrapFuseable.cs" />
+    <Compile Include="publisher\PublisherWrap.cs" />
+    <Compile Include="IReactiveStreams.cs" />
     <Compile Include="ExceptionHelper.cs" />
     <Compile Include="Scheduler.cs" />
     <Compile Include="scheduler\DefaultScheduler.cs" />
+    <Compile Include="ISignalEmitter.cs" />
     <Compile Include="subscriber\BasicConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableSubscriber.cs" />
     <Compile Include="subscriber\BasicSubscriber.cs" />
@@ -71,6 +84,8 @@
     <Compile Include="subscription\SubscriptionHelper.cs" />
     <Compile Include="util\BackpressureHelper.cs" />
     <Compile Include="util\DisposableHelper.cs" />
+    <Compile Include="util\IndexedMultipleDisposable.cs" />
+    <Compile Include="util\MultipleDisposable.cs" />
     <Compile Include="util\QueueDrainHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

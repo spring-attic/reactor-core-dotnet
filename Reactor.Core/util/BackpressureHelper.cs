@@ -148,5 +148,34 @@ namespace Reactor.Core.util
                 }
             }
         }
+
+        /// <summary>
+        /// Returns an exception instance indicating the lack of requests.
+        /// </summary>
+        /// <param name="message">The optional message</param>
+        /// <returns>The Exception instance.</returns>
+        public static Exception MissingBackpressureException(string message = "Could not signal value due to lack of requests.")
+        {
+            if (message.Length == 0)
+            {
+                return new InvalidOperationException("Please consider applying one of the OnBackpressureXXX operators.");
+            }
+            return new InvalidOperationException(message + " Please consider applying one of the OnBackpressureXXX operators.");
+        }
+
+        /// <summary>
+        /// Validates and atomically adds the amount to the requested field.
+        /// </summary>
+        /// <param name="requested">The target requested field.</param>
+        /// <param name="n">The amount to add, positive (validated).</param>
+        /// <returns>The amount of the requested field before the addition.</returns>
+        public static long ValidateAndAddCap(ref long requested, long n)
+        {
+            if (SubscriptionHelper.Validate(n))
+            {
+                return GetAndAddCap(ref requested, n);
+            }
+            return Volatile.Read(ref requested);
+        }
     }
 }

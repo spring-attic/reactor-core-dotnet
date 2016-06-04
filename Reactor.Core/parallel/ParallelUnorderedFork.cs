@@ -36,7 +36,7 @@ namespace Reactor.Core.parallel
 
         public override void Subscribe(ISubscriber<T>[] subscribers)
         {
-            // TODO implement
+            // TODO implement 
             throw new NotImplementedException();
         }
     }
