@@ -15,41 +15,20 @@ namespace Reactor.Core.subscription
     /// Represents an empty subscription that ignores requests and cancellation.
     /// </summary>
     /// <typeparam name="T">The value type (no value is emitted)</typeparam>
-    public sealed class EmptySubscription<T> : IQueueSubscription<T>
+    public sealed class NeverSubscription<T> : IQueueSubscription<T>
     {
 
-        private EmptySubscription()
+        private NeverSubscription()
         {
 
         }
 
-        private static readonly EmptySubscription<T> INSTANCE = new EmptySubscription<T>();
+        private static readonly NeverSubscription<T> INSTANCE = new NeverSubscription<T>();
 
         /// <summary>
         /// Returns the singleton instance of the EmptySubscription class.
         /// </summary>
-        public static EmptySubscription<T> Instance { get { return INSTANCE; } }
-
-        /// <summary>
-        /// Sets the empty instance on the ISubscriber and calls OnError with the Exception.
-        /// </summary>
-        /// <param name="s">The target ISubscriber</param>
-        /// <param name="ex">The exception to send</param>
-        public static void Error(ISubscriber<T> s, Exception ex)
-        {
-            s.OnSubscribe(Instance);
-            s.OnError(ex);
-        }
-
-        /// <summary>
-        /// Sets the empty instance on the ISubscriber and calls OnComplete.
-        /// </summary>
-        /// <param name="s">The target ISubscriber</param>
-        public static void Complete(ISubscriber<T> s)
-        {
-            s.OnSubscribe(Instance);
-            s.OnComplete();
-        }
+        public static NeverSubscription<T> Instance { get { return INSTANCE; } }
 
         /// <inheritdoc />
         public void Cancel()
@@ -92,7 +71,11 @@ namespace Reactor.Core.subscription
         /// <inheritdoc />
         public int RequestFusion(int mode)
         {
-            return mode;
+            if ((mode & FuseableHelper.ASYNC) != 0)
+            {
+                return FuseableHelper.ASYNC;
+            }
+            return FuseableHelper.NONE;
         }
     }
 }

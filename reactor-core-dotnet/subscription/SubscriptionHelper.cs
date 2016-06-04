@@ -66,6 +66,35 @@ namespace Reactor.Core.subscription
             return true;
         }
 
+        /// <summary>
+        /// Verifies that the target field is null and sets it to the non-null ISubscription provided
+        /// or signal an InvalidOperationException if the target field is not null and not the Cancelled
+        /// instance. In these cases, the new ISubscription is cancelled.
+        /// </summary>
+        /// <param name="current">The target field</param>
+        /// <param name="s">The new ISubscription instance to set</param>
+        /// <returns>True if successful, false if the target field is not empty</returns>
+        public static bool Validate<T>(ref IQueueSubscription<T> current, IQueueSubscription<T> s)
+        {
+            if (s == null)
+            {
+                ReportSubscriptionNull();
+                return false;
+            }
+
+            if (current != null)
+            {
+                s.Cancel();
+                if (current != CancelledQueueSubscription<T>.Instance)
+                {
+                    ReportSubscriptionSet();
+                }
+                return false;
+            }
+            current = s;
+            return true;
+        }
+
         static void ReportSubscriptionSet()
         {
             ExceptionHelper.OnErrorDropped(new InvalidOperationException("ISubscription already set"));
@@ -223,5 +252,51 @@ namespace Reactor.Core.subscription
                 // deliberately ignored
             }
         }
+
+        /// <summary>
+        /// Class representing a no-op cancelled ISubscription.
+        /// </summary>
+        internal sealed class CancelledQueueSubscription<T> : IQueueSubscription<T>
+        {
+
+            internal static readonly CancelledQueueSubscription<T> Instance = new CancelledQueueSubscription<T>();
+
+            public void Cancel()
+            {
+                // deliberately ignored
+            }
+
+            public void Clear()
+            {
+                // deliberately ignored
+            }
+
+            public bool IsEmpty()
+            {
+                return true;
+            }
+
+            public bool Offer(T value)
+            {
+                return FuseableHelper.DontCallOffer();
+            }
+
+            public bool Poll(out T value)
+            {
+                value = default(T);
+                return false;
+            }
+
+            public void Request(long n)
+            {
+                // deliberately ignored
+            }
+
+            public int RequestFusion(int mode)
+            {
+                return FuseableHelper.NONE;
+            }
+        }
+
     }
 }

@@ -47,5 +47,15 @@ namespace Reactor.Core.flow
         /// </summary>
         public static readonly int BOUNDARY = 4;
 
+        /// <summary>
+        /// Handle the case when the <see cref="IQueue{T}.Offer(T)"/> is called on a
+        /// <see cref="IQueueSubscription{T}"/>.
+        /// </summary>
+        /// <returns>Never completes normally.</returns>
+        public static bool DontCallOffer()
+        {
+            throw new InvalidOperationException("IQueueSubscription.Offer mustn't be called.");
+        }
+
     }
 }
