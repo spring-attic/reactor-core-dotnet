@@ -562,8 +562,7 @@ namespace Reactor.Core
 
         public static IMono<T> PublishOn<T>(this IMono<T> source, Scheduler scheduler)
         {
-            // TODO implement PublishOn
-            throw new NotImplementedException();
+            return new MonoPublishOn<T>(source, scheduler);
         }
 
         public static IFlux<T> Repeat<T>(this IMono<T> source)
