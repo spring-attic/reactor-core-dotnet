@@ -70,14 +70,24 @@ namespace Reactor.Core
             {
                 return;
             }
+            int n = subscribers.Length;
+
+            var a = new ISubscriber<IOrderedItem<T>>[n];
+
+            for (int i = 0; i < n; i++)
+            {
+                a[i] = new RemoveOrdered<T>(subscribers[i]);
+            }
+
+            SubscribeMany(a);
         }
 
         /// <summary>
-        /// Subscribe to this ordered parallel stream with an array of ISubscribers
+        /// Subscribe an array of ISubscribers to this ordered parallel stream
         /// that can consume IOrderedItems.
         /// </summary>
         /// <param name="subscribers">The array of IOrderedItem-receiving ISubscribers.</param>
-        public abstract void Subscribe(ISubscriber<IOrderedItem<T>>[] subscribers);
+        public abstract void SubscribeMany(ISubscriber<IOrderedItem<T>>[] subscribers);
     }
 
     internal static class ParallelFluxHelper

@@ -56,6 +56,5 @@ namespace Reactor.Core.flow
         {
             throw new InvalidOperationException("IQueueSubscription.Offer mustn't be called.");
         }
-
     }
 }

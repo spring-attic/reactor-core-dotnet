@@ -297,8 +297,7 @@ namespace Reactor.Core
 
         public static IFlux<T> Generate<T, S>(Func<S> stateSupplier, Func<S, ISignalEmitter<T>, S> generator, Action<S> stateDisposer)
         {
-            // TODO implement Generate
-            throw new NotImplementedException();
+            return new PublisherGenerate<T, S>(stateSupplier, generator, stateDisposer);
         }
 
         public static IFlux<long> Interval(TimeSpan period)
@@ -1365,8 +1364,11 @@ namespace Reactor.Core
 
         public static IFlux<T> Skip<T>(this IFlux<T> source, long n)
         {
-            // TODO implement Skip
-            throw new NotImplementedException();
+            if (n <= 0L)
+            {
+                return source;
+            }
+            return new PublisherSkip<T>(source, n);
         }
 
         public static IFlux<T> Skip<T>(this IFlux<T> source, TimeSpan timespan)
@@ -1439,8 +1441,7 @@ namespace Reactor.Core
 
         public static IFlux<T> Take<T>(this IFlux<T> source, long n)
         {
-            // TODO implement Take
-            throw new NotImplementedException();
+            return new PublisherTake<T>(source, n);
         }
 
         public static IFlux<T> Take<T>(this IFlux<T> source, TimeSpan timespan)

@@ -73,6 +73,7 @@
     <Compile Include="publisher\PublisherFilter.cs" />
     <Compile Include="publisher\PublisherFromTask.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
+    <Compile Include="publisher\PublisherGenerate.cs" />
     <Compile Include="publisher\PublisherHide.cs" />
     <Compile Include="publisher\PublisherIgnoreElements.cs" />
     <Compile Include="publisher\PublisherInterval.cs" />
@@ -82,6 +83,8 @@
     <Compile Include="publisher\PublisherArray.cs" />
     <Compile Include="publisher\PublisherPeek.cs" />
     <Compile Include="publisher\PublisherRange.cs" />
+    <Compile Include="publisher\PublisherSkip.cs" />
+    <Compile Include="publisher\PublisherTake.cs" />
     <Compile Include="publisher\PublisherWrapFuseable.cs" />
     <Compile Include="publisher\PublisherWrap.cs" />
     <Compile Include="IReactiveStreams.cs" />

@@ -33,10 +33,5 @@ namespace Reactor.Core
         /// Signal a completion. Can be called directly after calling <see cref="Next(T)"/>.
         /// </summary>
         void Complete();
-
-        /// <summary>
-        /// Indicate no more values will be emitted.
-        /// </summary>
-        void Stop();
     }
 }
