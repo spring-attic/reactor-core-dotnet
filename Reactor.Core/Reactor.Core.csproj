@@ -60,6 +60,7 @@
     <Compile Include="ParallelFlux.cs" />
     <Compile Include="parallel\ParallelUnorderedFork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="publisher\PublisherAction.cs" />
     <Compile Include="publisher\PublisherAsObservable.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
     <Compile Include="publisher\PublisherCount.cs" />
@@ -68,7 +69,9 @@
     <Compile Include="publisher\PublisherEnumerable.cs" />
     <Compile Include="publisher\PublisherDefer.cs" />
     <Compile Include="publisher\PublisherEmpty.cs" />
+    <Compile Include="publisher\PublisherError.cs" />
     <Compile Include="publisher\PublisherFilter.cs" />
+    <Compile Include="publisher\PublisherFromTask.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
     <Compile Include="publisher\PublisherHide.cs" />
     <Compile Include="publisher\PublisherIgnoreElements.cs" />
@@ -90,8 +93,13 @@
     <Compile Include="subscriber\BasicFuseableConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableSubscriber.cs" />
     <Compile Include="subscriber\BasicSubscriber.cs" />
+    <Compile Include="subscriber\BlockingFirstSubscriber.cs" />
+    <Compile Include="subscriber\BlockingLastSubscriber.cs" />
     <Compile Include="subscriber\CallbackSubscriber.cs" />
     <Compile Include="subscriber\DeferredScalarSubscriber.cs" />
+    <Compile Include="subscriber\TaskLastSubscriber.cs" />
+    <Compile Include="subscriber\TaskFirstSubscriber.cs" />
+    <Compile Include="subscriber\TaskCompleteSubscriber.cs" />
     <Compile Include="subscription\DeferredScalarSubscription.cs" />
     <Compile Include="subscription\NeverSubscription.cs" />
     <Compile Include="subscription\EmptySubscription.cs" />

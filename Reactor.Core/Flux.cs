@@ -8,6 +8,8 @@ using Reactor.Core.subscriber;
 using Reactor.Core.flow;
 using Reactor.Core.scheduler;
 using Reactor.Core.util;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Reactor.Core
 {
@@ -172,16 +174,17 @@ namespace Reactor.Core
             return new PublisherDefer<T>(supplier);
         }
 
-        public static IFlux<T> Error<T>(Exception error, bool whenRequested = false)
+        /// <summary>
+        /// Creates an IFlux instance which signals the given exception
+        /// immediately (or when requested).
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="ex">The exception to signal</param>
+        /// <param name="whenRequested">Signal the exception when requested?</param>
+        /// <returns>The IFlux instance.</returns>
+        public static IFlux<T> Error<T>(Exception ex, bool whenRequested = false)
         {
-            // TODO implement Error
-            throw new NotImplementedException();
-        }
-
-        public static IFlux<T> Error<T>(Func<Exception> errorSupplier, bool whenRequested = false)
-        {
-            // TODO implement Error
-            throw new NotImplementedException();
+            return new PublisherError<T>(ex, whenRequested);
         }
 
         public static IFlux<T> FirstEmitting<T>(params IPublisher<T>[] sources)
@@ -240,6 +243,41 @@ namespace Reactor.Core
         {
             // TODO implement From
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates a valueless IFlux instance from the task which
+        /// signals when the task completes or fails.
+        /// </summary>
+        /// <param name="task">The tast to use as source.</param>
+        /// <returns>The IFlux instance</returns>
+        public static IFlux<Void> From(Task task)
+        {
+            return new PublisherFromTask(task);
+        }
+
+        /// <summary>
+        /// Creates a IFlux instance from the task which
+        /// signals a single value when the task completes or 
+        /// signals an Exception if the task fails.
+        /// </summary>
+        /// <param name="task">The tast to use as source.</param>
+        /// <returns>The IFlux instance</returns>
+        public static IFlux<T> From<T>(Task<T> task)
+        {
+            return new PublisherFromTask<T>(task);
+        }
+
+        /// <summary>
+        /// Executes the given action for each subscriber and completes
+        /// or signals an Exception if the action threw.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="action">The action</param>
+        /// <returns>The IMono instance</returns>
+        public static IFlux<T> From<T>(Action action)
+        {
+            return new PublisherAction<T>(action);
         }
 
         public static IFlux<T> From<T>(Func<T> supplier, bool nullMeansEmpty = false)
@@ -1714,6 +1752,70 @@ namespace Reactor.Core
         // ---------------------------------------------------------------------------------------------------------
 
         /// <summary>
+        /// Subscribe to the source and block until it produces a value or
+        /// signals an Exception. An empty source will throw an IndexOutOfRangeException.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source</param>
+        /// <returns>The value produced</returns>
+        /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
+        public static T BlockFirst<T>(this IMono<T> source)
+        {
+            var s = new BlockingFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Get(true);
+        }
+
+        /// <summary>
+        /// Subscribe to the source and block until it produces a value or
+        /// signals an Exception. An empty source will throw an IndexOutOfRangeException.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="timeout">The maximum amount of time to wait for the value.</param>
+        /// <returns>The value produced</returns>
+        /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
+        /// <exception cref="TimeoutException">If the source didn't produce any value within the given timeout.</exception>
+        public static T BlockFirst<T>(this IMono<T> source, TimeSpan timeout)
+        {
+            var s = new BlockingFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Get(timeout, true, true);
+        }
+
+        /// <summary>
+        /// Subscribe to the source and block until it completes and returns the last value produces a value or
+        /// signals an Exception. An empty source will throw an IndexOutOfRangeException.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source</param>
+        /// <returns>The value produced</returns>
+        /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
+        public static T BlockLast<T>(this IMono<T> source)
+        {
+            var s = new BlockingLastSubscriber<T>();
+            source.Subscribe(s);
+            return s.Get(true);
+        }
+
+        /// <summary>
+        /// Subscribe to the source and block until it completes and returns the last value or
+        /// signals an Exception. An empty source will throw an IndexOutOfRangeException.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="timeout">The maximum amount of time to wait for the value.</param>
+        /// <returns>The value produced</returns>
+        /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
+        /// <exception cref="TimeoutException">If the source didn't produce any value within the given timeout.</exception>
+        public static T BlockLast<T>(this IMono<T> source, TimeSpan timeout)
+        {
+            var s = new BlockingLastSubscriber<T>();
+            source.Subscribe(s);
+            return s.Get(timeout, true, true);
+        }
+
+        /// <summary>
         /// Subscribes to the IPublisher and ignores all of its signals.
         /// </summary>
         /// <typeparam name="T">The value type</typeparam>
@@ -1799,6 +1901,90 @@ namespace Reactor.Core
         {
             // TODO implement ToEnumerable
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Returns a Task that awaits the first item from the IFlux or
+        /// signals an IndexOutOfRangeException if the IFlux is empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <returns>The task.</returns>
+        public static Task<T> FirstTask<T>(this IFlux<T> source)
+        {
+            var s = new TaskFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task();
+        }
+
+        /// <summary>
+        /// Returns a Task that awaits the first item from the IFlux or
+        /// signals an IndexOutOfRangeException if the IFlux is empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>The task.</returns>
+        public static Task<T> FirstTask<T>(this IFlux<T> source, CancellationToken ct)
+        {
+            var s = new TaskFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task(ct);
+        }
+
+        /// <summary>
+        /// Returns a Task that awaits the last item from the IFlux or
+        /// signals an IndexOutOfRangeException if the IFlux is empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <returns>The task.</returns>
+        public static Task<T> LastTask<T>(this IFlux<T> source)
+        {
+            var s = new TaskLastSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task();
+        }
+
+        /// <summary>
+        /// Returns a Task that awaits the last item from the IFlux or
+        /// signals an IndexOutOfRangeException if the IFlux is empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>The task.</returns>
+        public static Task<T> LastTask<T>(this IFlux<T> source, CancellationToken ct)
+        {
+            var s = new TaskLastSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task(ct);
+        }
+
+        /// <summary>
+        /// Return a Task that waits for the IMono source to complete.
+        /// </summary>
+        /// <param name="source">The source IMono</param>
+        /// <returns>The task.</returns>
+        public static Task WhenCompleteTask<T>(this IFlux<T> source)
+        {
+            var s = new TaskCompleteSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task();
+        }
+
+        /// <summary>
+        /// Return a Task that waits for the IMono source to complete
+        /// and support the cancellation of such wait.
+        /// </summary>
+        /// <param name="source">The source IMono</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>The task.</returns>
+        public static Task WhenCompleteTask<T>(this IFlux<T> source, CancellationToken ct)
+        {
+            var s = new TaskCompleteSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task(ct);
         }
     }
 }

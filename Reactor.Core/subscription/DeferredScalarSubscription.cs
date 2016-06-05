@@ -70,6 +70,14 @@ namespace Reactor.Core.subscription
         }
 
         /// <summary>
+        /// Signal a valueless completion to the downsream ISubscriber.
+        /// </summary>
+        public virtual void Complete()
+        {
+            actual.OnComplete();
+        }
+
+        /// <summary>
         /// Complete with the single value and emit it if
         /// there is request for it.
         /// This should be called at most once.

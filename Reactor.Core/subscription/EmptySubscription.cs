@@ -66,7 +66,6 @@ namespace Reactor.Core.subscription
         /// <inheritdoc />
         public bool IsEmpty()
         {
-            // deliberately ignored
             return true;
         }
 
@@ -92,7 +91,7 @@ namespace Reactor.Core.subscription
         /// <inheritdoc />
         public int RequestFusion(int mode)
         {
-            return mode;
+            return mode & FuseableHelper.ASYNC;
         }
     }
 }

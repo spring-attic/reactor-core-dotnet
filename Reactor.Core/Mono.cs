@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Reactor.Core
@@ -93,10 +94,17 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IMono<T> Error<T>(Exception ex)
+        /// <summary>
+        /// Creates an IMono instance which signals the given exception
+        /// immediately (or when requested).
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="ex">The exception to signal</param>
+        /// <param name="whenRequested">Signal the exception when requested?</param>
+        /// <returns>The IMono instance.</returns>
+        public static IMono<T> Error<T>(Exception ex, bool whenRequested = false)
         {
-            // TODO implement Error
-            throw new NotImplementedException();
+            return new PublisherError<T>(ex, whenRequested);
         }
 
         public static IMono<T> First<T>(params IMono<T>[] sources)
@@ -116,22 +124,39 @@ namespace Reactor.Core
             return new PublisherFunc<T>(generator, nullMeansEmpty);
         }
 
+        /// <summary>
+        /// Creates a valueless IMono instance from the task which
+        /// signals when the task completes or fails.
+        /// </summary>
+        /// <param name="task">The tast to use as source.</param>
+        /// <returns>The IMono instance</returns>
         public static IMono<Void> From(Task task)
         {
-            // TODO implement From
-            throw new NotImplementedException();
+            return new PublisherFromTask(task);
         }
 
+        /// <summary>
+        /// Creates a IMono instance from the task which
+        /// signals a single value when the task completes or 
+        /// signals an Exception if the task fails.
+        /// </summary>
+        /// <param name="task">The tast to use as source.</param>
+        /// <returns>The IMono instance</returns>
         public static IMono<T> From<T>(Task<T> task)
         {
-            // TODO implement From
-            throw new NotImplementedException();
+            return new PublisherFromTask<T>(task);
         }
 
-        public static IMono<Void> From(Action action)
+        /// <summary>
+        /// Executes the given action for each subscriber and completes
+        /// or signals an Exception if the action threw.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="action">The action</param>
+        /// <returns>The IMono instance</returns>
+        public static IMono<T> From<T>(Action action)
         {
-            // TODO implement From
-            throw new NotImplementedException();
+            return new PublisherAction<T>(action);
         }
 
         public static IMono<T> IgnoreElements<T>(IPublisher<T> source)
@@ -691,32 +716,40 @@ namespace Reactor.Core
             return new PublisherAsObservable<T>(source);
         }
 
-        public static Task<T> ToTask<T>(this IMono<T> source)
-        {
-            // TODO implement Timeout
-            throw new NotImplementedException();
-        }
-
-        public static Task ToTask(this IMono<Void> source)
-        {
-            // TODO implement Timeout
-            throw new NotImplementedException();
-        }
-
         // ---------------------------------------------------------------------------------------------------------
         // Leave the reactive world
         // ---------------------------------------------------------------------------------------------------------
 
+        /// <summary>
+        /// Subscribe to the source and block until it produces a value or
+        /// signals an Exception. An empty source will throw an IndexOutOfRangeException.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source</param>
+        /// <returns>The value produced</returns>
+        /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
         public static T Block<T>(this IMono<T> source)
         {
-            // TODO implement Block
-            throw new NotImplementedException();
+            var s = new BlockingFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Get(true);
         }
 
+        /// <summary>
+        /// Subscribe to the source and block until it produces a value or
+        /// signals an Exception. An empty source will throw an IndexOutOfRangeException.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source</param>
+        /// <param name="timeout">The maximum amount of time to wait for the value.</param>
+        /// <returns>The value produced</returns>
+        /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
+        /// <exception cref="TimeoutException">If the source didn't produce any value within the given timeout.</exception>
         public static T Block<T>(this IMono<T> source, TimeSpan timeout)
         {
-            // TODO implement Block
-            throw new NotImplementedException();
+            var s = new BlockingFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Get(timeout, true, true);
         }
 
         /// <summary>
@@ -801,5 +834,61 @@ namespace Reactor.Core
             // TODO implement ToEnumerable
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Returns a Task that awaits a single item from the IMono or
+        /// signals an IndexOutOfRangeException if the IMono is empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IMono</param>
+        /// <returns>The task.</returns>
+        public static Task<T> ToTask<T>(this IMono<T> source)
+        {
+            var s = new TaskFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task();
+        }
+
+        /// <summary>
+        /// Returns a Task that awaits a single item from the IMono or
+        /// signals an IndexOutOfRangeException if the IMono is empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IMono</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>The task.</returns>
+        public static Task<T> ToTask<T>(this IMono<T> source, CancellationToken ct)
+        {
+            var s = new TaskFirstSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task(ct);
+        }
+
+        /// <summary>
+        /// Return a Task that waits for the IMono source to complete.
+        /// </summary>
+        /// <param name="source">The source IMono</param>
+        /// <returns>The task.</returns>
+        public static Task WhenCompleteTask<T>(this IMono<T> source)
+        {
+            var s = new TaskCompleteSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task();
+        }
+
+        /// <summary>
+        /// Return a Task that waits for the IMono source to complete
+        /// and support the cancellation of such wait.
+        /// </summary>
+        /// <param name="source">The source IMono</param>
+        /// <param name="ct">The cancellation token.</param>
+        /// <returns>The task.</returns>
+        public static Task WhenCompleteTask<T>(this IMono<T> source, CancellationToken ct)
+        {
+            var s = new TaskCompleteSubscriber<T>();
+            source.Subscribe(s);
+            return s.Task(ct);
+        }
+
     }
 }
