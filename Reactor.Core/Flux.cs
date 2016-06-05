@@ -1096,10 +1096,10 @@ namespace Reactor.Core
 
         public static IFlux<R> Publish<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> transformer)
         {
-            return Publish(source, transformer, BufferSize);
+            return Publish<T, R>(source, transformer, BufferSize);
         }
 
-        public static IFlux<T> Publish<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> transformer, int prefetch)
+        public static IFlux<R> Publish<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> transformer, int prefetch)
         {
             // TODO implement Publish
             throw new NotImplementedException();
@@ -1346,6 +1346,114 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
+        public static IFlux<T> StartWith<T>(this IFlux<T> source, params T[] values)
+        {
+            return StartWith<T>(source, From(values));
+        }
+
+        public static IFlux<T> StartWith<T>(this IFlux<T> source, IEnumerable<T> values)
+        {
+            return StartWith<T>(source, From(values));
+        }
+
+        public static IFlux<T> StartWith<T>(this IFlux<T> source, IPublisher<T> other)
+        {
+            // TODO implement StartWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SubscribeOn<T>(this IFlux<T> source, Scheduler scheduler)
+        {
+            // TODO implement SubscribeOn
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> SwitchMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper)
+        {
+            return SwitchMap(source, mapper, BufferSize);
+        }
+
+        public static IFlux<R> SwitchMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int prefetch)
+        {
+            // TODO implement SwitchMap
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> SwitchIfEmpty<T>(this IFlux<T> source, IFlux<T> other)
+        {
+            // TODO implement SwitchIfEmpty
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Take<T>(this IFlux<T> source, long n)
+        {
+            // TODO implement Take
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Take<T>(this IFlux<T> source, TimeSpan timespan)
+        {
+            return Take(source, timespan);
+        }
+
+        public static IFlux<T> Take<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
+        {
+            // TODO implement Take
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> TakeLast<T>(this IFlux<T> source, long n)
+        {
+            // TODO implement TakeLast
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> TakeUntil<T, U>(this IFlux<T> source, IPublisher<U> other)
+        {
+            // TODO implement TakeUntil
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> TakeUntil<T>(this IFlux<T> source, Func<T, bool> predicate)
+        {
+            // TODO implement TakeUntil
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> TakeWhile<T>(this IFlux<T> source, Func<T, bool> predicate)
+        {
+            // TODO implement TakeWhile
+            throw new NotImplementedException();
+        }
+
+        public static IMono<T> Then<T>(this IFlux<T> source)
+        {
+            // TODO implement Then
+            throw new NotImplementedException();
+        }
+
+        public static IMono<object> Then<T>(this IFlux<T> source, IPublisher<object> other)
+        {
+            // TODO implement Then
+            throw new NotImplementedException();
+        }
+
+        public static IMono<object> Then<T>(this IFlux<T> source, Func<IPublisher<object>> afterSupplier)
+        {
+            return Then(source, Defer(afterSupplier));
+        }
+
+        public static IMono<R> ThenMany<T, R>(this IFlux<T> source, IPublisher<R> afterSupplier)
+        {
+            // TODO implement Then
+            throw new NotImplementedException();
+        }
+
+        public static IMono<R> ThenMany<T, R>(this IFlux<T> source, Func<IPublisher<R>> afterSupplier)
+        {
+            return ThenMany(source, Defer(afterSupplier));
+        }
+
         public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, int size) {
             // TODO implement Window
             throw new NotImplementedException();
@@ -1354,6 +1462,19 @@ namespace Reactor.Core
         // ---------------------------------------------------------------------------------------------------------
         // Leave the reactive world
         // ---------------------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Subscribes to the IPublisher and ignores all of its signals.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source IPublisher</param>
+        /// <returns>The IDisposable that allows cancelling the subscription.</returns>
+        public static IDisposable Subscribe<T>(this IPublisher<T> source)
+        {
+            var d = new CallbackSubscriber<T>(v => { }, e => { ExceptionHelper.OnErrorDropped(e); }, () => { });
+            source.Subscribe(d);
+            return d;
+        }
 
         /// <summary>
         /// Subscribes to the IPublisher and consumes only its OnNext signals.
@@ -1411,6 +1532,12 @@ namespace Reactor.Core
             var d = new CallbackSubscriber<T>(onNext, onError, onComplete);
             source.Subscribe(d);
             return d;
+        }
+
+        public static E SubscribeWith<T, E>(this IPublisher<T> source, E subscriber) where E : ISubscriber<T>
+        {
+            source.Subscribe(subscriber);
+            return subscriber;
         }
 
     }
