@@ -17,6 +17,8 @@ namespace Reactor.Core.publisher
     {
         readonly Func<T> supplier;
 
+        readonly bool nullMeansEmpty;
+
         public T Value
         {
             get
@@ -25,9 +27,10 @@ namespace Reactor.Core.publisher
             }
         }
 
-        public PublisherFunc(Func<T> supplier)
+        public PublisherFunc(Func<T> supplier, bool nullMeansEmpty)
         {
             this.supplier = supplier;
+            this.nullMeansEmpty = nullMeansEmpty;
         }
 
         public void Subscribe(ISubscriber<T> s)
@@ -44,6 +47,12 @@ namespace Reactor.Core.publisher
             {
                 ExceptionHelper.ThrowIfFatal(ex);
                 parent.Error(ex);
+                return;
+            }
+
+            if (nullMeansEmpty && v == null)
+            {
+                s.OnComplete();
                 return;
             }
 

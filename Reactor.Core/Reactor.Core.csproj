@@ -46,6 +46,7 @@
     <Compile Include="flow\IFuseable.cs" />
     <Compile Include="flow\IQueue.cs" />
     <Compile Include="flow\IQueueSubscription.cs" />
+    <Compile Include="IMonoEmitter.cs" />
     <Compile Include="IFluxEmitter.cs" />
     <Compile Include="IFluxProcessor.cs" />
     <Compile Include="IFlux.cs" />
@@ -67,12 +68,12 @@
     <Compile Include="publisher\PublisherEnumerable.cs" />
     <Compile Include="publisher\PublisherDefer.cs" />
     <Compile Include="publisher\PublisherEmpty.cs" />
+    <Compile Include="publisher\PublisherFilter.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
     <Compile Include="publisher\PublisherHide.cs" />
     <Compile Include="publisher\PublisherIgnoreElements.cs" />
     <Compile Include="publisher\PublisherInterval.cs" />
     <Compile Include="publisher\PublisherJust.cs" />
-    <Compile Include="publisher\PublisherMapFuseable.cs" />
     <Compile Include="publisher\PublisherMap.cs" />
     <Compile Include="publisher\PublisherNever.cs" />
     <Compile Include="publisher\PublisherArray.cs" />
@@ -106,6 +107,7 @@
     <Compile Include="util\QueueHelper.cs" />
     <Compile Include="util\SpscArrayQueue.cs" />
     <Compile Include="util\SpscLinkedArrayQueue.cs" />
+    <Compile Include="Void.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

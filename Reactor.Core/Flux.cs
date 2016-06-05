@@ -126,24 +126,30 @@ namespace Reactor.Core
 
         public static IFlux<T> Concat<T>(IEnumerable<IPublisher<T>> sources, bool delayError = false)
         {
-            // TODO implement CombineLatest
+            // TODO implement Concat
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> Concat<T>(IEnumerable<IPublisher<T>> sources, int prefetch, bool delayError = false)
+        public static IFlux<T> Concat<T>(params IPublisher<T>[] sources)
         {
-            // TODO implement CombineLatest
+            // TODO implement Concat
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> Concat<T>(bool delayError = false, params IPublisher<T>[] sources)
+        public static IFlux<T> ConcatDelayError<T>(params IPublisher<T>[] sources)
         {
-            return Concat(BufferSize, delayError, sources);
+            // TODO implement ConcatDelayError
+            throw new NotImplementedException();
         }
 
-        public static IFlux<T> Concat<T>(int prefetch, bool delayError = false, params IPublisher<T>[] sources)
+        public static IFlux<T> Concat<T>(IPublisher<IPublisher<T>> sources, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
-            // TODO implement CombineLatest
+            return Concat(sources, 2, errorMode);
+        }
+
+        public static IFlux<T> Concat<T>(IPublisher<IPublisher<T>> sources, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
+        {
+            // TODO implement Concat
             throw new NotImplementedException();
         }
 
@@ -236,9 +242,9 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> From<T>(Func<T> supplier)
+        public static IFlux<T> From<T>(Func<T> supplier, bool nullMeansEmpty = false)
         {
-            return new PublisherFunc<T>(supplier);
+            return new PublisherFunc<T>(supplier, nullMeansEmpty);
         }
 
         public static IFlux<T> Generate<T>(Action<ISignalEmitter<T>> generator)
@@ -491,10 +497,6 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance</returns>
         public static IFlux<R> Map<T, R>(this IFlux<T> source, Func<T, R> mapper)
         {
-            if (source is IFuseable)
-            {
-                return new PublisherMapFuseable<T, R>(source, mapper);
-            }
             return new PublisherMap<T, R>(source, mapper);
         }
 
@@ -582,10 +584,17 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<R> Cast<T, R>(this IFlux<T> source, R witness = default(R))
+        public static IFlux<R> Cast<T, R>(this IFlux<T> source) where T: class where R: class
         {
-            // TODO implement Cast
-            throw new NotImplementedException();
+            return Map(source, v =>
+            {
+                R r = v as R;
+                if (v != null && r == null)
+                {
+                    throw new InvalidCastException();
+                }
+                return r;
+            });
         }
 
         public static IMono<C> Collect<T, C>(this IFlux<T> source, Func<C> collectionSupplier, Action<C, T> collector)
@@ -664,18 +673,18 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> ConcatWith<T>(this IFlux<T> source, IFlux<T> other, bool delayError = false)
-        {
-            // TODO implement ConcatMap
-            throw new NotImplementedException();
-        }
-
         public static IFlux<T> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             return ConcatMap(source, mapper, BufferSize, errorMode);
         }
 
         public static IFlux<T> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
+        {
+            // TODO implement ConcatMap
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> ConcatWith<T>(this IFlux<T> source, IFlux<T> other, bool delayError = false)
         {
             // TODO implement ConcatMap
             throw new NotImplementedException();
@@ -854,6 +863,11 @@ namespace Reactor.Core
         public static IFlux<T> EveryFirst<T>(this IFlux<T> source, int batchSize)
         {
             return source.Window(batchSize).FlatMap(w => w.Next());
+        }
+
+        public static IFlux<T> Filter<T>(this IFlux<T> source, Func<T, bool> predicate)
+        {
+            return new PublisherFilter<T>(source, predicate);
         }
 
         public static IFlux<T> FirstEmittingWith<T>(this IFlux<T> source, IFlux<T> other)
@@ -1164,7 +1178,7 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> RepeatWhen<T>(this IFlux<T> source, Func<IFlux<long>, IFlux<object>> whenFunction)
+        public static IFlux<T> RepeatWhen<T>(this IFlux<T> source, Func<IFlux<long>, IPublisher<object>> whenFunction)
         {
             // TODO implement RepeatWhen
             throw new NotImplementedException();
@@ -1212,7 +1226,7 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> RetryWhen<T>(this IFlux<T> source, Func<IFlux<Exception>, IFlux<object>> whenFunction)
+        public static IFlux<T> RetryWhen<T>(this IFlux<T> source, Func<IFlux<Exception>, IPublisher<object>> whenFunction)
         {
             // TODO implement RepeatWhen
             throw new NotImplementedException();
@@ -1432,13 +1446,13 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IMono<object> Then<T>(this IFlux<T> source, IPublisher<object> other)
+        public static IMono<Void> Then<T>(this IFlux<T> source, IPublisher<Void> other)
         {
             // TODO implement Then
             throw new NotImplementedException();
         }
 
-        public static IMono<object> Then<T>(this IFlux<T> source, Func<IPublisher<object>> afterSupplier)
+        public static IMono<Void> Then<T>(this IFlux<T> source, Func<IPublisher<Void>> afterSupplier)
         {
             return Then(source, Defer(afterSupplier));
         }
@@ -1497,6 +1511,25 @@ namespace Reactor.Core
         public static IFlux<T> ToFlux<T>(this IObservable<T> source, BackpressureHandling backpressure = BackpressureHandling.Error)
         {
             // TODO implement ToFlux
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Converts this IFlux into an IMono.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source to convert</param>
+        /// <returns>The IFlux instance</returns>
+        public static IMono<T> ToMono<T>(this IFlux<T> source)
+        {
+            if (source is IMono<T>)
+            {
+                return source as IMono<T>;
+            }
+            if (source is IFuseable)
+            {
+            }
+            // TODO implement ToMono
             throw new NotImplementedException();
         }
 
@@ -1686,7 +1719,7 @@ namespace Reactor.Core
         /// <typeparam name="T">The value type</typeparam>
         /// <param name="source">The source IPublisher</param>
         /// <returns>The IDisposable that allows cancelling the subscription.</returns>
-        public static IDisposable Subscribe<T>(this IPublisher<T> source)
+        public static IDisposable Subscribe<T>(this IFlux<T> source)
         {
             var d = new CallbackSubscriber<T>(v => { }, e => { ExceptionHelper.OnErrorDropped(e); }, () => { });
             source.Subscribe(d);
@@ -1700,7 +1733,7 @@ namespace Reactor.Core
         /// <param name="source">The source IPublisher</param>
         /// <param name="onNext">The callback for the OnNext signals</param>
         /// <returns>The IDisposable that allows cancelling the subscription.</returns>
-        public static IDisposable Subscribe<T>(this IPublisher<T> source, Action<T> onNext)
+        public static IDisposable Subscribe<T>(this IFlux<T> source, Action<T> onNext)
         {
             var d = new CallbackSubscriber<T>(onNext, e => { ExceptionHelper.OnErrorDropped(e); }, () => { });
             source.Subscribe(d);
@@ -1721,7 +1754,7 @@ namespace Reactor.Core
         /// <param name="onNext">The callback for the OnNext signals</param>
         /// <param name="onError">The callback for the OnError signals</param>
         /// <returns>The IDisposable that allows cancelling the subscription.</returns>
-        public static IDisposable Subscribe<T>(this IPublisher<T> source, Action<T> onNext, Action<Exception> onError)
+        public static IDisposable Subscribe<T>(this IFlux<T> source, Action<T> onNext, Action<Exception> onError)
         {
             var d = new CallbackSubscriber<T>(onNext, onError, () => { });
             source.Subscribe(d);
@@ -1744,25 +1777,25 @@ namespace Reactor.Core
         /// <param name="onError">The callback for the OnError signal.</param>
         /// <param name="onComplete">The callback for the OnComplete signal.</param>
         /// <returns>The IDisposable that allows cancelling the subscription.</returns>
-        public static IDisposable Subscribe<T>(this IPublisher<T> source, Action<T> onNext, Action<Exception> onError, Action onComplete)
+        public static IDisposable Subscribe<T>(this IFlux<T> source, Action<T> onNext, Action<Exception> onError, Action onComplete)
         {
             var d = new CallbackSubscriber<T>(onNext, onError, onComplete);
             source.Subscribe(d);
             return d;
         }
 
-        public static E SubscribeWith<T, E>(this IPublisher<T> source, E subscriber) where E : ISubscriber<T>
+        public static E SubscribeWith<T, E>(this IFlux<T> source, E subscriber) where E : ISubscriber<T>
         {
             source.Subscribe(subscriber);
             return subscriber;
         }
 
-        public static IEnumerable<T> ToEnumerable<T>(this IPublisher<T> source)
+        public static IEnumerable<T> ToEnumerable<T>(this IFlux<T> source)
         {
             return ToEnumerable(source, BufferSize);
         }
 
-        public static IEnumerable<T> ToEnumerable<T>(this IPublisher<T> source, int prefetch)
+        public static IEnumerable<T> ToEnumerable<T>(this IFlux<T> source, int prefetch)
         {
             // TODO implement ToEnumerable
             throw new NotImplementedException();

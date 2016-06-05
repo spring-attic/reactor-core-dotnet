@@ -14,7 +14,7 @@ using Reactor.Core.subscriber;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherMap<T, R> : IFlux<R>, IMono<R>
+    sealed class PublisherMap<T, R> : IFlux<R>, IMono<R>, IFuseable
     {
         readonly IPublisher<T> source;
 
@@ -39,7 +39,7 @@ namespace Reactor.Core.publisher
         }
     }
 
-    sealed class MapSubscriber<T, R> : BasicSubscriber<T, R>
+    sealed class MapSubscriber<T, R> : BasicFuseableSubscriber<T, R>
     {
         readonly Func<T, R> mapper;
 
@@ -77,22 +77,34 @@ namespace Reactor.Core.publisher
                 return;
             }
 
-            if (v == null)
-            {
-                Fail(new NullReferenceException("The mapper returned a null value"));
-                return;
-            }
-
             actual.OnNext(v);
         }
 
-        protected override void OnStart()
+        public override bool Poll(out R value)
         {
-            // nothing to do
+            T local;
+
+            if (qs.Poll(out local))
+            {
+                value = mapper(local);
+                return true;
+            }
+            value = default(R);
+            return false;
+        }
+
+        public override int RequestFusion(int mode)
+        {
+            var qs = this.qs;
+            if (qs != null)
+            {
+                return TransitiveBoundaryFusion(mode);
+            }
+            return FuseableHelper.NONE;
         }
     }
 
-    sealed class MapConditionalSubscriber<T, R> : BasicConditionalSubscriber<T, R>
+    sealed class MapConditionalSubscriber<T, R> : BasicFuseableConditionalSubscriber<T, R>
     {
         readonly Func<T, R> mapper;
 
@@ -130,13 +142,30 @@ namespace Reactor.Core.publisher
                 return;
             }
 
-            if (v == null)
-            {
-                Fail(new NullReferenceException("The mapper returned a null value"));
-                return;
-            }
-
             actual.OnNext(v);
+        }
+
+        public override bool Poll(out R value)
+        {
+            T local;
+
+            if (qs.Poll(out local))
+            {
+                value = mapper(local);
+                return true;
+            }
+            value = default(R);
+            return false;
+        }
+
+        public override int RequestFusion(int mode)
+        {
+            var qs = this.qs;
+            if (qs != null)
+            {
+                return TransitiveBoundaryFusion(mode);
+            }
+            return FuseableHelper.NONE;
         }
 
         public override bool TryOnNext(T t)
@@ -158,18 +187,7 @@ namespace Reactor.Core.publisher
                 return true;
             }
 
-            if (v == null)
-            {
-                Fail(new NullReferenceException("The mapper returned a null value"));
-                return true;
-            }
-
             return actual.TryOnNext(v);
-        }
-
-        protected override void OnStart()
-        {
-            // nothing to do
         }
     }
 

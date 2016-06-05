@@ -73,7 +73,7 @@ namespace Reactor.Core.publisher
             }
         }
 
-        internal static IFlux<T> withOnNext(IFlux<T> source, Action<T> onNext)
+        internal static PublisherPeek<T> withOnNext(IPublisher<T> source, Action<T> onNext)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -83,7 +83,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, onNext, v => { }, e => { }, () => { }, () => { }, () => { }, r => { }, s => { }, () => { });
         }
 
-        internal static IFlux<T> withOnAfterNext(IFlux<T> source, Action<T> onAfterNext)
+        internal static PublisherPeek<T> withOnAfterNext(IPublisher<T> source, Action<T> onAfterNext)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -93,7 +93,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, v => { }, onAfterNext, e => { }, () => { }, () => { }, () => { }, r => { }, s => { }, () => { });
         }
 
-        internal static IFlux<T> withOnError(IFlux<T> source, Action<Exception> onError)
+        internal static PublisherPeek<T> withOnError(IPublisher<T> source, Action<Exception> onError)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -103,7 +103,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, v => { }, v => { }, onError, () => { }, () => { }, () => { }, r => { }, s => { }, () => { });
         }
 
-        internal static IFlux<T> withOnComplete(IFlux<T> source, Action onComplete)
+        internal static PublisherPeek<T> withOnComplete(IPublisher<T> source, Action onComplete)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -113,7 +113,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, v => { }, v => { }, e => { }, onComplete, () => { }, () => { }, r => { }, s => { }, () => { });
         }
 
-        internal static IFlux<T> withOnTerminate(IFlux<T> source, Action onTerminate)
+        internal static PublisherPeek<T> withOnTerminate(IPublisher<T> source, Action onTerminate)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -123,7 +123,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, v => { }, v => { }, e => { }, () => { }, onTerminate, () => { }, r => { }, s => { }, () => { });
         }
 
-        internal static IFlux<T> withOnAfterTerminate(IFlux<T> source, Action onAfterTerminate)
+        internal static PublisherPeek<T> withOnAfterTerminate(IPublisher<T> source, Action onAfterTerminate)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -133,7 +133,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, v => { }, v => { }, e => { }, () => { }, () => { }, onAfterTerminate, r => { }, s => { }, () => { });
         }
 
-        internal static IFlux<T> withOnRequest(IFlux<T> source, Action<long> onRequest)
+        internal static PublisherPeek<T> withOnRequest(IPublisher<T> source, Action<long> onRequest)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -143,7 +143,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, v => { }, v => { }, e => { }, () => { }, () => { }, () => { }, onRequest, s => { }, () => { });
         }
 
-        internal static IFlux<T> withOnSubscribe(IFlux<T> source, Action<ISubscription> onSubscribe)
+        internal static PublisherPeek<T> withOnSubscribe(IPublisher<T> source, Action<ISubscription> onSubscribe)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)
@@ -153,7 +153,7 @@ namespace Reactor.Core.publisher
             return new PublisherPeek<T>(source, v => { }, v => { }, e => { }, () => { }, () => { }, () => { }, r => { }, onSubscribe, () => { });
         }
 
-        internal static IFlux<T> withOnCancel(IFlux<T> source, Action onCancel)
+        internal static PublisherPeek<T> withOnCancel(IPublisher<T> source, Action onCancel)
         {
             PublisherPeek<T> p = source as PublisherPeek<T>;
             if (p != null)

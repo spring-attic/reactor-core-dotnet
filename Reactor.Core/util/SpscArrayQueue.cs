@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using Reactive.Streams;
-using Reactor.Core;
-using System.Threading;
+﻿using System.Threading;
 using Reactor.Core.flow;
-using Reactor.Core.subscriber;
-using Reactor.Core.subscription;
-using Reactor.Core.util;
 using System.Runtime.InteropServices;
+
+
+/* 
+ * The algorithm was inspired by the Fast-Flow implementation in the JCTools library at
+ * https://github.com/JCTools/JCTools/blob/master/jctools-core/src/main/java/org/jctools/queues/SpscUnboundedArrayQueue.java
+ * 
+ * The difference, as of now, is there is no item padding and no lookahead.
+ */
 
 namespace Reactor.Core.util
 {
