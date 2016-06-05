@@ -59,6 +59,7 @@
     <Compile Include="ParallelFlux.cs" />
     <Compile Include="parallel\ParallelUnorderedFork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="publisher\PublisherAsObservable.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
     <Compile Include="publisher\PublisherCount.cs" />
     <Compile Include="publisher\PublisherDistinctUntilChanged.cs" />

@@ -1443,21 +1443,238 @@ namespace Reactor.Core
             return Then(source, Defer(afterSupplier));
         }
 
-        public static IMono<R> ThenMany<T, R>(this IFlux<T> source, IPublisher<R> afterSupplier)
+        public static IFlux<T> ThenMany<T>(this IFlux<T> source, IPublisher<T> after)
         {
-            // TODO implement Then
+            // Can't fuse multiple applications into one operator unless all the types are the same due to non-erasure, unlike Java.
+            return ThenMany<T, T>(source, after);
+        }
+
+        public static IFlux<R> ThenMany<T, R>(this IFlux<T> source, IPublisher<R> afterSupplier)
+        {
+            // TODO implement ThenMany
             throw new NotImplementedException();
         }
 
-        public static IMono<R> ThenMany<T, R>(this IFlux<T> source, Func<IPublisher<R>> afterSupplier)
+        public static IFlux<R> ThenMany<T, R>(this IFlux<T> source, Func<IPublisher<R>> afterSupplier)
         {
-            return ThenMany(source, Defer(afterSupplier));
+            return ThenMany<T, R>(source, Defer(afterSupplier));
         }
 
-        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, int size) {
+        public static IFlux<T> Timeout<T>(this IFlux<T> source, TimeSpan timeout, IPublisher<T> fallback = null)
+        {
+            return Timeout(source, timeout, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<T> Timeout<T>(this IFlux<T> source, TimeSpan timeout, TimedScheduler scheduler, IPublisher<T> fallback = null)
+        {
+            // TODO implement Timeout
+            throw new NotImplementedException();
+        }
+
+
+        public static IFlux<T> Timeout<T, U>(this IFlux<T> source, IPublisher<U> firstTimeout, IPublisher<T> fallback = null)
+        {
+            // TODO implement Timeout
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Timeout<T, U, V>(this IFlux<T> source, IPublisher<U> firstTimeout, Func<U, IPublisher<V>> itemTimeout, IPublisher<T> fallback = null)
+        {
+            // TODO implement Timeout
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<Timed<T>> Timestamp<T>(this IFlux<T> source)
+        {
+            return Timestamp(source, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<Timed<T>> Timestamp<T>(this IFlux<T> source, TimedScheduler scheduler)
+        {
+            return Map(source, v => new Timed<T>(v, scheduler.NowUtc));
+        }
+
+        public static IFlux<T> ToFlux<T>(this IObservable<T> source, BackpressureHandling backpressure = BackpressureHandling.Error)
+        {
+            // TODO implement ToFlux
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Convert this IFlux into an IObservable.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IObservable.</returns>
+        public static IObservable<T> ToObservable<T>(this IFlux<T> source)
+        {
+            return new PublisherAsObservable<T>(source);
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source)
+        {
             // TODO implement Window
             throw new NotImplementedException();
         }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, int size) {
+            return Window(source, size, size);
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, int size, int skip)
+        {
+            // TODO implement Window
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<IFlux<T>> Window<T, U>(this IFlux<T> source, IPublisher<U> boundary)
+        {
+            // TODO implement Window
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<IFlux<T>> Window<T, U, V>(this IFlux<T> source, IPublisher<U> open, Func<U, IPublisher<V>> close)
+        {
+            // TODO implement Window
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, TimeSpan timespan)
+        {
+            return Window(source, timespan, timespan, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
+        {
+            return Window(source, timespan, timespan, scheduler);
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, TimeSpan timespan, TimeSpan timeskip)
+        {
+            return Window(source, timespan, timeskip, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, TimeSpan timespan, TimeSpan timeskip, TimedScheduler scheduler)
+        {
+            // TODO implement Window
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, int maxSize, TimeSpan timespan)
+        {
+            return Window(source, maxSize, timespan, DefaultScheduler.Instance);
+        }
+
+        public static IFlux<IFlux<T>> Window<T>(this IFlux<T> source, int maxSize, TimeSpan timespan, TimedScheduler scheduler)
+        {
+            // TODO implement Window
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> WithLatestFrom<T1, T2, R>(this IFlux<T1> source, IPublisher<T2> other, Func<T1, T2, R> combiner)
+        {
+            // TODO implement WithLatestFrom
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> WithLatestFrom<T1, T2, T3, R>(this IFlux<T1> source, 
+            IPublisher<T2> p2, IPublisher<T3> p3,
+            Func<T1, T2, T3, R> combiner)
+        {
+            // TODO implement WithLatestFrom
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> WithLatestFrom<T1, T2, T3, T4, R>(this IFlux<T1> source,
+            IPublisher<T2> p2, IPublisher<T3> p3,
+            IPublisher<T4> p4,
+            Func<T1, T2, T3, T4, R> combiner)
+        {
+            // TODO implement WithLatestFrom
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> WithLatestFrom<T1, T2, T3, T4, T5, R>(this IFlux<T1> source,
+            IPublisher<T2> p2, IPublisher<T3> p3,
+            IPublisher<T4> p4, IPublisher<T5> p5,
+            Func<T1, T2, T3, T4, T5, R> combiner)
+        {
+            // TODO implement WithLatestFrom
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> WithLatestFrom<T1, T2, T3, T4, T5, T6, R>(this IFlux<T1> source,
+            IPublisher<T2> p2, IPublisher<T3> p3,
+            IPublisher<T4> p4, IPublisher<T5> p5,
+            IPublisher<T6> p6,
+            Func<T1, T2, T3, T4, T5, T6, R> combiner)
+        {
+            // TODO implement WithLatestFrom
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> WithLatestFrom<T, R>(this IFlux<T> source, Func<T[], R> combiner, params IPublisher<T>[] others)
+        {
+            // TODO implement WithLatestFrom
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> ZipWith<T, R>(this IFlux<T> source, IPublisher<T> other, Func<T, T, R> zipper)
+        {
+            return ZipWith<T, R>(source, other, zipper, BufferSize);
+        }
+
+        public static IFlux<R> ZipWith<T, R>(this IFlux<T> source, IPublisher<T> other, Func<T, T, R> zipper, int prefetch)
+        {
+            // Allows fusing only if all soures have the same type due to no type erasure, unlike Java
+            // TODO implement ZipWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> ZipWith<T, U, R>(this IFlux<T> source, IPublisher<U> other, Func<T, U, R> zipper)
+        {
+            return ZipWith<T, U, R>(source, other, zipper, BufferSize);
+        }
+
+        public static IFlux<R> ZipWith<T, U, R>(this IFlux<T> source, IPublisher<U> other, Func<T, U, R> zipper, int prefetch)
+        {
+            // TODO implement ZipWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<Tuple<T, U>> ZipWith<T, U>(this IFlux<T> source, IPublisher<U> other)
+        {
+            return ZipWith(source, other, BufferSize);
+        }
+
+        public static IFlux<Tuple<T, U>> ZipWith<T, U>(this IFlux<T> source, IPublisher<U> other, int prefetch)
+        {
+            // TODO implement ZipWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<Tuple<T, U>> ZipWith<T, U>(this IFlux<T> source, IEnumerable<U> other)
+        {
+            return ZipWith(source, other, BufferSize);
+        }
+
+        public static IFlux<Tuple<T, U>> ZipWith<T, U>(this IFlux<T> source, IEnumerable<U> other, int prefetch)
+        {
+            // TODO implement ZipWith
+            throw new NotImplementedException();
+        }
+
+        public static IFlux<R> ZipWith<T, U, R>(this IFlux<T> source, IEnumerable<U> other, Func<T, U, R> zipper)
+        {
+            return ZipWith<T, U, R>(source, other, zipper, BufferSize);
+        }
+
+        public static IFlux<R> ZipWith<T, U, R>(this IFlux<T> source, IEnumerable<U> other, Func<T, U, R> zipper, int prefetch)
+        {
+            // TODO implement ZipWith
+            throw new NotImplementedException();
+        }
+
 
         // ---------------------------------------------------------------------------------------------------------
         // Leave the reactive world
@@ -1540,5 +1757,15 @@ namespace Reactor.Core
             return subscriber;
         }
 
+        public static IEnumerable<T> ToEnumerable<T>(this IPublisher<T> source)
+        {
+            return ToEnumerable(source, BufferSize);
+        }
+
+        public static IEnumerable<T> ToEnumerable<T>(this IPublisher<T> source, int prefetch)
+        {
+            // TODO implement ToEnumerable
+            throw new NotImplementedException();
+        }
     }
 }
