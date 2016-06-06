@@ -48,5 +48,107 @@ namespace Reactor.Core.util
                 return w;
             }
         }
+
+        public static bool CheckTerminated<T, U>(ref bool cancelled, ref bool done, ref Exception error, 
+            ISubscriber<T> actual, IQueue<U> queue, ISubscription s)
+        {
+            if (Volatile.Read(ref cancelled))
+            {
+                queue.Clear();
+                return true;
+            }
+
+            if (Volatile.Read(ref done))
+            {
+                Exception ex = Volatile.Read(ref error);
+                if (ex != null)
+                {
+                    ex = ExceptionHelper.Terminate(ref error);
+                    queue.Clear();
+                    actual.OnError(ex);
+                    return true;
+                }
+                else
+                {
+                    bool empty;
+
+                    try
+                    {
+                        empty = queue.IsEmpty();
+                    }
+                    catch (Exception exc)
+                    {
+                        ExceptionHelper.ThrowIfFatal(exc);
+
+                        queue.Clear();
+                        s.Cancel();
+
+                        ExceptionHelper.AddError(ref error, exc);
+                        exc = ExceptionHelper.Terminate(ref error);
+
+                        actual.OnError(exc);
+                        return true;
+                    }
+
+                    if (empty)
+                    {
+                        actual.OnComplete();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static bool CheckTerminatedDelayed<T, U>(ref bool cancelled, ref bool done, ref Exception error, 
+            ISubscriber<T> actual, IQueue<U> queue, ISubscription s)
+        {
+            if (Volatile.Read(ref cancelled))
+            {
+                queue.Clear();
+                return true;
+            }
+
+            if (Volatile.Read(ref done))
+            {
+                bool empty;
+
+                try
+                {
+                    empty = queue.IsEmpty();
+                }
+                catch (Exception exc)
+                {
+                    ExceptionHelper.ThrowIfFatal(exc);
+
+                    queue.Clear();
+                    s.Cancel();
+
+                    ExceptionHelper.AddError(ref error, exc);
+                    exc = ExceptionHelper.Terminate(ref error);
+
+                    actual.OnError(exc);
+                    return true;
+                }
+
+                if (empty)
+                {
+                    Exception ex = Volatile.Read(ref error);
+                    if (ex != null)
+                    {
+                        ex = ExceptionHelper.Terminate(ref error);
+                        actual.OnError(ex);
+                    }
+                    else
+                    {
+                        actual.OnComplete();
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
     }
 }

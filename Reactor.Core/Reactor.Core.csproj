@@ -83,6 +83,7 @@
     <Compile Include="publisher\PublisherNever.cs" />
     <Compile Include="publisher\PublisherArray.cs" />
     <Compile Include="publisher\PublisherPeek.cs" />
+    <Compile Include="publisher\PublisherPublishOn.cs" />
     <Compile Include="publisher\PublisherRange.cs" />
     <Compile Include="publisher\PublisherSkip.cs" />
     <Compile Include="publisher\PublisherTake.cs" />

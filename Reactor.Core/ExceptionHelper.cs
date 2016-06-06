@@ -15,6 +15,8 @@ namespace Reactor.Core
     {
         static bool lockdown;
 
+        static readonly Exception TERMINATED = new Exception("Sequence terminated");
+
         /// <summary>
         /// Check if the plugins are in lockdown.
         /// </summary>
@@ -135,6 +137,44 @@ namespace Reactor.Core
         {
             ThrowIfFatal(ex);
             OnErrorDropped(ex);
+        }
+
+        public static bool AddError(ref Exception error, Exception ex)
+        {
+            var e = Volatile.Read(ref error);
+            for (;;)
+            {
+                if (e == TERMINATED)
+                {
+                    return false;
+                }
+
+                Exception u;
+                if (e == null)
+                {
+                    u = e;
+                }
+                else
+                {
+                    u = new AggregateException(e, ex);
+                }
+
+                var f = Interlocked.CompareExchange(ref error, u, e);
+                if (f == e)
+                {
+                    return true;
+                }
+            }
+        }
+
+        public static Exception Terminate(ref Exception error)
+        {
+            var e = Volatile.Read(ref error);
+            if (e != TERMINATED)
+            {
+                e = Interlocked.Exchange(ref error, TERMINATED);
+            }
+            return e;
         }
     }
 }

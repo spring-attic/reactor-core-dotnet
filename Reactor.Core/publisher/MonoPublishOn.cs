@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class MonoPublishOn<T> : IMono<T>
+    sealed class MonoPublishOn<T> : IMono<T>, IFuseable
     {
         readonly IMono<T> source;
 
