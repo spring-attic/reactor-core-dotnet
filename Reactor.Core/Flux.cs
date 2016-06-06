@@ -162,20 +162,18 @@ namespace Reactor.Core
 
         public static IFlux<T> Concat<T>(IEnumerable<IPublisher<T>> sources, bool delayError = false)
         {
-            // TODO implement Concat
-            throw new NotImplementedException();
+            return new PublisherConcatEnumerable<T>(sources, delayError);
         }
 
         public static IFlux<T> Concat<T>(params IPublisher<T>[] sources)
         {
-            // TODO implement Concat
-            throw new NotImplementedException();
+            return new PublisherConcatArray<T>(sources, false);
         }
 
         public static IFlux<T> ConcatDelayError<T>(params IPublisher<T>[] sources)
         {
-            // TODO implement ConcatDelayError
-            throw new NotImplementedException();
+            // FIXME default vs params argument sometimes doesn't work together, like Concat(false, p...) can't map to Concat(bool, P[])
+            return new PublisherConcatArray<T>(sources, true);
         }
 
         public static IFlux<T> Concat<T>(IPublisher<IPublisher<T>> sources, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
@@ -191,8 +189,7 @@ namespace Reactor.Core
 
         public static IFlux<T> Create<T>(Action<IFluxEmitter<T>> emitter, BackpressureHandling backpressure = BackpressureHandling.Error)
         {
-            // TODO implement Create
-            throw new NotImplementedException();
+            return new PublisherCreate<T>(emitter, backpressure);
         }
 
         /// <summary>
@@ -273,8 +270,7 @@ namespace Reactor.Core
 
         public static IFlux<T> From<T>(IObservable<T> source, BackpressureHandling backpressure = BackpressureHandling.Error)
         {
-            // TODO implement From
-            throw new NotImplementedException();
+            return new PublisherFromObservable<T>(source, backpressure);
         }
 
         /// <summary>
@@ -780,8 +776,11 @@ namespace Reactor.Core
 
         public static IFlux<T> ConcatWith<T>(this IFlux<T> source, IFlux<T> other, bool delayError = false)
         {
-            // TODO implement ConcatMap
-            throw new NotImplementedException();
+            if (source is PublisherConcatArray<T>)
+            {
+                return (source as PublisherConcatArray<T>).EndWith(source, delayError);
+            }
+            return new PublisherConcatArray<T>(new IPublisher<T>[] { source, other }, delayError);
         }
 
         public static IMono<long> Count<T>(this IFlux<T> source)
@@ -1457,20 +1456,23 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> StartWith<T>(this IFlux<T> source, params T[] values)
+        public static IFlux<T> StartWith<T>(this IFlux<T> source, bool delayError = false, params T[] values)
         {
-            return StartWith<T>(source, From(values));
+            return StartWith<T>(source, From(values), delayError);
         }
 
-        public static IFlux<T> StartWith<T>(this IFlux<T> source, IEnumerable<T> values)
+        public static IFlux<T> StartWith<T>(this IFlux<T> source, IEnumerable<T> values, bool delayError = false)
         {
-            return StartWith<T>(source, From(values));
+            return StartWith<T>(source, From(values), delayError);
         }
 
-        public static IFlux<T> StartWith<T>(this IFlux<T> source, IPublisher<T> other)
+        public static IFlux<T> StartWith<T>(this IFlux<T> source, IPublisher<T> other, bool delayError = false)
         {
-            // TODO implement StartWith
-            throw new NotImplementedException();
+            if (source is PublisherConcatArray<T>)
+            {
+                return (source as PublisherConcatArray<T>).StartWith(source, delayError);
+            }
+            return new PublisherConcatArray<T>(new IPublisher<T>[] { source, other }, delayError);
         }
 
         public static IFlux<T> SubscribeOn<T>(this IFlux<T> source, Scheduler scheduler)

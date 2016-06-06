@@ -35,12 +35,6 @@ namespace Reactor.Core
         void Complete();
 
         /// <summary>
-        /// Indicate no more signals will follow. Further calls
-        /// to the other methods are ignored.
-        /// </summary>
-        void Stop();
-
-        /// <summary>
         /// Associate a resource with the emitter that should
         /// be disposed on completion or cancellation
         /// </summary>

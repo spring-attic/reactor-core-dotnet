@@ -35,6 +35,27 @@ namespace Reactor.Core.util
         }
 
         /// <summary>
+        /// Multiplies two long values and caps the result at long.MaxValue.
+        /// </summary>
+        /// <param name="a">The first value, non-negative (not verified).</param>
+        /// <param name="b">The second value, non-negative (not verified).</param>
+        /// <returns>The product of <paramref name="a"/> and <paramref name="b"/> capped at <see cref="long.MaxValue"/></returns>
+        public static long MultiplyCap(long a, long b)
+        {
+            long c = a * b;
+
+            if (((a | b) >> 31) != 0L)
+            {
+                if (b != 0L && c / b != a)
+                {
+                    return long.MaxValue;
+                }
+            }
+
+            return c;
+        }
+
+        /// <summary>
         /// Atomically add the given number to the requested field and
         /// cap the sum at long.MaxValue.
         /// </summary>

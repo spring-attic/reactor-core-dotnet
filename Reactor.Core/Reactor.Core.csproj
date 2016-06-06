@@ -66,7 +66,10 @@
     <Compile Include="publisher\PublisherAsObservable.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
     <Compile Include="publisher\PublisherCombineLatest.cs" />
+    <Compile Include="publisher\PublisherConcatEnumerable.cs" />
+    <Compile Include="publisher\PublisherConcatArray.cs" />
     <Compile Include="publisher\PublisherCount.cs" />
+    <Compile Include="publisher\PublisherCreate.cs" />
     <Compile Include="publisher\PublisherDistinctUntilChanged.cs" />
     <Compile Include="publisher\PublisherDistinct.cs" />
     <Compile Include="publisher\PublisherEnumerable.cs" />
@@ -74,6 +77,7 @@
     <Compile Include="publisher\PublisherEmpty.cs" />
     <Compile Include="publisher\PublisherError.cs" />
     <Compile Include="publisher\PublisherFilter.cs" />
+    <Compile Include="publisher\PublisherFromObservable.cs" />
     <Compile Include="publisher\PublisherFromTask.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
     <Compile Include="publisher\PublisherGenerate.cs" />
@@ -99,6 +103,7 @@
     <Compile Include="subscriber\BasicConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableSubscriber.cs" />
+    <Compile Include="subscription\BasicRejectingSubscription.cs" />
     <Compile Include="subscriber\BasicSubscriber.cs" />
     <Compile Include="subscriber\BlockingFirstSubscriber.cs" />
     <Compile Include="subscriber\BlockingLastSubscriber.cs" />
@@ -112,6 +117,7 @@
     <Compile Include="subscription\EmptySubscription.cs" />
     <Compile Include="publisher\PublisherTimer.cs" />
     <Compile Include="subscription\ScalarSubscription.cs" />
+    <Compile Include="subscription\SubscriptionArbiterStruct.cs" />
     <Compile Include="subscription\SubscriptionHelper.cs" />
     <Compile Include="Timed.cs" />
     <Compile Include="util\BackpressureHelper.cs" />

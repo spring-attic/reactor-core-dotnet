@@ -20,6 +20,24 @@ namespace Reactor.Core.util
     /// </summary>
     internal static class MultiSourceHelper
     {
+        public static T[] AppendFirst<T>(T[] array, T value)
+        {
+            int n = array.Length;
+            var a = new T[n + 1];
+            Array.Copy(array, 0, a, 1, n);
+            a[0] = value;
+            return a;
+        }
+
+        public static T[] AppendLast<T>(T[] array, T value)
+        {
+            int n = array.Length;
+            var a = new T[n + 1];
+            Array.Copy(array, 0, a, 0, n);
+            a[n] = value;
+            return a;
+        }
+
         public static bool ToArray<T, U>(T[] values, IEnumerable<T> valuesEnumerable, ISubscriber<U> s, out int n, out T[] array)
         {
             if (values != null)
