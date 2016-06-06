@@ -17,9 +17,9 @@ namespace Reactor.Core.publisher
 {
     sealed class PublisherCombineLatest<T, R> : IFlux<R>, IFuseable
     {
-        readonly IPublisher<T>[] source;
+        readonly IPublisher<T>[] sources;
 
-        readonly IEnumerable<IPublisher<T>> sourceEnumerable;
+        readonly IEnumerable<IPublisher<T>> sourcesEnumerable;
 
         readonly int prefetch;
 
@@ -27,12 +27,12 @@ namespace Reactor.Core.publisher
 
         readonly Func<T[], R> combiner;
 
-        internal PublisherCombineLatest(IPublisher<T>[] source, 
+        internal PublisherCombineLatest(IPublisher<T>[] sources, 
             IEnumerable<IPublisher<T>> sourceEnumerable,
             int prefetch, bool delayError, Func<T[], R> combiner)
         {
-            this.source = source;
-            this.sourceEnumerable = sourceEnumerable;
+            this.sources = sources;
+            this.sourcesEnumerable = sourceEnumerable;
             this.prefetch = prefetch;
             this.delayError = delayError;
             this.combiner = combiner;
@@ -43,28 +43,21 @@ namespace Reactor.Core.publisher
             int n;
             IPublisher<T>[] a;
 
-            if (source != null)
+            if (!MultiSourceHelper.ToArray(sources, sourcesEnumerable, s, out n, out a))
             {
-                a = source;
-                n = a.Length;
+                return;
+            }
+
+            if (n == 0)
+            {
+                EmptySubscription<R>.Complete(s);
+                return;
             }
             else
+            if (n == 1)
             {
-                n = 0;
-                a = new IPublisher<T>[8];
-
-                foreach (var e in sourceEnumerable)
-                {
-                    if (n == a.Length)
-                    {
-                        var b = new IPublisher<T>[n + (n >> 1)];
-                        Array.Copy(a, 0, b, 0, n);
-                        a = b;
-                    }
-                    a[n] = e;
-
-                    n++;
-                }
+                new PublisherMap<T, R>(a[0], v => combiner(new T[] { v })).Subscribe(s);
+                return;
             }
 
             if (s is IConditionalSubscriber<R>)

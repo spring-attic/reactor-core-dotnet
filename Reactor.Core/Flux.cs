@@ -67,14 +67,29 @@ namespace Reactor.Core
 
         public static IFlux<R> CombineLatest<T, R>(Func<T[], R> combiner, int prefetch, bool delayError = false, params IPublisher<T>[] sources)
         {
-            // TODO implement CombineLatest
-            throw new NotImplementedException();
+            return new PublisherCombineLatest<T, R>(sources, null, prefetch, delayError, combiner);
         }
 
         public static IFlux<R> CombineLatest<T1, T2, R>(IPublisher<T1> p1, IPublisher<T2> p2, Func<T1, T2, R> combiner, bool delayError = false)
         {
-            // TODO implement CombineLatest
-            throw new NotImplementedException();
+            return CombineLatest<object, R>(a =>
+                {
+                    return combiner((T1)a[0], (T2)a[1]);
+                }, 
+                BufferSize, delayError, 
+                Box(p1), Box(p2)
+            );
+        }
+
+        /// <summary>
+        /// Boxes or casts a value to object.
+        /// </summary>
+        /// <typeparam name="T">The input value type</typeparam>
+        /// <param name="source">The source IPublisher</param>
+        /// <returns>The IFlux instance.</returns>
+        static IFlux<object> Box<T>(IPublisher<T> source)
+        {
+            return new PublisherMap<T, object>(source, v => (object)v);
         }
 
         public static IFlux<R> CombineLatest<T1, T2, T3, R>(
@@ -82,8 +97,13 @@ namespace Reactor.Core
             IPublisher<T3> p3,
             Func<T1, T2, T3, R> combiner, bool delayError = false)
         {
-            // TODO implement CombineLatest
-            throw new NotImplementedException();
+            return CombineLatest<object, R>(a =>
+            {
+                return combiner((T1)a[0], (T2)a[1], (T3)a[2]);
+            },
+                BufferSize, delayError,
+                Box(p1), Box(p2), Box(p3)
+            );
         }
 
         public static IFlux<R> CombineLatest<T1, T2, T3, T4, R>(
@@ -91,8 +111,13 @@ namespace Reactor.Core
             IPublisher<T3> p3, IPublisher<T4> p4,
             Func<T1, T2, T3, T4, R> combiner, bool delayError = false)
         {
-            // TODO implement CombineLatest
-            throw new NotImplementedException();
+            return CombineLatest<object, R>(a =>
+            {
+                return combiner((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3]);
+            },
+                BufferSize, delayError,
+                Box(p1), Box(p2), Box(p3), Box(p4)
+            );
         }
 
         public static IFlux<R> CombineLatest<T1, T2, T3, T4, T5, R>(
@@ -101,8 +126,13 @@ namespace Reactor.Core
             IPublisher<T5> p5,
             Func<T1, T2, T3, T4, T5, R> combiner, bool delayError = false)
         {
-            // TODO implement CombineLatest
-            throw new NotImplementedException();
+            return CombineLatest<object, R>(a =>
+            {
+                return combiner((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3], (T5)a[4]);
+            },
+                BufferSize, delayError,
+                Box(p1), Box(p2), Box(p3), Box(p4), Box(p5)
+            );
         }
 
         public static IFlux<R> CombineLatest<T1, T2, T3, T4, T5, T6, R>(
@@ -111,8 +141,13 @@ namespace Reactor.Core
             IPublisher<T5> p5, IPublisher<T6> p6,
             Func<T1, T2, T3, T4, T5, T6, R> combiner, bool delayError = false)
         {
-            // TODO implement CombineLatest
-            throw new NotImplementedException();
+            return CombineLatest<object, R>(a =>
+            {
+                return combiner((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3], (T5)a[4], (T6)a[5]);
+            },
+                BufferSize, delayError,
+                Box(p1), Box(p2), Box(p3), Box(p4), Box(p5), Box(p6)
+            );
         }
 
         public static IFlux<R> CombineLatest<T, R>(IEnumerable<IPublisher<T>> sources, Func<T[], R> combiner, bool delayError = false)
@@ -122,8 +157,7 @@ namespace Reactor.Core
 
         public static IFlux<R> CombineLatest<T, R>(IEnumerable<IPublisher<T>> sources, Func<T[], R> combiner, int prefetch, bool delayError = false)
         {
-            // TODO implement CombineLatest
-            throw new NotImplementedException();
+            return new PublisherCombineLatest<T, R>(null, sources, prefetch, delayError, combiner);
         }
 
         public static IFlux<T> Concat<T>(IEnumerable<IPublisher<T>> sources, bool delayError = false)
@@ -189,14 +223,12 @@ namespace Reactor.Core
 
         public static IFlux<T> FirstEmitting<T>(params IPublisher<T>[] sources)
         {
-            // TODO implement FirstEmitting
-            throw new NotImplementedException();
+            return new PublisherAmb<T>(sources, null);
         }
 
         public static IFlux<T> FirstEmitting<T>(IEnumerable<IPublisher<T>> sources)
         {
-            // TODO implement FirstEmitting
-            throw new NotImplementedException();
+            return new PublisherAmb<T>(null, sources);
         }
 
         /// <summary>
@@ -440,8 +472,13 @@ namespace Reactor.Core
 
         public static IFlux<R> Zip<T1, T2, R>(IPublisher<T1> p1, IPublisher<T2> p2, Func<T1, T2, R> zipper, int prefetch, bool delayErrors = false)
         {
-            // TODO implement Using
-            throw new NotImplementedException();
+            return Zip<object, R>(a =>
+            {
+                return zipper((T1)a[0], (T2)a[1]);
+            },
+                BufferSize, delayErrors,
+                Box(p1), Box(p2)
+            );
         }
 
         public static IFlux<R> Zip<T1, T2, T3, R>(
@@ -458,8 +495,13 @@ namespace Reactor.Core
             Func<T1, T2, T3, R> zipper,
             int prefetch, bool delayErrors = false)
         {
-            // TODO implement Using
-            throw new NotImplementedException();
+            return Zip<object, R>(a =>
+            {
+                return zipper((T1)a[0], (T2)a[1], (T3)a[2]);
+            },
+                BufferSize, delayErrors,
+                Box(p1), Box(p2), Box(p3)
+            );
         }
 
         public static IFlux<R> Zip<T1, T2, T3, T4, R>(
@@ -476,8 +518,13 @@ namespace Reactor.Core
             Func<T1, T2, T3, T4, R> zipper,
             int prefetch, bool delayErrors = false)
         {
-            // TODO implement Using
-            throw new NotImplementedException();
+            return Zip<object, R>(a =>
+            {
+                return zipper((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3]);
+            },
+                BufferSize, delayErrors,
+                Box(p1), Box(p2), Box(p3), Box(p4)
+            );
         }
 
         public static IFlux<R> Zip<T1, T2, T3, T4, T5, R>(
@@ -496,8 +543,13 @@ namespace Reactor.Core
             Func<T1, T2, T3, T4, T5, R> zipper,
             int prefetch, bool delayErrors = false)
         {
-            // TODO implement Using
-            throw new NotImplementedException();
+            return Zip<object, R>(a =>
+            {
+                return zipper((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3], (T5)a[4]);
+            },
+                BufferSize, delayErrors,
+                Box(p1), Box(p2), Box(p3), Box(p4), Box(p5)
+            );
         }
 
         public static IFlux<R> Zip<T1, T2, T3, T4, T5, T6, R>(
@@ -516,8 +568,13 @@ namespace Reactor.Core
             Func<T1, T2, T3, T4, T5, T6, R> zipper,
             int prefetch, bool delayErrors = false)
         {
-            // TODO implement Using
-            throw new NotImplementedException();
+            return Zip<object, R>(a =>
+            {
+                return zipper((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3], (T5)a[4], (T6)a[5]);
+            },
+                BufferSize, delayErrors,
+                Box(p1), Box(p2), Box(p3), Box(p4), Box(p5), Box(p6)
+            );
         }
 
         // ---------------------------------------------------------------------------------------------------------

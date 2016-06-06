@@ -39,7 +39,7 @@ namespace Reactor.Core.util
         /// cap the sum at long.MaxValue.
         /// </summary>
         /// <param name="requested">The target requested field</param>
-        /// <param name="n">The request amount.</param>
+        /// <param name="n">The request amount. Not validated</param>
         /// <returns>The previous value of the requested field</returns>
         public static long GetAndAddCap(ref long requested, long n)
         {
@@ -126,7 +126,7 @@ namespace Reactor.Core.util
         /// </summary>
         /// <param name="current">The current ISubscription field</param>
         /// <param name="requested">The requested amount field</param>
-        /// <param name="n">The requested amount to request directly or accumulate until the current field is not null.</param>
+        /// <param name="n">The requested amount to request directly or accumulate until the current field is not null. Validated</param>
         public static void DeferredRequest(ref ISubscription current, ref long requested, long n)
         {
             var a = Volatile.Read(ref current);
@@ -136,14 +136,17 @@ namespace Reactor.Core.util
             }
             else
             {
-                GetAndAddCap(ref requested, n);
-                a = Volatile.Read(ref current);
-                if (a != null)
+                if (SubscriptionHelper.Validate(n))
                 {
-                    long r = Interlocked.Exchange(ref requested, 0L);
-                    if (r != 0L)
+                    GetAndAddCap(ref requested, n);
+                    a = Volatile.Read(ref current);
+                    if (a != null)
                     {
-                        a.Request(r);
+                        long r = Interlocked.Exchange(ref requested, 0L);
+                        if (r != 0L)
+                        {
+                            a.Request(r);
+                        }
                     }
                 }
             }
