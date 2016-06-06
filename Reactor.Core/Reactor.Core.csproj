@@ -64,6 +64,7 @@
     <Compile Include="publisher\PublisherAction.cs" />
     <Compile Include="publisher\PublisherAsObservable.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
+    <Compile Include="publisher\PublisherCombineLatest.cs" />
     <Compile Include="publisher\PublisherCount.cs" />
     <Compile Include="publisher\PublisherDistinctUntilChanged.cs" />
     <Compile Include="publisher\PublisherDistinct.cs" />
@@ -114,12 +115,14 @@
     <Compile Include="Timed.cs" />
     <Compile Include="util\BackpressureHelper.cs" />
     <Compile Include="util\DisposableHelper.cs" />
+    <Compile Include="util\FalseSharing.cs" />
     <Compile Include="util\IndexedMultipleDisposable.cs" />
     <Compile Include="util\MultipleDisposable.cs" />
     <Compile Include="util\QueueDrainHelper.cs" />
     <Compile Include="util\QueueHelper.cs" />
     <Compile Include="util\SpscArrayQueue.cs" />
     <Compile Include="util\SpscLinkedArrayQueue.cs" />
+    <Compile Include="util\SpscOneQueue.cs" />
     <Compile Include="Void.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

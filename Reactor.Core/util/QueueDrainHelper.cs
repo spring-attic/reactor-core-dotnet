@@ -50,7 +50,7 @@ namespace Reactor.Core.util
         }
 
         public static bool CheckTerminated<T, U>(ref bool cancelled, ref bool done, ref Exception error, 
-            ISubscriber<T> actual, IQueue<U> queue, ISubscription s)
+            ISubscriber<T> actual, IQueue<U> queue, ISubscription s, IDisposable d)
         {
             if (Volatile.Read(ref cancelled))
             {
@@ -66,6 +66,8 @@ namespace Reactor.Core.util
                     ex = ExceptionHelper.Terminate(ref error);
                     queue.Clear();
                     actual.OnError(ex);
+
+                    d?.Dispose();
                     return true;
                 }
                 else
@@ -87,12 +89,16 @@ namespace Reactor.Core.util
                         exc = ExceptionHelper.Terminate(ref error);
 
                         actual.OnError(exc);
+
+                        d?.Dispose();
                         return true;
                     }
 
                     if (empty)
                     {
                         actual.OnComplete();
+
+                        d?.Dispose();
                         return true;
                     }
                 }
@@ -101,7 +107,7 @@ namespace Reactor.Core.util
         }
 
         public static bool CheckTerminatedDelayed<T, U>(ref bool cancelled, ref bool done, ref Exception error, 
-            ISubscriber<T> actual, IQueue<U> queue, ISubscription s)
+            ISubscriber<T> actual, IQueue<U> queue, ISubscription s, IDisposable d)
         {
             if (Volatile.Read(ref cancelled))
             {
@@ -128,6 +134,8 @@ namespace Reactor.Core.util
                     exc = ExceptionHelper.Terminate(ref error);
 
                     actual.OnError(exc);
+
+                    d?.Dispose();
                     return true;
                 }
 
@@ -143,11 +151,36 @@ namespace Reactor.Core.util
                     {
                         actual.OnComplete();
                     }
+
+                    d?.Dispose();
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Constructs a queue based on the prefetch value.
+        /// </summary>
+        /// <typeparam name="T">The queue element type</typeparam>
+        /// <param name="capacityHint">If negative, an SpscLinkedArrayQueue is created with
+        /// capacity hint as the absolute of capacityHint,
+        /// if one, an SpscOneQueue is created. Otherwise, an SpscArrayQueue is created with
+        /// the capacityHint.</param>
+        /// <returns></returns>
+        public static IQueue<T> CreateQueue<T>(int capacityHint)
+        {
+            if (capacityHint < 0)
+            {
+                return new SpscLinkedArrayQueue<T>(-capacityHint);
+            }
+            else
+            if (capacityHint == 1)
+            {
+                return new SpscOneQueue<T>();
+            }
+            return new SpscArrayQueue<T>(capacityHint);
         }
 
     }
