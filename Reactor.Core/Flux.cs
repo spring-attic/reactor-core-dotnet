@@ -1819,7 +1819,7 @@ namespace Reactor.Core
         /// <param name="source">The source</param>
         /// <returns>The value produced</returns>
         /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
-        public static T BlockFirst<T>(this IMono<T> source)
+        public static T BlockFirst<T>(this IFlux<T> source)
         {
             var s = new BlockingFirstSubscriber<T>();
             source.Subscribe(s);
@@ -1836,7 +1836,7 @@ namespace Reactor.Core
         /// <returns>The value produced</returns>
         /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
         /// <exception cref="TimeoutException">If the source didn't produce any value within the given timeout.</exception>
-        public static T BlockFirst<T>(this IMono<T> source, TimeSpan timeout)
+        public static T BlockFirst<T>(this IFlux<T> source, TimeSpan timeout)
         {
             var s = new BlockingFirstSubscriber<T>();
             source.Subscribe(s);
@@ -1851,7 +1851,7 @@ namespace Reactor.Core
         /// <param name="source">The source</param>
         /// <returns>The value produced</returns>
         /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
-        public static T BlockLast<T>(this IMono<T> source)
+        public static T BlockLast<T>(this IFlux<T> source)
         {
             var s = new BlockingLastSubscriber<T>();
             source.Subscribe(s);
@@ -1868,7 +1868,7 @@ namespace Reactor.Core
         /// <returns>The value produced</returns>
         /// <exception cref="IndexOutOfRangeException">If the source is empty.</exception>
         /// <exception cref="TimeoutException">If the source didn't produce any value within the given timeout.</exception>
-        public static T BlockLast<T>(this IMono<T> source, TimeSpan timeout)
+        public static T BlockLast<T>(this IFlux<T> source, TimeSpan timeout)
         {
             var s = new BlockingLastSubscriber<T>();
             source.Subscribe(s);
