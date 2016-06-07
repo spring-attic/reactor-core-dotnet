@@ -889,5 +889,26 @@ namespace Reactor.Core
             return s.Task(ct);
         }
 
+        /// <summary>
+        /// Creates a TestSubscriber with the given initial settings and returns it.
+        /// </summary>
+        /// <typeparam name="T">The value type received.</typeparam>
+        /// <param name="source">The source IMono</param>
+        /// <param name="initialRequest">The optional initial request amount.</param>
+        /// <param name="fusionMode">The optional fusion mode if supported by the source.</param>
+        /// <param name="cancelled">Optionally start out as cancelled.</param>
+        /// <returns></returns>
+        public static TestSubscriber<T> Test<T>(this IMono<T> source, long initialRequest = long.MaxValue, int fusionMode = 0, bool cancelled = false)
+        {
+            TestSubscriber<T> ts = new TestSubscriber<T>(initialRequest, fusionMode);
+            if (cancelled)
+            {
+                ts.Cancel();
+            }
+
+            source.Subscribe(ts);
+
+            return ts;
+        }
     }
 }

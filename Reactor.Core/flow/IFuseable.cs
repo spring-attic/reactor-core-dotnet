@@ -56,5 +56,32 @@ namespace Reactor.Core.flow
         {
             throw new InvalidOperationException("IQueueSubscription.Offer mustn't be called.");
         }
+
+        /// <summary>
+        /// Convert the mode flags into a string.
+        /// </summary>
+        /// <param name="mode">The mode flags.</param>
+        /// <returns>The string representing the mode flags.</returns>
+        public static string ToString(int mode)
+        {
+            string result = "";
+            if (mode == 0)
+            {
+                return "NONE";
+            }
+            if ((mode & SYNC) != 0)
+            {
+                result += "SYNC | ";
+            }
+            if ((mode & ASYNC) != 0)
+            {
+                result += "ASYNC | ";
+            }
+            if ((mode & BOUNDARY) != 0)
+            {
+                result += "ASYNC | ";
+            }
+            return result.Substring(0, result.Length - 3);
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace Reactor.Core
     /// An IFlux-typed <see cref="IProcessor{T}"/>.
     /// </summary>
     /// <typeparam name="T">The input and output value type.</typeparam>
-    public interface IFluxProcessor<T> : IFlux<T>, IProcessor<T>
+    public interface IFluxProcessor<T> : IFluxProcessor<T, T>, IProcessor<T>
     {
     }
 

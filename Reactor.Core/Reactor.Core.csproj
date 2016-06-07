@@ -40,6 +40,7 @@
   <ItemGroup>
     <Compile Include="BackpressureHandling.cs" />
     <Compile Include="ConcatErrorMode.cs" />
+    <Compile Include="DirectProcessor.cs" />
     <Compile Include="IConnectableFlux.cs" />
     <Compile Include="flow\ICallable.cs" />
     <Compile Include="flow\IConditionalSubscriber.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="subscriber\BasicConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableSubscriber.cs" />
+    <Compile Include="subscriber\TestSubscriber.cs" />
     <Compile Include="subscription\BasicRejectingSubscription.cs" />
     <Compile Include="subscriber\BasicSubscriber.cs" />
     <Compile Include="subscriber\BlockingFirstSubscriber.cs" />

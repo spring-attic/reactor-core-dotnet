@@ -1608,8 +1608,7 @@ namespace Reactor.Core
 
         public static IFlux<T> ToFlux<T>(this IObservable<T> source, BackpressureHandling backpressure = BackpressureHandling.Error)
         {
-            // TODO implement ToFlux
-            throw new NotImplementedException();
+            return From(source, backpressure);
         }
 
         /// <summary>
@@ -2045,6 +2044,28 @@ namespace Reactor.Core
             var s = new TaskCompleteSubscriber<T>();
             source.Subscribe(s);
             return s.Task(ct);
+        }
+
+        /// <summary>
+        /// Creates a TestSubscriber with the given initial settings and returns it.
+        /// </summary>
+        /// <typeparam name="T">The value type received.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <param name="initialRequest">The optional initial request amount.</param>
+        /// <param name="fusionMode">The optional fusion mode if supported by the source.</param>
+        /// <param name="cancelled">Optionally start out as cancelled.</param>
+        /// <returns></returns>
+        public static TestSubscriber<T> Test<T>(this IFlux<T> source, long initialRequest = long.MaxValue, int fusionMode = 0, bool cancelled = false)
+        {
+            TestSubscriber<T> ts = new TestSubscriber<T>(initialRequest, fusionMode);
+            if (cancelled)
+            {
+                ts.Cancel();
+            }
+
+            source.Subscribe(ts);
+
+            return ts;
         }
     }
 }
