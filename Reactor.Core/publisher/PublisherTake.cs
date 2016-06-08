@@ -235,11 +235,22 @@ namespace Reactor.Core.publisher
                 long r = remaining;
                 if (r == 0)
                 {
+                    if (fusionMode == FuseableHelper.ASYNC && !done)
+                    {
+                        done = true;
+                        qs.Cancel();
+                        actual.OnComplete();
+                    }
                     value = default(T);
                     return false;
                 }
                 remaining = r - 1;
                 return qs.Poll(out value);
+            }
+
+            public override bool IsEmpty()
+            {
+                return remaining == 0 || qs.IsEmpty();
             }
         }
     }

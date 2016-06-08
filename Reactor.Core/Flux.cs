@@ -1225,8 +1225,7 @@ namespace Reactor.Core
 
         public static IFlux<T> PublishOn<T>(this IFlux<T> source, Scheduler scheduler, int prefetch, bool delayError = true)
         {
-            // TODO implement PublishOn
-            throw new NotImplementedException();
+            return new PublisherPublishOn<T>(source, scheduler, delayError, prefetch);
         }
 
         public static IFlux<T> Reduce<T>(this IFlux<T> source, Func<T, T, T> reducer)

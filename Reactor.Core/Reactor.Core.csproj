@@ -101,6 +101,7 @@
     <Compile Include="Scheduler.cs" />
     <Compile Include="scheduler\DefaultScheduler.cs" />
     <Compile Include="ISignalEmitter.cs" />
+    <Compile Include="scheduler\ImmediateScheduler.cs" />
     <Compile Include="subscriber\BasicConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableSubscriber.cs" />

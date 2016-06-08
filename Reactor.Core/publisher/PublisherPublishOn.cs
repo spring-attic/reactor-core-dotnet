@@ -529,8 +529,6 @@ namespace Reactor.Core.publisher
                         }
                     }
 
-                    bool d = Volatile.Read(ref done);
-
                     bool empty;
 
                     try
@@ -557,7 +555,7 @@ namespace Reactor.Core.publisher
                         a.OnNext(default(T));
                     }
 
-                    if (d && empty)
+                    if (Volatile.Read(ref done))
                     {
                         Exception ex = Volatile.Read(ref error);
                         if (ex != null)

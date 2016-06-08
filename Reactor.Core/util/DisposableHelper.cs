@@ -21,6 +21,11 @@ namespace Reactor.Core.util
         private static readonly IDisposable DISPOSED = new Disposed();
 
         /// <summary>
+        /// The Disposed instance.
+        /// </summary>
+        internal static IDisposable Disposed { get { return DISPOSED; } }
+
+        /// <summary>
         /// Check if the given IDisposable is the disposed instance.
         /// </summary>
         /// <param name="d">The IDisposable to check.</param>
