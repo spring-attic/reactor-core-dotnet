@@ -1,14 +1,14 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Reactor.Core.flow;
 using Reactor.Core.scheduler;
+using NUnit.Framework;
 
 namespace Reactor.Core.Test
 {
-    [TestClass]
+    [TestFixture]
     public class TakeTest
     {
-        [TestMethod]
+        [Test]
         public void Take_Fused_Exact_Boundary_Backpressure()
         {
 
@@ -20,13 +20,13 @@ namespace Reactor.Core.Test
             ts.AssertResult(1);
         }
 
-        [TestMethod]
+        [Test]
         public void Take_Normal()
         {
             Flux.Range(1, 10).Take(5).Test().AssertResult(1, 2, 3, 4, 5);
         }
 
-        [TestMethod]
+        [Test]
         public void Take_Normal_Backpressured()
         {
             var ts = Flux.Range(1, 10).Take(5).Test(0L);

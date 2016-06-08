@@ -1,13 +1,13 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using NUnit.Framework;
+using System;
 
 namespace Reactor.Core.Test
 {
-    [TestClass]
+    [TestFixture]
     public class JustTest
     {
-        [TestMethod]
-        public void Normal()
+        [Test]
+        public void Just_Normal()
         {
             Assert.AreEqual(1, Flux.Just(1).BlockLast());
         }

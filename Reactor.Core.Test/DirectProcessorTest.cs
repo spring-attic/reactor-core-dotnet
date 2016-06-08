@@ -1,13 +1,13 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Reactor.Core.Test
 {
-    [TestClass]
+    [TestFixture]
     public class DirectProcessorTest
     {
-        [TestMethod]
-        public void Normal()
+        [Test]
+        public void DirectProcessor_Normal()
         {
             DirectProcessor<int> dp = new DirectProcessor<int>();
 
