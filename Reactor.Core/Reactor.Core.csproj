@@ -99,6 +99,7 @@
     <Compile Include="publisher\PublisherWrap.cs" />
     <Compile Include="IReactiveStreams.cs" />
     <Compile Include="ExceptionHelper.cs" />
+    <Compile Include="publisher\PublisherZipEnumerable.cs" />
     <Compile Include="Scheduler.cs" />
     <Compile Include="scheduler\DefaultScheduler.cs" />
     <Compile Include="ISignalEmitter.cs" />

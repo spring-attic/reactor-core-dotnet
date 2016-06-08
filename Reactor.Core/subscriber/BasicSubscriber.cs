@@ -12,6 +12,12 @@ using Reactor.Core.subscription;
 
 namespace Reactor.Core.subscriber
 {
+    /// <summary>
+    /// Base class for subscribers with an actual ISubscriber, a done flag and
+    /// a sequentially set ISubscription.
+    /// </summary>
+    /// <typeparam name="T">The input value type</typeparam>
+    /// <typeparam name="U">The output value type</typeparam>
     internal abstract class BasicSubscriber<T, U> : ISubscriber<T>, ISubscription
     {
         /// <summary>

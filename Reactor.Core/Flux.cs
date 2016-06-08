@@ -1784,26 +1784,13 @@ namespace Reactor.Core
 
         public static IFlux<Tuple<T, U>> ZipWith<T, U>(this IFlux<T> source, IEnumerable<U> other)
         {
-            return ZipWith(source, other, BufferSize);
-        }
-
-        public static IFlux<Tuple<T, U>> ZipWith<T, U>(this IFlux<T> source, IEnumerable<U> other, int prefetch)
-        {
-            // TODO implement ZipWith
-            throw new NotImplementedException();
+            return ZipWith(source, other, (a, b) => new Tuple<T, U>(a, b));
         }
 
         public static IFlux<R> ZipWith<T, U, R>(this IFlux<T> source, IEnumerable<U> other, Func<T, U, R> zipper)
         {
-            return ZipWith<T, U, R>(source, other, zipper, BufferSize);
+            return new PublisherZipEnumerable<T, U, R>(source, other, zipper);
         }
-
-        public static IFlux<R> ZipWith<T, U, R>(this IFlux<T> source, IEnumerable<U> other, Func<T, U, R> zipper, int prefetch)
-        {
-            // TODO implement ZipWith
-            throw new NotImplementedException();
-        }
-
 
         // ---------------------------------------------------------------------------------------------------------
         // Leave the reactive world
