@@ -129,8 +129,22 @@ namespace Reactor.Core.publisher
                     value = default(T);
                     return false;
                 }
-                remaining = r - 1;
-                return qs.Poll(out value);
+                if (qs.Poll(out value))
+                {
+                    remaining = --r;
+                    if (r == 0)
+                    {
+                        if (fusionMode == FuseableHelper.ASYNC && !done)
+                        {
+                            done = true;
+                            qs.Cancel();
+                            actual.OnComplete();
+                        }
+                    }
+
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -252,8 +266,22 @@ namespace Reactor.Core.publisher
                     value = default(T);
                     return false;
                 }
-                remaining = r - 1;
-                return qs.Poll(out value);
+                if (qs.Poll(out value))
+                {
+                    remaining = --r;
+                    if (r == 0)
+                    {
+                        if (fusionMode == FuseableHelper.ASYNC && !done)
+                        {
+                            done = true;
+                            qs.Cancel();
+                            actual.OnComplete();
+                        }
+                    }
+
+                    return true;
+                }
+                return false;
             }
 
             public override bool IsEmpty()
