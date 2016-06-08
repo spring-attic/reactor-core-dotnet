@@ -87,6 +87,7 @@ namespace Reactor.Core.publisher
                     Complete();
                     return;
                 }
+                remaining = r;
             }
 
             public override int RequestFusion(int mode)
@@ -119,6 +120,12 @@ namespace Reactor.Core.publisher
                 long r = remaining;
                 if (r == 0)
                 {
+                    if (fusionMode == FuseableHelper.ASYNC && !done)
+                    {
+                        done = true;
+                        qs.Cancel();
+                        actual.OnComplete();
+                    }
                     value = default(T);
                     return false;
                 }
@@ -176,6 +183,7 @@ namespace Reactor.Core.publisher
                     Complete();
                     return;
                 }
+                remaining = r;
             }
 
             public override bool TryOnNext(T t)

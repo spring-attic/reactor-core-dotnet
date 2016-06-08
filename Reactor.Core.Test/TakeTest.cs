@@ -19,5 +19,31 @@ namespace Reactor.Core.Test
 
             ts.AssertResult(1);
         }
+
+        [TestMethod]
+        public void Take_Normal()
+        {
+            Flux.Range(1, 10).Take(5).Test().AssertResult(1, 2, 3, 4, 5);
+        }
+
+        [TestMethod]
+        public void Take_Normal_Backpressured()
+        {
+            var ts = Flux.Range(1, 10).Take(5).Test(0L);
+
+            ts.AssertNoEvents();
+
+            ts.Request(1);
+
+            ts.AssertValues(1);
+
+            ts.Request(2);
+
+            ts.AssertValues(1, 2, 3);
+
+            ts.Request(2);
+
+            ts.AssertResult(1, 2, 3, 4, 5);
+        }
     }
 }
