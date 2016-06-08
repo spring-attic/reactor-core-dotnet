@@ -44,6 +44,7 @@ namespace Reactor.Core.publisher
 
             internal FilterSubscriber(ISubscriber<T> actual, Func<T, bool> predicate) : base(actual)
             {
+                this.predicate = predicate;
             }
 
             public override void OnComplete()
@@ -166,6 +167,7 @@ namespace Reactor.Core.publisher
 
             internal FilterConditionalSubscriber(IConditionalSubscriber<T> actual, Func<T, bool> predicate) : base(actual)
             {
+                this.predicate = predicate;
             }
 
             public override void OnComplete()

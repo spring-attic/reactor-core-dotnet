@@ -24,6 +24,7 @@ namespace Reactor.Core.publisher
 
         internal PublisherCollect(IPublisher<T> source, Func<C> collectionSupplier, Action<C, T> collector)
         {
+            this.source = source;
             this.collectionSupplier = collectionSupplier;
             this.collector = collector;
         }

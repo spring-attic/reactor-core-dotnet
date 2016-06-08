@@ -316,6 +316,7 @@ namespace Reactor.Core.scheduler
             }
 
             long c = count + 1;
+            count = c;
             long next = start + c * (long)period.TotalMilliseconds;
 
             long delay = next - scheduler.NowUtc;

@@ -41,7 +41,6 @@ namespace Reactor.Core.subscription
 
         int fusionState;
 
-        static readonly int NOT_FUSED = 0;
         static readonly int EMPTY = 1;
         static readonly int HAS_VALUE = 2;
         static readonly int COMPLETE = 3;
