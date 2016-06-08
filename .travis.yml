@@ -5,4 +5,5 @@ install:
   - nuget install NUnit.Runners -Version 3.2.1 -OutputDirectory testrunner
 script:
   - xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5" reactor-core-dotnet.sln
+  - ls -R ./testrunner
   - mono ./testrunner/NUnit.Runners.3.2.1/tools/nunit-console.exe ./Reactor.Core.Test/bin/Release/Reactor.Core.Test.dll
