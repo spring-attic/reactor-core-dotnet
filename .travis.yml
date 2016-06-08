@@ -6,4 +6,4 @@ install:
 script:
   - xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5" reactor-core-dotnet.sln
   - ls -R ./testrunner
-  - mono ./testrunner/NUnit.Runners.3.2.1/tools/nunit3-console.exe ./Reactor.Core.Test/bin/Release/Reactor.Core.Test.dll
+  - mono ./testrunner/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe ./Reactor.Core.Test/bin/Release/Reactor.Core.Test.dll
