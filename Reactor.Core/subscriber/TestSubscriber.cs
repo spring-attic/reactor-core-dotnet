@@ -64,6 +64,7 @@ namespace Reactor.Core.subscriber
         {
             this.requested = initialRequest;
             this.requestFusionMode = fusionMode;
+            this.lastTimestamp = DateTimeOffset.UtcNow.UtcMillis();
         }
 
         /// <inheritdoc/>

@@ -406,7 +406,7 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> Filter<T>(this IFlux<T> source, Func<T, bool> predicate)
+        public static IMono<T> Filter<T>(this IMono<T> source, Func<T, bool> predicate)
         {
             return new PublisherFilter<T>(source, predicate);
         }

@@ -2059,9 +2059,13 @@ namespace Reactor.Core
         /// <typeparam name="T">The input value type.</typeparam>
         /// <typeparam name="U">The output value type</typeparam>
         /// <param name="processor">The target processor instance.</param>
-        /// <param name="values">The values to signal.</param>
-        public static void OnNext<T, U>(this IProcessor<T, U> processor, params T[] values)
+        /// <param name="t1">The first value to signal.</param>
+        /// <param name="t2">The second value to signal.</param>
+        /// <param name="values">The rest of the values to signal.</param>
+        public static void OnNext<T, U>(this IProcessor<T, U> processor, T t1, T t2, params T[] values)
         {
+            processor.OnNext(t1);
+            processor.OnNext(t2);
             foreach (var t in values)
             {
                 processor.OnNext(t);

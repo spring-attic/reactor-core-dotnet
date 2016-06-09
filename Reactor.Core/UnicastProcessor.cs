@@ -38,7 +38,9 @@ namespace Reactor.Core
 
         long requested;
 
-        ISubscriber<T> actual;
+        ISubscriber<T> regular;
+
+        IConditionalSubscriber<T> conditional;
 
         int once;
 
@@ -46,12 +48,23 @@ namespace Reactor.Core
 
         bool outputFused;
 
+        /// <summary>
+        /// Construct a default UnicastProcessor with an optional termination action
+        /// and the default Flux.BufferSize queue.
+        /// </summary>
+        /// <param name="onTerminated">The optional termination action.</param>
         public UnicastProcessor(Action onTerminated = null)
         {
             this.queue = new SpscLinkedArrayQueue<T>(Flux.BufferSize);
             this.onTerminated = onTerminated;
         }
 
+        /// <summary>
+        /// Construct a default UnicastProcessor with an optional termination action
+        /// and the given capacity-hinted queue.
+        /// </summary>
+        /// <param name="capacityHint">The expected number of items getting buffered</param>
+        /// <param name="onTerminated">The optional termination action.</param>
         public UnicastProcessor(int capacityHint, Action onTerminated = null)
         {
             this.queue = new SpscLinkedArrayQueue<T>(capacityHint);
@@ -78,6 +91,7 @@ namespace Reactor.Core
             }
         }
 
+        /// <inheritdoc/>
         public void OnSubscribe(ISubscription s)
         {
             if (lvDone() || lvCancelled())
@@ -90,6 +104,7 @@ namespace Reactor.Core
             }
         }
 
+        /// <inheritdoc/>
         public void OnNext(T t)
         {
             if (lvDone() || lvCancelled())
@@ -101,6 +116,7 @@ namespace Reactor.Core
             Drain();
         }
 
+        /// <inheritdoc/>
         public void OnError(Exception e)
         {
             if (lvDone() || lvCancelled())
@@ -114,6 +130,7 @@ namespace Reactor.Core
             Drain();
         }
 
+        /// <inheritdoc/>
         public void OnComplete()
         {
             if (lvDone() || lvCancelled())
@@ -125,20 +142,36 @@ namespace Reactor.Core
             Drain();
         }
 
+        /// <inheritdoc/>
         public void Subscribe(ISubscriber<T> s)
         {
             if (Interlocked.CompareExchange(ref once, 1, 0) == 0)
             {
                 s.OnSubscribe(this);
 
-                Volatile.Write(ref actual, s);
-                if (lvCancelled())
+                if (s is IConditionalSubscriber<T>)
                 {
-                    actual = null;
+                    Volatile.Write(ref conditional, (IConditionalSubscriber<T>)s);
+                    if (lvCancelled())
+                    {
+                        conditional = null;
+                    }
+                    else
+                    {
+                        Drain();
+                    }
                 }
                 else
                 {
-                    Drain();
+                    Volatile.Write(ref regular, s);
+                    if (lvCancelled())
+                    {
+                        regular = null;
+                    }
+                    else
+                    {
+                        Drain();
+                    }
                 }
             }
             else
@@ -147,7 +180,7 @@ namespace Reactor.Core
             }
         }
 
-        void DrainFused(ISubscriber<T> a)
+        void DrainRegularFused(ISubscriber<T> a)
         {
             var q = queue;
             int missed = 1;
@@ -156,7 +189,7 @@ namespace Reactor.Core
             {
                 if (lvCancelled())
                 {
-                    actual = null;
+                    regular = null;
                     q.Clear();
                     return;
                 }
@@ -167,7 +200,7 @@ namespace Reactor.Core
 
                 if (d)
                 {
-                    actual = null;
+                    regular = null;
                     Exception ex = error;
                     if (ex != null)
                     {
@@ -203,7 +236,7 @@ namespace Reactor.Core
                 {
                     if (lvCancelled())
                     {
-                        actual = null;
+                        regular = null;
                         q.Clear();
                         return;
                     }
@@ -216,7 +249,7 @@ namespace Reactor.Core
 
                     if (d && empty)
                     {
-                        actual = null;
+                        regular = null;
                         Exception ex = error;
                         if (ex != null)
                         {
@@ -244,14 +277,146 @@ namespace Reactor.Core
                 {
                     if (lvCancelled())
                     {
-                        actual = null;
+                        regular = null;
                         q.Clear();
                         return;
                     }
 
                     if (lvDone() && q.IsEmpty())
                     {
-                        actual = null;
+                        regular = null;
+                        Exception ex = error;
+                        if (ex != null)
+                        {
+                            a.OnError(ex);
+                        }
+                        else
+                        {
+                            a.OnComplete();
+                        }
+
+                        return;
+                    }
+                }
+
+                if (e != 0 && r != long.MaxValue)
+                {
+                    Interlocked.Add(ref requested, -e);
+                }
+
+                missed = QueueDrainHelper.Leave(ref wip, missed);
+                if (missed == 0)
+                {
+                    break;
+                }
+            }
+        }
+
+        void DrainConditionalFused(IConditionalSubscriber<T> a)
+        {
+            var q = queue;
+            int missed = 1;
+
+            for (;;)
+            {
+                if (lvCancelled())
+                {
+                    conditional = null;
+                    q.Clear();
+                    return;
+                }
+
+                bool d = lvDone();
+
+                a.TryOnNext(default(T));
+
+                if (d)
+                {
+                    conditional = null;
+                    Exception ex = error;
+                    if (ex != null)
+                    {
+                        a.OnError(ex);
+                    }
+                    else
+                    {
+                        a.OnComplete();
+                    }
+
+                    return;
+                }
+
+                missed = QueueDrainHelper.Leave(ref wip, missed);
+                if (missed == 0)
+                {
+                    break;
+                }
+            }
+        }
+
+        void DrainConditional(IConditionalSubscriber<T> a)
+        {
+            var q = queue;
+            int missed = 1;
+
+            for (;;)
+            {
+                long r = Volatile.Read(ref requested);
+                long e = 0L;
+
+                while (e != r)
+                {
+                    if (lvCancelled())
+                    {
+                        conditional = null;
+                        q.Clear();
+                        return;
+                    }
+
+                    bool d = lvDone();
+
+                    T v;
+
+                    bool empty = !q.Poll(out v);
+
+                    if (d && empty)
+                    {
+                        conditional = null;
+                        Exception ex = error;
+                        if (ex != null)
+                        {
+                            a.OnError(ex);
+                        }
+                        else
+                        {
+                            a.OnComplete();
+                        }
+
+                        return;
+                    }
+
+                    if (empty)
+                    {
+                        break;
+                    }
+
+                    a.OnNext(v);
+
+                    e++;
+                }
+
+                if (e == r)
+                {
+                    if (lvCancelled())
+                    {
+                        conditional = null;
+                        q.Clear();
+                        return;
+                    }
+
+                    if (lvDone() && q.IsEmpty())
+                    {
+                        conditional = null;
                         Exception ex = error;
                         if (ex != null)
                         {
@@ -281,7 +446,7 @@ namespace Reactor.Core
 
         void Drain()
         {
-            var a = Volatile.Read(ref actual);
+            var a = Volatile.Read(ref regular);
 
             if (a != null)
             {
@@ -292,15 +457,35 @@ namespace Reactor.Core
 
                 if (outputFused)
                 {
-                    DrainFused(a);
+                    DrainRegularFused(a);
                 }
                 else
                 {
                     DrainRegular(a);
                 }
+            } else
+            {
+                var b = Volatile.Read(ref conditional);
+                if (b != null)
+                {
+                    if (!QueueDrainHelper.Enter(ref wip))
+                    {
+                        return;
+                    }
+
+                    if (outputFused)
+                    {
+                        DrainConditionalFused(b);
+                    }
+                    else
+                    {
+                        DrainConditional(b);
+                    }
+                }
             }
         }
 
+        /// <inheritdoc/>
         public void Request(long n)
         {
             if (SubscriptionHelper.Validate(n))
@@ -310,6 +495,7 @@ namespace Reactor.Core
             }
         }
 
+        /// <inheritdoc/>
         public void Cancel()
         {
             if (lvCancelled())
@@ -319,12 +505,12 @@ namespace Reactor.Core
             Volatile.Write(ref cancelled, true);
             if (QueueDrainHelper.Enter(ref wip))
             {
-                queue.Clear();
-                actual = null;
+                Clear();
                 return;
             }
         }
 
+        /// <inheritdoc/>
         public int RequestFusion(int mode)
         {
             int m = mode & FuseableHelper.ASYNC;
@@ -332,24 +518,29 @@ namespace Reactor.Core
             return m;
         }
 
+        /// <inheritdoc/>
         public bool Offer(T value)
         {
             return FuseableHelper.DontCallOffer();
         }
 
+        /// <inheritdoc/>
         public bool Poll(out T value)
         {
             return queue.Poll(out value);
         }
 
+        /// <inheritdoc/>
         public bool IsEmpty()
         {
             return queue.IsEmpty();
         }
 
+        /// <inheritdoc/>
         public void Clear()
         {
-            actual = null;
+            regular = null;
+            conditional = null;
             queue.Clear();
         }
     }

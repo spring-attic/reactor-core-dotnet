@@ -91,6 +91,10 @@ namespace Reactor.Core.publisher
                     return true;
                 }
 
+                if (b)
+                {
+                    actual.OnNext(t);
+                }
 
                 return b;
             }
@@ -214,7 +218,10 @@ namespace Reactor.Core.publisher
                     return true;
                 }
 
-
+                if (b)
+                {
+                    return actual.TryOnNext(t);
+                }
                 return b;
             }
 

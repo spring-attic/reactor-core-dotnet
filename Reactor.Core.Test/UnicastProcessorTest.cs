@@ -36,6 +36,19 @@ namespace Reactor.Core.Test
 
         }
 
+        [Test]
+        public void UnicastProcessor_Conditional_Offline()
+        {
+            var up = new UnicastProcessor<int>();
+            up.OnNext(1, 2, 3, 4, 5, 6);
+            up.OnComplete();
+
+            var ts = up.Filter(v => true).Test();
+
+            ts.AssertResult(1, 2, 3, 4, 5, 6);
+
+        }
+
 
         [Test]
         public void UnicastProcessor_Online_Scheduled()
