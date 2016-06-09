@@ -529,33 +529,11 @@ namespace Reactor.Core.publisher
                         }
                     }
 
-                    bool empty;
+                    bool d = Volatile.Read(ref done);
 
-                    try
-                    {
-                        empty = queue.IsEmpty();
-                    }
-                    catch (Exception ex)
-                    {
-                        ExceptionHelper.ThrowIfFatal(ex);
+                    a.OnNext(default(T));
 
-                        s.Cancel();
-
-                        ExceptionHelper.AddError(ref error, ex);
-                        ex = ExceptionHelper.Terminate(ref error);
-
-                        a.OnError(ex);
-
-                        worker.Dispose();
-                        return;
-                    }
-
-                    if (!empty)
-                    {
-                        a.OnNext(default(T));
-                    }
-
-                    if (Volatile.Read(ref done))
+                    if (d)
                     {
                         Exception ex = Volatile.Read(ref error);
                         if (ex != null)

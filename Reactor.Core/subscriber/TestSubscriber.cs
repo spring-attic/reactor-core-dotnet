@@ -131,13 +131,13 @@ namespace Reactor.Core.subscriber
                     {
                         values.Add(v);
                     }
-                    Volatile.Write(ref valueCount, values.Count);
-                    Volatile.Write(ref lastTimestamp, DateTimeOffset.UtcNow.UtcMillis());
                 }
                 catch (Exception ex)
                 {
                     errors.Add(ex);
                 }
+                Volatile.Write(ref valueCount, values.Count);
+                Volatile.Write(ref lastTimestamp, DateTimeOffset.UtcNow.UtcMillis());
                 return;
             }
 
