@@ -65,6 +65,7 @@
     <Compile Include="publisher\MonoPublishOn.cs" />
     <Compile Include="publisher\PublisherAction.cs" />
     <Compile Include="publisher\PublisherAmb.cs" />
+    <Compile Include="publisher\PublisherAsEnumerable.cs" />
     <Compile Include="publisher\PublisherAsObservable.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
     <Compile Include="publisher\PublisherCombineLatest.cs" />
@@ -125,6 +126,7 @@
     <Compile Include="subscription\SubscriptionArbiterStruct.cs" />
     <Compile Include="subscription\SubscriptionHelper.cs" />
     <Compile Include="Timed.cs" />
+    <Compile Include="UnicastProcessor.cs" />
     <Compile Include="util\BackpressureHelper.cs" />
     <Compile Include="util\DisposableHelper.cs" />
     <Compile Include="util\FalseSharing.cs" />

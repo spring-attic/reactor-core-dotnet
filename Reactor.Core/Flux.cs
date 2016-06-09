@@ -417,7 +417,7 @@ namespace Reactor.Core
             return SwitchOnNext<T>(sources, BufferSize);
         }
 
-        public static IFlux<T> SwitchOnNext<T>(IPublisher<IPublisher<T>> sources, int prefetch)
+        public static IFlux<T> SwitchOnNext<T>(this IPublisher<IPublisher<T>> sources, int prefetch)
         {
             // TODO implement SwitchOnNext
             throw new NotImplementedException();
@@ -1944,8 +1944,7 @@ namespace Reactor.Core
 
         public static IEnumerable<T> ToEnumerable<T>(this IFlux<T> source, int prefetch)
         {
-            // TODO implement ToEnumerable
-            throw new NotImplementedException();
+            return new PublisherAsEnumerable<T>(source, prefetch);
         }
 
         /// <summary>
@@ -2052,6 +2051,21 @@ namespace Reactor.Core
             source.Subscribe(ts);
 
             return ts;
+        }
+
+        /// <summary>
+        /// Convenience method to signal the given values to the IProcessor.
+        /// </summary>
+        /// <typeparam name="T">The input value type.</typeparam>
+        /// <typeparam name="U">The output value type</typeparam>
+        /// <param name="processor">The target processor instance.</param>
+        /// <param name="values">The values to signal.</param>
+        public static void OnNext<T, U>(this IProcessor<T, U> processor, params T[] values)
+        {
+            foreach (var t in values)
+            {
+                processor.OnNext(t);
+            }
         }
     }
 }

@@ -234,7 +234,7 @@ namespace Reactor.Core.publisher
 
                         try
                         {
-                            empty = q.Poll(out v);
+                            empty = !q.Poll(out v);
                         }
                         catch (Exception ex)
                         {
@@ -338,7 +338,7 @@ namespace Reactor.Core.publisher
 
                         try
                         {
-                            empty = q.Poll(out v);
+                            empty = !q.Poll(out v);
                         }
                         catch (Exception ex)
                         {
@@ -448,7 +448,7 @@ namespace Reactor.Core.publisher
 
                         try
                         {
-                            empty = q.Poll(out v);
+                            empty = !q.Poll(out v);
                         }
                         catch (Exception ex)
                         {
@@ -827,7 +827,7 @@ namespace Reactor.Core.publisher
 
                         try
                         {
-                            empty = q.Poll(out v);
+                            empty = !q.Poll(out v);
                         }
                         catch (Exception ex)
                         {
@@ -932,7 +932,7 @@ namespace Reactor.Core.publisher
 
                         try
                         {
-                            empty = q.Poll(out v);
+                            empty = !q.Poll(out v);
                         }
                         catch (Exception ex)
                         {
@@ -1043,7 +1043,7 @@ namespace Reactor.Core.publisher
 
                         try
                         {
-                            empty = q.Poll(out v);
+                            empty = !q.Poll(out v);
                         }
                         catch (Exception ex)
                         {

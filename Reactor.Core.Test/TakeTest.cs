@@ -45,5 +45,22 @@ namespace Reactor.Core.Test
 
             ts.AssertResult(1, 2, 3, 4, 5);
         }
+
+        [Test]
+        public void Take_Exact_Number_Sync_Fused()
+        {
+            Flux.Range(1, 5).Take(5).Test(fusionMode: FuseableHelper.SYNC)
+                .AssertResult(1, 2, 3, 4, 5);
+        }
+
+        [Test]
+        public void Take_Exact_Number_Async_Fused()
+        {
+            var up = new UnicastProcessor<int>();
+            up.OnNext(1, 2, 3, 4, 5);
+
+            up.Take(5).Test(fusionMode: FuseableHelper.ASYNC)
+                .AssertResult(1, 2, 3, 4, 5);
+        }
     }
 }

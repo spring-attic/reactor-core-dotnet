@@ -325,7 +325,7 @@ namespace Reactor.Core.publisher
                         bool d = Volatile.Read(ref complete) == n;
 
                         Entry v;
-                        bool empty = q.Poll(out v);
+                        bool empty = !q.Poll(out v);
 
                         if (d && empty)
                         {
@@ -447,7 +447,7 @@ namespace Reactor.Core.publisher
                         bool d = Volatile.Read(ref complete) == n;
 
                         Entry v;
-                        bool empty = q.Poll(out v);
+                        bool empty = !q.Poll(out v);
 
                         if (d && empty)
                         {
@@ -922,7 +922,7 @@ namespace Reactor.Core.publisher
                         bool d = Volatile.Read(ref complete) == n;
 
                         Entry v;
-                        bool empty = q.Poll(out v);
+                        bool empty = !q.Poll(out v);
 
                         if (d && empty)
                         {
@@ -1045,7 +1045,7 @@ namespace Reactor.Core.publisher
                         bool d = Volatile.Read(ref complete) == n;
 
                         Entry v;
-                        bool empty = q.Poll(out v);
+                        bool empty = !q.Poll(out v);
 
                         if (d && empty)
                         {

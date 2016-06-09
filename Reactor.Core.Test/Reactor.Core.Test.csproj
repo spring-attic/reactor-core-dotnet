@@ -57,8 +57,10 @@
   </Choose>
   <ItemGroup>
     <Compile Include="DirectProcessorTest.cs" />
+    <Compile Include="ToEnumerableTest.cs" />
     <Compile Include="JustTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UnicastProcessorTest.cs" />
     <Compile Include="ZipEnumerableTest.cs" />
     <Compile Include="TakeTest.cs" />
   </ItemGroup>
