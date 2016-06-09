@@ -52,7 +52,7 @@ namespace Reactor.Core.Test
             Assert.AreEqual(expected, list);
         }
 
-        [Test Timeout(5000)]
+        [Test, Timeout(5000)]
         public void ToEnumerable_Normal_Async_Fused_Online()
         {
             var up = new UnicastProcessor<int>();
@@ -84,7 +84,7 @@ namespace Reactor.Core.Test
             Assert.AreEqual(expected, list);
         }
 
-        [Test Timeout(5000)]
+        [Test, Timeout(5000)]
         public void ToEnumerable_Normal_Sync_Fused_Offline()
         {
             var up = new UnicastProcessor<int>();

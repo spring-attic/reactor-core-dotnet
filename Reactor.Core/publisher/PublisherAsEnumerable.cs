@@ -149,6 +149,7 @@ namespace Reactor.Core.publisher
                     ExceptionHelper.OnErrorDropped(e);
                     return;
                 }
+                error = e;
                 Volatile.Write(ref done, true);
                 Signal();
             }
