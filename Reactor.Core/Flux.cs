@@ -70,17 +70,6 @@ namespace Reactor.Core
             return new PublisherCombineLatest<T, R>(sources, null, prefetch, delayError, combiner);
         }
 
-        public static IFlux<R> CombineLatest<T1, T2, R>(IPublisher<T1> p1, IPublisher<T2> p2, Func<T1, T2, R> combiner, bool delayError = false)
-        {
-            return CombineLatest<object, R>(a =>
-                {
-                    return combiner((T1)a[0], (T2)a[1]);
-                }, 
-                BufferSize, delayError, 
-                Box(p1), Box(p2)
-            );
-        }
-
         /// <summary>
         /// Boxes or casts a value to object.
         /// </summary>
@@ -90,6 +79,17 @@ namespace Reactor.Core
         static IFlux<object> Box<T>(IPublisher<T> source)
         {
             return new PublisherMap<T, object>(source, v => (object)v);
+        }
+
+        public static IFlux<R> CombineLatest<T1, T2, R>(IPublisher<T1> p1, IPublisher<T2> p2, Func<T1, T2, R> combiner, bool delayError = false)
+        {
+            return CombineLatest<object, R>(a =>
+                {
+                    return combiner((T1)a[0], (T2)a[1]);
+                }, 
+                BufferSize, delayError, 
+                Box(p1), Box(p2)
+            );
         }
 
         public static IFlux<R> CombineLatest<T1, T2, T3, R>(
