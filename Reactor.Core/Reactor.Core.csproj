@@ -71,6 +71,7 @@
     <Compile Include="publisher\PublisherCombineLatest.cs" />
     <Compile Include="publisher\PublisherConcatEnumerable.cs" />
     <Compile Include="publisher\PublisherConcatArray.cs" />
+    <Compile Include="publisher\PublisherConcatMap.cs" />
     <Compile Include="publisher\PublisherCount.cs" />
     <Compile Include="publisher\PublisherCreate.cs" />
     <Compile Include="publisher\PublisherDistinctUntilChanged.cs" />

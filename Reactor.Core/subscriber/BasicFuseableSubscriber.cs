@@ -107,7 +107,7 @@ namespace Reactor.Core.subscriber
                 return;
             }
             done = true;
-            actual.OnComplete();
+            actual.OnError(ex);
         }
 
         /// <summary>

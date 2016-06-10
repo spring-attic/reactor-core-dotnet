@@ -139,6 +139,13 @@ namespace Reactor.Core
             OnErrorDropped(ex);
         }
 
+        /// <summary>
+        /// Atomically sets the given Exception on the target or combines the existing
+        /// Exception with the provided through an AggregateException.
+        /// </summary>
+        /// <param name="error">The target field.</param>
+        /// <param name="ex">The new exception to add</param>
+        /// <returns>True if successful, false if the target field already contained the terminated instance.</returns>
         public static bool AddError(ref Exception error, Exception ex)
         {
             var e = Volatile.Read(ref error);
@@ -152,7 +159,7 @@ namespace Reactor.Core
                 Exception u;
                 if (e == null)
                 {
-                    u = e;
+                    u = ex;
                 }
                 else
                 {
@@ -167,6 +174,12 @@ namespace Reactor.Core
             }
         }
 
+        /// <summary>
+        /// Atomically swaps in the terminated Exception instance if not already done
+        /// and returns the previous Exception the target field held.
+        /// </summary>
+        /// <param name="error">The target field</param>
+        /// <returns>The previous Exception instance or the terminated instance.</returns>
         public static Exception Terminate(ref Exception error)
         {
             var e = Volatile.Read(ref error);

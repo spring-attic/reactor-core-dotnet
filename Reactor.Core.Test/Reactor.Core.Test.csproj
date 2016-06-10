@@ -59,6 +59,7 @@
     <Compile Include="DirectProcessorTest.cs" />
     <Compile Include="FilterTest.cs" />
     <Compile Include="SkipTest.cs" />
+    <Compile Include="ConcatMapTest.cs" />
     <Compile Include="ToEnumerableTest.cs" />
     <Compile Include="JustTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

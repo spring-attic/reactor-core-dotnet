@@ -183,8 +183,7 @@ namespace Reactor.Core
 
         public static IFlux<T> Concat<T>(IPublisher<IPublisher<T>> sources, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
-            // TODO implement Concat
-            throw new NotImplementedException();
+            return new PublisherConcatMap<IPublisher<T>, T>(sources, v => v, prefetch, errorMode);
         }
 
         public static IFlux<T> Create<T>(Action<IFluxEmitter<T>> emitter, BackpressureHandling backpressure = BackpressureHandling.Error)
@@ -759,8 +758,7 @@ namespace Reactor.Core
 
         public static IFlux<R> ConcatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
-            // TODO implement ConcatMap
-            throw new NotImplementedException();
+            return new PublisherConcatMap<T, R>(source, mapper, prefetch, errorMode);
         }
 
         public static IFlux<T> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)

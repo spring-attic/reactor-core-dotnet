@@ -55,6 +55,26 @@ namespace Reactor.Core.subscriber
         long lastTimestamp;
 
         /// <summary>
+        /// The number of received OnNext values.
+        /// </summary>
+        public int ValueCount { get { return Volatile.Read(ref valueCount); } }
+
+        /// <summary>
+        /// The received OnNext values list.
+        /// </summary>
+        public IList<T> Values { get { return values; } }
+
+        /// <summary>
+        /// The received OnError exception list.
+        /// </summary>
+        public IList<Exception> Errors { get { return errors; } }
+
+        /// <summary>
+        /// The received OnComplete count.
+        /// </summary>
+        public int Completions { get { return completions; } }
+
+        /// <summary>
         /// Constructs a new TestSubscriber instance with an optional
         /// initial request amount.
         /// </summary>
@@ -65,6 +85,14 @@ namespace Reactor.Core.subscriber
             this.requested = initialRequest;
             this.requestFusionMode = fusionMode;
             this.lastTimestamp = DateTimeOffset.UtcNow.UtcMillis();
+        }
+
+        /// <summary>
+        /// Subscribe with the Empty Subscription instance.
+        /// </summary>
+        public void OnSubscribe()
+        {
+            OnSubscribe(EmptySubscription<T>.Instance);
         }
 
         /// <inheritdoc/>
@@ -234,6 +262,10 @@ namespace Reactor.Core.subscriber
             throw new InvalidOperationException(msg, new AggregateException(errors));
         }
 
+        /// <summary>
+        /// Assert that the upstream called OnSubscribe with an IQueueSubscription instance.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertFuseable()
         {
             if (qs == null)
@@ -243,6 +275,10 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Assert that no OnNext has been called.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertNoValues()
         {
             if (values.Count != 0)
@@ -252,6 +288,11 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Assert that OnNext has been called the specified number of times.
+        /// </summary>
+        /// <param name="n">The expected number of times OnNext has been called.</param>
+        /// <returns></returns>
         public TestSubscriber<T> AssertValueCount(int n)
         {
             if (values.Count != n)
@@ -273,6 +314,12 @@ namespace Reactor.Core.subscriber
                           ts.Select(x => x.ToString()).ToArray());
         }
 
+        /// <summary>
+        /// Assert that OnNext has been called with values in the order and in the numbers
+        /// the expected array contains them.
+        /// </summary>
+        /// <param name="expected">The array of expected values</param>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertValues(params T[] expected)
         {
             if (values.Count != expected.Length)
@@ -296,6 +343,10 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Assert that OnError has not been called.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertNoError()
         {
             if (errors.Count != 0)
@@ -305,6 +356,11 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Assert that OnError has been called once with the exact Exception instance.
+        /// </summary>
+        /// <param name="ex">The expected exception instance</param>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertError(Exception ex)
         {
             int c = errors.Count;
@@ -316,31 +372,29 @@ namespace Reactor.Core.subscriber
             {
                 AssertionError(string.Format("Error expected ({0}) but multiple errors received", ex));
             }
-            if (errors[0] != ex)
+            if (object.Equals(errors[0], ex))
             {
                 AssertionError(string.Format("Error expected ({0}) but different error received", ex));
             }
             return this;
         }
 
+        /// <summary>
+        /// Assert that there is exactly one Exception which is a of type E.
+        /// </summary>
+        /// <typeparam name="E">The expected exception type</typeparam>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertError<E>() where E : Exception
         {
-            int c = errors.Count;
-            if (c == 0)
-            {
-                AssertionError(string.Format("Error expected ({0}) but no errors received", typeof(E)));
-            }
-            if (c != 1)
-            {
-                AssertionError(string.Format("Error expected ({0}) but multiple errors received", typeof(E)));
-            }
-            if (!(errors[0] is E))
-            {
-                AssertionError(string.Format("Error expected ({0}) but different error received", typeof(E)));
-            }
-            return this;
+            return AssertError(e => e is E);
         }
 
+        /// <summary>
+        /// Assert that there is exactly on Exception and the given predicate returns
+        /// true of it.
+        /// </summary>
+        /// <param name="predicate">The predicate to run.</param>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertError(Func<Exception, bool> predicate)
         {
             int c = errors.Count;
@@ -359,6 +413,20 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Assert that there is exactly one Exception which has the specified error message.
+        /// </summary>
+        /// <param name="expectedMessage">The expected error message</param>
+        /// <returns>This</returns>
+        public TestSubscriber<T> AssertErrorMessage(string expectedMessage)
+        {
+            return AssertError(e => e.Message != null && e.Message.Equals(expectedMessage));
+        }
+
+        /// <summary>
+        /// Assert that there has been exactly one completion signal received.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertComplete()
         {
             int c = completions;
@@ -373,6 +441,10 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Asser tthat there has been no completion signal received.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertNotComplete()
         {
             int c = completions;
@@ -387,6 +459,11 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Assert that the given fusion mode has been established.
+        /// </summary>
+        /// <param name="mode">The expected fusion mode, <see cref="FuseableHelper"/> constants.</param>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertFusionMode(int mode)
         {
             if (establishedFusionMode != mode)
@@ -396,6 +473,10 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Waits for an OnError or OnComplete signal.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AwaitTerminalEvent()
         {
             try
@@ -410,6 +491,11 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Waits for an OnError or OnComplete signal for the given
+        /// </summary>
+        /// <param name="timeout">The time to wait</param>
+        /// <returns>This</returns>
         public TestSubscriber<T> AwaitTerminalEvent(TimeSpan timeout)
         {
             try
@@ -417,16 +503,22 @@ namespace Reactor.Core.subscriber
                 if (!cde.Wait(timeout))
                 {
                     Cancel();
+                    errors.Add(new TimeoutException("TestScheduler timed out"));
                 }
             }
             catch (Exception ex)
             {
-                ExceptionHelper.OnErrorDropped(ex);
+                ExceptionHelper.ThrowIfFatal(ex);
                 Cancel();
+                errors.Add(ex);
             }
             return this;
         }
 
+        /// <summary>
+        /// Assert that no OnNext, OnError and OnComplete was called.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertNoEvents()
         {
             return AssertNoValues()
@@ -434,6 +526,12 @@ namespace Reactor.Core.subscriber
                    .AssertNotComplete();
         }
 
+        /// <summary>
+        /// Assert that this TestSubscriber received the given OnNext values
+        /// followed by an OnComplete.
+        /// </summary>
+        /// <param name="expected">The array of expected values</param>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertResult(params T[] expected)
         {
             return AssertValues(expected)
@@ -441,6 +539,10 @@ namespace Reactor.Core.subscriber
                    .AssertComplete();
         }
 
+        /// <summary>
+        /// Assert that the upstream has called OnSubscribe with a proper ISubscription.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertSubscribed()
         {
             if (s == null)
@@ -450,6 +552,10 @@ namespace Reactor.Core.subscriber
             return this;
         }
 
+        /// <summary>
+        /// Assert that the upstream has not called OnSubscribe yet.
+        /// </summary>
+        /// <returns>This</returns>
         public TestSubscriber<T> AssertNotSubscribed()
         {
             if (s != null)
