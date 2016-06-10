@@ -57,6 +57,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="DirectProcessorTest.cs" />
+    <Compile Include="FlatMapTest.cs" />
     <Compile Include="FilterTest.cs" />
     <Compile Include="SkipTest.cs" />
     <Compile Include="ConcatMapTest.cs" />

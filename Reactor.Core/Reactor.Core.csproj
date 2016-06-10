@@ -67,6 +67,7 @@
     <Compile Include="publisher\PublisherAmb.cs" />
     <Compile Include="publisher\PublisherAsEnumerable.cs" />
     <Compile Include="publisher\PublisherAsObservable.cs" />
+    <Compile Include="publisher\PublisherCallableXMap.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
     <Compile Include="publisher\PublisherCombineLatest.cs" />
     <Compile Include="publisher\PublisherConcatEnumerable.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="publisher\PublisherEmpty.cs" />
     <Compile Include="publisher\PublisherError.cs" />
     <Compile Include="publisher\PublisherFilter.cs" />
+    <Compile Include="publisher\PublisherFlatMap.cs" />
     <Compile Include="publisher\PublisherFromObservable.cs" />
     <Compile Include="publisher\PublisherFromTask.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
@@ -137,6 +139,7 @@
     <Compile Include="util\QueueDrainHelper.cs" />
     <Compile Include="util\QueueHelper.cs" />
     <Compile Include="util\SpscArrayQueue.cs" />
+    <Compile Include="util\SpscFreelistTracker.cs" />
     <Compile Include="util\SpscLinkedArrayQueue.cs" />
     <Compile Include="util\SpscOneQueue.cs" />
     <Compile Include="Void.cs" />

@@ -347,26 +347,41 @@ namespace Reactor.Core
             return new PublisherInterval(initialDelay, period, scheduler);
         }
 
-        public static IFlux<T> Merge<T>(int maxConcurrency = int.MaxValue, bool delayErrors = false, params IPublisher<T>[] sources)
+        public static IFlux<T> Merge<T>(bool delayErrors = false, params IPublisher<T>[] sources)
+        {
+            return Merge(BufferSize, BufferSize, delayErrors, sources);
+        }
+
+        public static IFlux<T> Merge<T>(int maxConcurrency, bool delayErrors = false, params IPublisher<T>[] sources)
         {
             return Merge(BufferSize, maxConcurrency, delayErrors, sources);
         }
 
-        public static IFlux<T> Merge<T>(int prefetch, int maxConcurrency = int.MaxValue, bool delayErrors = false, params IPublisher<T>[] sources)
+        public static IFlux<T> Merge<T>(int maxConcurrency, int prefetch, bool delayErrors = false, params IPublisher<T>[] sources)
         {
             // TODO implement Merge
             throw new NotImplementedException();
         }
 
-        public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, int maxConcurrency = int.MaxValue, bool delayErrors = false)
+        public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, bool delayErrors = false)
+        {
+            return Merge(sources, BufferSize, BufferSize, delayErrors);
+        }
+
+        public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, int maxConcurrency, bool delayErrors = false)
         {
             return Merge(sources, BufferSize, maxConcurrency, delayErrors);
         }
 
-        public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, int prefetch, int maxConcurrency = int.MaxValue, bool delayErrors = false)
+        public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, int maxConcurrency, int prefetch, bool delayErrors = false)
         {
             // TODO implement Merge
             throw new NotImplementedException();
+        }
+
+        public static IFlux<T> Merge<T>(this IPublisher<IPublisher<T>> sources, bool delayErrors = false)
+        {
+            return Merge(sources, BufferSize, BufferSize, delayErrors);
         }
 
         public static IFlux<T> Merge<T>(this IPublisher<IPublisher<T>> sources, int maxConcurrency = int.MaxValue, bool delayErrors = false)
@@ -376,8 +391,7 @@ namespace Reactor.Core
 
         public static IFlux<T> Merge<T>(this IPublisher<IPublisher<T>> sources, int prefetch, int maxConcurrency = int.MaxValue, bool delayErrors = false)
         {
-            // TODO implement Merge
-            throw new NotImplementedException();
+            return new PublisherFlatMap<IPublisher<T>, T>(sources, v => v, delayErrors, maxConcurrency, prefetch);
         }
 
         /// <summary>
@@ -967,20 +981,19 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
-        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, bool delayError = false)
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, bool delayErrors = false)
         {
-            return FlatMap(source, mapper, BufferSize, BufferSize, delayError);
+            return FlatMap(source, mapper, BufferSize, BufferSize, delayErrors);
         }
 
-        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, bool delayError = false)
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, bool delayErrors = false)
         {
-            return FlatMap(source, mapper, maxConcurrency, BufferSize, delayError);
+            return FlatMap(source, mapper, maxConcurrency, BufferSize, delayErrors);
         }
 
-        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, int prefetch, bool delayError = false)
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, int prefetch, bool delayErrors = false)
         {
-            // TODO implement FlatMap
-            throw new NotImplementedException();
+            return new PublisherFlatMap<T, R>(source, mapper, delayErrors, maxConcurrency, prefetch);
         }
 
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapperOnNext, Func<Exception, IPublisher<R>> mapperOnError, Func<IPublisher<R>> mapperOnComplete)

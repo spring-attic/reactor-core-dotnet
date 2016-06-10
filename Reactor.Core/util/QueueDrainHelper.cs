@@ -183,5 +183,15 @@ namespace Reactor.Core.util
             return new SpscArrayQueue<T>(capacityHint);
         }
 
+        /// <summary>
+        /// Tries to enter the drain mode via a fast-path method.
+        /// </summary>
+        /// <param name="wip">The work-in-progress field to change</param>
+        /// <returns>True if successful</returns>
+        public static bool TryEnter(ref int wip)
+        {
+            return Volatile.Read(ref wip) == 0 && Interlocked.CompareExchange(ref wip, 1, 0) == 0;
+        }
+
     }
 }

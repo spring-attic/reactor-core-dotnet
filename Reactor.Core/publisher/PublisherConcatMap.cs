@@ -35,6 +35,11 @@ namespace Reactor.Core.publisher
 
         public void Subscribe(ISubscriber<R> s)
         {
+            if (PublisherCallableXMap<T, R>.CallableXMap(source, s, mapper))
+            {
+                return;
+            }
+
             if (errorMode == ConcatErrorMode.Immediate)
             {
                 if (s is IConditionalSubscriber<R>)
