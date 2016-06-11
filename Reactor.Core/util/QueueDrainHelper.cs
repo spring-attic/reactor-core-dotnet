@@ -49,6 +49,19 @@ namespace Reactor.Core.util
             }
         }
 
+        /// <summary>
+        /// Checks for a terminal condition and signals errors eagerly.
+        /// </summary>
+        /// <typeparam name="T">The input value type.</typeparam>
+        /// <typeparam name="U">The output value type.</typeparam>
+        /// <param name="cancelled">The cancelled field</param>
+        /// <param name="done">The done field</param>
+        /// <param name="error">The error field</param>
+        /// <param name="actual">The receivin ISubscriber</param>
+        /// <param name="queue">The queue to check for emptiness.</param>
+        /// <param name="s">The subscription to upstream</param>
+        /// <param name="d">The optional disposable.</param>
+        /// <returns>True if a terminal state has been reached</returns>
         public static bool CheckTerminated<T, U>(ref bool cancelled, ref bool done, ref Exception error, 
             ISubscriber<T> actual, IQueue<U> queue, ISubscription s, IDisposable d)
         {
@@ -106,6 +119,20 @@ namespace Reactor.Core.util
             return false;
         }
 
+        /// <summary>
+        /// Checks for a terminal condition and signals errors if the queue
+        /// is also empty.
+        /// </summary>
+        /// <typeparam name="T">The input value type.</typeparam>
+        /// <typeparam name="U">The output value type.</typeparam>
+        /// <param name="cancelled">The cancelled field</param>
+        /// <param name="done">The done field</param>
+        /// <param name="error">The error field</param>
+        /// <param name="actual">The receivin ISubscriber</param>
+        /// <param name="queue">The queue to check for emptiness.</param>
+        /// <param name="s">The subscription to upstream</param>
+        /// <param name="d">The optional disposable.</param>
+        /// <returns>True if a terminal state has been reached</returns>
         public static bool CheckTerminatedDelayed<T, U>(ref bool cancelled, ref bool done, ref Exception error, 
             ISubscriber<T> actual, IQueue<U> queue, ISubscription s, IDisposable d)
         {
@@ -192,6 +219,5 @@ namespace Reactor.Core.util
         {
             return Volatile.Read(ref wip) == 0 && Interlocked.CompareExchange(ref wip, 1, 0) == 0;
         }
-
     }
 }

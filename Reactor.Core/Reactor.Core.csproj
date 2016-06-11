@@ -98,7 +98,9 @@
     <Compile Include="publisher\PublisherPublishOn.cs" />
     <Compile Include="publisher\PublisherRange.cs" />
     <Compile Include="publisher\PublisherSkip.cs" />
+    <Compile Include="publisher\PublisherSwitchMap.cs" />
     <Compile Include="publisher\PublisherTake.cs" />
+    <Compile Include="publisher\PublisherUsing.cs" />
     <Compile Include="publisher\PublisherWrapFuseable.cs" />
     <Compile Include="publisher\PublisherWrap.cs" />
     <Compile Include="IReactiveStreams.cs" />

@@ -129,7 +129,7 @@ namespace Reactor.Core.publisher
 
                             actual.OnSubscribe(this);
 
-                            s.Request(prefetch);
+                            s.Request(prefetch < 0 ? long.MaxValue : prefetch);
 
                             return;
                         }
@@ -139,7 +139,7 @@ namespace Reactor.Core.publisher
 
                     actual.OnSubscribe(this);
 
-                    s.Request(prefetch);
+                    s.Request(prefetch < 0 ? long.MaxValue : prefetch);
                 }
             }
 

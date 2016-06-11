@@ -432,8 +432,7 @@ namespace Reactor.Core
 
         public static IFlux<T> SwitchOnNext<T>(this IPublisher<IPublisher<T>> sources, int prefetch)
         {
-            // TODO implement SwitchOnNext
-            throw new NotImplementedException();
+            return new PublisherSwitchMap<IPublisher<T>, T>(sources, v => v, prefetch);
         }
 
         public static IFlux<long> Timer(TimeSpan delay)
@@ -448,8 +447,7 @@ namespace Reactor.Core
 
         public static IFlux<T> Using<T, S>(Func<S> resourceSupplier, Func<S, IPublisher<T>> publisherFactory, Action<S> resourceDisposer, bool eager = true)
         {
-            // TODO implement Using
-            throw new NotImplementedException();
+            return new PublisherUsing<T, S>(resourceSupplier, publisherFactory, resourceDisposer, eager);
         }
 
         public static IFlux<R> Zip<T, R>(Func<T[], R> zipper, bool delayErrors = false, params IPublisher<T>[] sources)
@@ -1498,8 +1496,7 @@ namespace Reactor.Core
 
         public static IFlux<R> SwitchMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int prefetch)
         {
-            // TODO implement SwitchMap
-            throw new NotImplementedException();
+            return new PublisherSwitchMap<T, R>(source, mapper, prefetch);
         }
 
         public static IFlux<T> SwitchIfEmpty<T>(this IFlux<T> source, IFlux<T> other)

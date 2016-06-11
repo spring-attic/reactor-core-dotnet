@@ -11,6 +11,7 @@ using Reactor.Core.flow;
 using Reactor.Core.subscriber;
 using Reactor.Core.subscription;
 using Reactor.Core.util;
+using System.Runtime.InteropServices;
 
 namespace Reactor.Core.publisher
 {
@@ -76,6 +77,7 @@ namespace Reactor.Core.publisher
             }
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         abstract class ConcatBaseSubscriber : ISubscriber<T>, ISubscription, ConcatParent
         {
             protected readonly ISubscriber<R> actual;
@@ -149,7 +151,7 @@ namespace Reactor.Core.publisher
 
                             actual.OnSubscribe(this);
 
-                            s.Request(prefetch);
+                            s.Request(prefetch < 0 ? long.MaxValue : prefetch);
 
                             return;
                         }
@@ -159,7 +161,7 @@ namespace Reactor.Core.publisher
 
                     actual.OnSubscribe(this);
 
-                    s.Request(prefetch);
+                    s.Request(prefetch < 0 ? long.MaxValue : prefetch);
                 }
             }
 
@@ -226,6 +228,7 @@ namespace Reactor.Core.publisher
             public abstract void Drain();
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         sealed class ConcatImmediateSubscriber : ConcatBaseSubscriber
         {
             /// <summary>
@@ -700,6 +703,7 @@ namespace Reactor.Core.publisher
             }
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         abstract class ConcatBaseConditionalSubscriber : ISubscriber<T>, ISubscription, ConcatConditionalParent
         {
             protected readonly IConditionalSubscriber<R> actual;
@@ -773,7 +777,7 @@ namespace Reactor.Core.publisher
 
                             actual.OnSubscribe(this);
 
-                            s.Request(prefetch);
+                            s.Request(prefetch < 0 ? long.MaxValue : prefetch);
 
                             return;
                         }
@@ -783,7 +787,7 @@ namespace Reactor.Core.publisher
 
                     actual.OnSubscribe(this);
 
-                    s.Request(prefetch);
+                    s.Request(prefetch < 0 ? long.MaxValue : prefetch);
                 }
             }
 
@@ -852,6 +856,7 @@ namespace Reactor.Core.publisher
             public abstract void Drain();
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         sealed class ConcatImmediateConditionalSubscriber : ConcatBaseConditionalSubscriber
         {
             /// <summary>

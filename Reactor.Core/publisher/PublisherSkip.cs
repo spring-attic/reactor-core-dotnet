@@ -100,11 +100,7 @@ namespace Reactor.Core.publisher
 
             public override int RequestFusion(int mode)
             {
-                if (qs != null)
-                {
-                    return TransitiveAnyFusion(mode);
-                }
-                return FuseableHelper.NONE;
+                return TransitiveAnyFusion(mode);
             }
 
             protected override void OnStart()
@@ -186,11 +182,7 @@ namespace Reactor.Core.publisher
 
             public override int RequestFusion(int mode)
             {
-                if (qs != null)
-                {
-                    return TransitiveAnyFusion(mode);
-                }
-                return FuseableHelper.NONE;
+                return TransitiveAnyFusion(mode);
             }
 
             protected override void OnStart()

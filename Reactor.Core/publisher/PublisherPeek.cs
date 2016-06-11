@@ -299,11 +299,7 @@ namespace Reactor.Core.publisher
 
             public override int RequestFusion(int mode)
             {
-                if (qs != null)
-                {
-                    return TransitiveAnyFusion(mode);
-                }
-                return FuseableHelper.NONE;
+                return TransitiveAnyFusion(mode);
             }
 
             public override bool Poll(out T value)
@@ -527,11 +523,7 @@ namespace Reactor.Core.publisher
 
             public override int RequestFusion(int mode)
             {
-                if (qs != null)
-                {
-                    return TransitiveAnyFusion(mode);
-                }
-                return FuseableHelper.NONE;
+                return TransitiveAnyFusion(mode);
             }
 
             public override bool Poll(out T value)

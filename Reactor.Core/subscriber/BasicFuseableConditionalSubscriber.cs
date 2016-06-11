@@ -148,32 +148,46 @@ namespace Reactor.Core.subscriber
         /// <summary>
         /// Forward the mode request to the upstream IQueueSubscription and
         /// set the mode it returns.
+        /// If the upstream is not an IQueueSubscription, <see cref="FuseableHelper.NONE"/>
+        /// is returned.
         /// </summary>
         /// <param name="mode">The incoming fusion mode.</param>
         /// <returns>The established fusion mode</returns>
         protected int TransitiveAnyFusion(int mode)
         {
-            int m = qs.RequestFusion(mode);
-            fusionMode = m;
-            return m;
+            var qs = this.qs;
+            if (qs != null)
+            {
+                int m = qs.RequestFusion(mode);
+                fusionMode = m;
+                return m;
+            }
+            return FuseableHelper.NONE;
         }
 
         /// <summary>
         /// Unless the mode contains the <see cref="FuseableHelper.BOUNDARY"/> flag,
         /// forward the mode request to the upstream IQueueSubscription and
         /// set the mode it returns.
+        /// If the upstream is not an IQueueSubscription, <see cref="FuseableHelper.NONE"/>
+        /// is returned.
         /// </summary>
         /// <param name="mode">The incoming fusion mode.</param>
         /// <returns>The established fusion mode</returns>
         protected int TransitiveBoundaryFusion(int mode)
         {
-            if ((mode & FuseableHelper.BOUNDARY) != 0)
+            var qs = this.qs;
+            if (qs != null)
             {
-                return FuseableHelper.NONE;
+                if ((mode & FuseableHelper.BOUNDARY) != 0)
+                {
+                    return FuseableHelper.NONE;
+                }
+                int m = qs.RequestFusion(mode);
+                fusionMode = m;
+                return m;
             }
-            int m = qs.RequestFusion(mode);
-            fusionMode = m;
-            return m;
+            return FuseableHelper.NONE;
         }
     }
 }

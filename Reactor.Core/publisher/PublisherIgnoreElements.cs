@@ -66,11 +66,7 @@ namespace Reactor.Core.publisher
 
             public override int RequestFusion(int mode)
             {
-                if (qs != null)
-                {
-                    return TransitiveAnyFusion(mode);
-                }
-                return FuseableHelper.NONE;
+                return TransitiveAnyFusion(mode);
             }
 
             public override void Request(long n)

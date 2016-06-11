@@ -156,12 +156,7 @@ namespace Reactor.Core.publisher
 
             public override int RequestFusion(int mode)
             {
-                var qs = this.qs;
-                if (qs != null)
-                {
-                    return TransitiveBoundaryFusion(mode);
-                }
-                return FuseableHelper.NONE;
+                return TransitiveBoundaryFusion(mode);
             }
         }
 
@@ -282,12 +277,7 @@ namespace Reactor.Core.publisher
 
             public override int RequestFusion(int mode)
             {
-                var qs = this.qs;
-                if (qs != null)
-                {
-                    return TransitiveBoundaryFusion(mode);
-                }
-                return FuseableHelper.NONE;
+                return TransitiveBoundaryFusion(mode);
             }
         }
     }

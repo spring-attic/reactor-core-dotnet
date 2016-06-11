@@ -5,6 +5,7 @@ using Reactor.Core.util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +43,7 @@ namespace Reactor.Core.publisher
             source.Subscribe(new FlatMapSubscriber(s, mapper, delayErrors, maxConcurrency, prefetch));
         }
 
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
         sealed class FlatMapSubscriber : ISubscriber<T>, ISubscription
         {
             readonly ISubscriber<R> actual;
@@ -542,6 +544,11 @@ namespace Reactor.Core.publisher
 
             internal void InnerNext(FlatMapInnerSubscriber sender, R value)
             {
+                if (sender.IsAsyncFused())
+                {
+                    Drain();
+                    return;
+                }
                 if (QueueDrainHelper.TryEnter(ref wip))
                 {
                     long r = Volatile.Read(ref requested);
@@ -652,7 +659,7 @@ namespace Reactor.Core.publisher
                             fusionMode = m;
                             queue = qs;
 
-                            s.Request(prefetch);
+                            s.Request(prefetch < 0 ? long.MaxValue : prefetch);
 
                             return;
                         }
@@ -660,7 +667,7 @@ namespace Reactor.Core.publisher
 
                     queue = QueueDrainHelper.CreateQueue<R>(prefetch);
 
-                    s.Request(prefetch);
+                    s.Request(prefetch < 0 ? long.MaxValue : prefetch);
                 }
             }
 
@@ -731,6 +738,11 @@ namespace Reactor.Core.publisher
             internal void svDone()
             {
                 Volatile.Write(ref done, true);
+            }
+
+            internal bool IsAsyncFused()
+            {
+                return fusionMode == FuseableHelper.ASYNC;
             }
         }
     }
