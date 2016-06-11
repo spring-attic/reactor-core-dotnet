@@ -1943,71 +1943,199 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Makes sure only distinct elements are relayed through the lifetime of the IFlux sequence,
+        /// as determined by the default <see cref="EqualityComparer{T}.Default"/> comparer.
+        /// </summary>
+        /// <remarks>
+        /// Note that the internal HashSet used for remembering seen elements can't be cleared
+        /// and may grow indefinitely.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Distinct<T>(this IFlux<T> source)
         {
             return Distinct(source, v => v, EqualityComparer<T>.Default);
         }
 
+        /// <summary>
+        /// Makes sure only distinct elements are relayed through the lifetime of the IFlux sequence,
+        /// as determined by the given comparer.
+        /// </summary>
+        /// <remarks>
+        /// Note that the internal HashSet used for remembering seen elements can't be cleared
+        /// and may grow indefinitely.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="comparer">The comparer comparing the source elements</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Distinct<T>(this IFlux<T> source, IEqualityComparer<T> comparer)
         {
             return Distinct(source, v => v, comparer);
         }
 
+        /// <summary>
+        /// Makes sure only distinct elements (according to a key) are relayed through the lifetime of the IFlux sequence,
+        /// as determined by the <see cref="EqualityComparer{T}.Default"/> key comparer.
+        /// </summary>
+        /// <remarks>
+        /// Note that the internal HashSet used for remembering seen keys can't be cleared
+        /// and may grow indefinitely.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts the key from the source value to be checked for distinctness.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Distinct<T, K>(this IFlux<T> source, Func<T, K> keySelector)
         {
             return Distinct(source, keySelector, EqualityComparer<K>.Default);
         }
 
+        /// <summary>
+        /// Makes sure only distinct elements (according to a key) are relayed through the lifetime of the IFlux sequence,
+        /// as determined by the given comparer. default <see cref="EqualityComparer{T}.Default"/> comparer.
+        /// </summary>
+        /// <remarks>
+        /// Note that the internal HashSet used for remembering seen keys can't be cleared
+        /// and may grow indefinitely.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts the key from the source value to be checked for distinctness.</param>
+        /// <param name="comparer">The comparer comparing the extracted keys.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Distinct<T, K>(this IFlux<T> source, Func<T, K> keySelector, IEqualityComparer<K> comparer)
         {
             return new PublisherDistinct<T, K>(source, keySelector, comparer);
         }
 
+        /// <summary>
+        /// Makes sure a source IFlux item is only relayed if it doesn't equal to the previous
+        /// element, based on the default <see cref="EqualityComparer{T}.Default"/> comparer.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DistinctUntilChanged<T>(this IFlux<T> source)
         {
             return DistinctUntilChanged(source, v => v, EqualityComparer<T>.Default);
         }
 
+        /// <summary>
+        /// Makes sure a source IFlux item is only relayed if it doesn't equal to the previous
+        /// element, based on the give comparer.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="comparer">The comparer to compare subsequent source items.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DistinctUntilChanged<T>(this IFlux<T> source, IEqualityComparer<T> comparer)
         {
             return DistinctUntilChanged(source, v => v, comparer);
         }
 
+        /// <summary>
+        /// Makes sure a source IFlux item is only relayed if the key extracted from it doesn't equal to the previous
+        /// element's key, based on the default <see cref="EqualityComparer{T}.Default"/> key comparer.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts a key from the source item.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DistinctUntilChanged<T, K>(this IFlux<T> source, Func<T, K> keySelector)
         {
             return DistinctUntilChanged(source, keySelector, EqualityComparer<K>.Default);
         }
 
+        /// <summary>
+        /// Makes sure a source IFlux item is only relayed if the key extracted from it doesn't equal to the previous
+        /// element's key, based on the given key comparer.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts a key from the source item.</param>
+        /// <param name="comparer">The comparer to compare the extracted keys of subsequent source items.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DistinctUntilChanged<T, K>(this IFlux<T> source, Func<T, K> keySelector, IEqualityComparer<K> comparer)
         {
             return new PublisherDistinctUntilChanged<T, K>(source, keySelector, comparer);
         }
 
+        /// <summary>
+        /// Call the specified action after the source has signalled an OnError or OnComplete.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onAfterTerminate">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoAfterTerminate<T>(this IFlux<T> source, Action onAfterTerminate)
         {
             return PublisherPeek<T>.withOnAfterTerminate(source, onAfterTerminate);
         }
 
+        /// <summary>
+        /// Call the specified action with the current value after the source has signalled an OnNext.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onAfterNext">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoAfterNext<T>(this IFlux<T> source, Action<T> onAfterNext)
         {
             return PublisherPeek<T>.withOnAfterNext(source, onAfterNext);
         }
 
+        /// <summary>
+        /// Call the specified action if the sequence gets cancelled.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onCancel">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnCancel<T>(this IFlux<T> source, Action onCancel)
         {
             return PublisherPeek<T>.withOnCancel(source, onCancel);
         }
+
+        /// <summary>
+        /// Call the specified action before the source signals an OnComplete.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onComplete">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
 
         public static IFlux<T> DoOnComplete<T>(this IFlux<T> source, Action onComplete)
         {
             return PublisherPeek<T>.withOnComplete(source, onComplete);
         }
 
+        /// <summary>
+        /// Call the specified action before the source signals an OnError.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onError">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnError<T>(this IFlux<T> source, Action<Exception> onError)
         {
             return PublisherPeek<T>.withOnError(source, onError);
         }
 
+        /// <summary>
+        /// Call the specified action before the source signals OnError with the given Exception type (or its subtypes).
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="E">The exception type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onError">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnError<T, E>(this IFlux<T> source, Action<E> onError) where E : Exception
         {
             return DoOnError(source, e =>
@@ -2019,6 +2147,14 @@ namespace Reactor.Core
             });
         }
 
+        /// <summary>
+        /// Call the specified action before the source signals an OnError whose Exception matches the predicate.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="predicate">The predicate that receives the Exception and if returns true, the onError action is called.</param>
+        /// <param name="onError">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnError<T>(this IFlux<T> source, Func<Exception, bool> predicate, Action<Exception> onError)
         {
             return DoOnError(source, e =>
@@ -2030,145 +2166,387 @@ namespace Reactor.Core
             });
         }
 
+        /// <summary>
+        /// Calls the specified action with the current value before the sequence signals an OnNext.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <param name="onNext">The action to call with the current value.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnNext<T>(this IFlux<T> source, Action<T> onNext)
         {
             return PublisherPeek<T>.withOnNext(source, onNext);
         }
 
+        /// <summary>
+        /// Calls the specified action with the current request amount before it reaches the upstream.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <param name="onRequest">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnRequest<T>(this IFlux<T> source, Action<long> onRequest)
         {
             return PublisherPeek<T>.withOnRequest(source, onRequest);
         }
 
+        /// <summary>
+        /// Calls the specified action with the incoming ISubscription before it reaches the downstream.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onSubscribe">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnSubscribe<T>(this IFlux<T> source, Action<ISubscription> onSubscribe)
         {
             return PublisherPeek<T>.withOnSubscribe(source, onSubscribe);
         }
 
+        /// <summary>
+        /// Calls the specified action befoer the source signals an OnError or OnComplete.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="onTerminate">The action to call.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DoOnTerminate<T>(this IFlux<T> source, Action onTerminate)
         {
             return PublisherPeek<T>.withOnTerminate(source, onTerminate);
         }
 
+        /// <summary>
+        /// Wraps each source element into a Timed structure which holds the time difference between
+        /// subsequent element according to the default timed scheduler. The first structure holds
+        /// the time between the subscription and the emission of the first element.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<Timed<T>> Elapsed<T>(this IFlux<T> source)
         {
             return Elapsed(source, DefaultScheduler.Instance);
         }
 
+        /// <summary>
+        /// Wraps each source element into a Timed structure which holds the time difference between
+        /// subsequent element according to the given timed scheduler. The first structure holds
+        /// the time between the subscription and the emission of the first element.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="scheduler">The scheduler supplying the notion of current time.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<Timed<T>> Elapsed<T>(this IFlux<T> source, TimedScheduler scheduler)
         {
             // TODO implement Elapsed
             throw new NotImplementedException();
         }
 
-        public static IMono<T> ElementAt<T>(this IFlux<T> source)
+        /// <summary>
+        /// Emits the element at the given index or signals an IndexOutOfRangeException if
+        /// the sequence is shorter.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="index">The index of the element to return.</param>
+        /// <returns>The new IFlux instance.</returns>
+        public static IMono<T> ElementAt<T>(this IFlux<T> source, long index)
         {
             // TODO implement ElementAt
             throw new NotImplementedException();
         }
 
-        public static IMono<T> ElementAt<T>(this IFlux<T> source, T defaultValue)
+        /// <summary>
+        /// Emits the element at the given index or signals a default value if
+        /// the sequence is shorter.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="index">The index of the element to return.</param>
+        /// <param name="defaultValue">The value to signal if the sequence is shorter.</param>
+        /// <returns>The new IFlux instance.</returns>
+        public static IMono<T> ElementAt<T>(this IFlux<T> source, long index, T defaultValue)
         {
             // TODO implement ElementAt
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Returns every <paramref name="batchSize"/> element from the source sequence
+        /// or the very last element (if the source length not multiple of the batchSize).
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="batchSize">The frequency of elements to return.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Every<T>(this IFlux<T> source, int batchSize)
         {
             return source.Window(batchSize).FlatMap(w => w.Last());
         }
 
+        /// <summary>
+        /// Returns every <paramref name="batchSize"/> element, starting from the first element from
+        /// the source sequence.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="batchSize">The frequency of elements to return.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> EveryFirst<T>(this IFlux<T> source, int batchSize)
         {
             return source.Window(batchSize).FlatMap(w => w.Next());
         }
 
+        /// <summary>
+        /// Filters out elements that don't match the predicate.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <param name="predicate">The predicate function called for each source element and returns true if that element
+        /// may pass.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Filter<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
             return new PublisherFilter<T>(source, predicate);
         }
 
-        public static IFlux<T> FirstEmittingWith<T>(this IFlux<T> source, IFlux<T> other)
+        /// <summary>
+        /// Relays signals of the source IFlux or the other IPublisher sequence whichever signals first,
+        /// cancelling the other (or not even subscribing to it).
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="other">The other IPublisher.</param>
+        /// <returns>The new IFlux instance.</returns>
+        public static IFlux<T> FirstEmittingWith<T>(this IFlux<T> source, IPublisher<T> other)
         {
-            // TODO implement Last
-            throw new NotImplementedException();
+            if (source is PublisherAmb<T>)
+            {
+                var a = (source as PublisherAmb<T>).AmbWith(other);
+                if (a != null)
+                {
+                    return a;
+                }
+            }
+            return FirstEmitting<T>(source, other);
         }
 
+        /// <summary>
+        /// Flattens (merges) a sequence of IPublisher sources generated via a mapper function from the source elements, optionally
+        /// delaying any errors.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that receives a source value and returns an IPublisher to be merged</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, bool delayErrors = false)
         {
             return FlatMap(source, mapper, BufferSize, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Flattens (merges) a sequence of IPublisher sources generated via a mapper function from the source elements, 
+        /// making sure only the specified number of sources are active and optionally
+        /// delaying any errors.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that receives a source value and returns an IPublisher to be merged</param>
+        /// <param name="maxConcurrency">The maximum number of active IPublisher sources at the same time.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, bool delayErrors = false)
         {
             return FlatMap(source, mapper, maxConcurrency, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Flattens (merges) a sequence of IPublisher sources generated via a mapper function from the source elements, 
+        /// making sure only the specified number of sources are active, prefetching the specified amount from each
+        /// and optionally delaying any errors.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that receives a source value and returns an IPublisher to be merged</param>
+        /// <param name="maxConcurrency">The maximum number of active IPublisher sources at the same time.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, int prefetch, bool delayErrors = false)
         {
             return new PublisherFlatMap<T, R>(source, mapper, delayErrors, maxConcurrency, prefetch);
         }
 
-        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapperOnNext, Func<Exception, IPublisher<R>> mapperOnError, Func<IPublisher<R>> mapperOnComplete)
+
+        /// <summary>
+        /// Flattens (merges) a sequence of IPublisher sources generated via a mapper function from the source elements and terminal signals.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapperOnNext">The function that receives each source elements and returns an IPublisher for them to be merged.</param>
+        /// <param name="mapperOnError">The function that receives the Exception and returns an IPublisher for it to be merged.</param>
+        /// <param name="mapperOnComplete">The function that is called when the source completes and returns an IPublisher for it to be merged.</param>
+        /// <returns>The new IFlux instance.</returns>
+        public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapperOnNext, 
+            Func<Exception, IPublisher<R>> mapperOnError, Func<IPublisher<R>> mapperOnComplete)
         {
             // TODO implement FlatMap
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Flattens (merges) IEnumerable sequences generated by a mapper function from the values of the source IPublisher.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that maps each source value into an IEnumerable.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper)
         {
             // TODO implement FlatMap
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Flattens (merges) IEnumerable sequences generated by a mapper function from the values of the source IPublisher.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that maps each source value into an IEnumerable.</param>
+        /// <param name="prefetch">The number of items to prefetch from the source. If negative, the source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, int prefetch)
         {
             // TODO implement FlatMap
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Groups elements with the same key into an IGroupedFlux inner sequences.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts a key from a source element.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IGroupedFlux<K, T>> GroupBy<T, K>(this IFlux<T> source, Func<T, K> keySelector)
         {
             return GroupBy(source, keySelector, v => v, BufferSize);
         }
 
+        /// <summary>
+        /// Groups values, extracted from elements, with the same key into IGroupedFlux inner sequences.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <typeparam name="V">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts a key from a source element.</param>
+        /// <param name="valueSelector">The function that extracts the value from a source element.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IGroupedFlux<K, V>> GroupBy<T, K, V>(this IFlux<T> source, Func<T, K> keySelector, Func<T, V> valueSelector)
         {
             return GroupBy(source, keySelector, valueSelector, BufferSize);
         }
 
+        /// <summary>
+        /// Groups values, extracted from elements, with the same key into IGroupedFlux inner sequences.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <typeparam name="V">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts a key from a source element.</param>
+        /// <param name="valueSelector">The function that extracts the value from a source element.</param>
+        /// <param name="prefetch">The number of items to prefetch from the source. If negative, the source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IGroupedFlux<K, V>> GroupBy<T, K, V>(this IFlux<T> source, Func<T, K> keySelector, Func<T, V> valueSelector, int prefetch)
         {
             // TODO implement GroupBy
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Signals a single true if the source has the specified element, based on
+        /// the <see cref="EqualityComparer{T}.Default"/> comparer.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="element">The element to look for.</param>
+        /// <returns>The new IMono instance</returns>
         public static IMono<bool> HasElement<T>(this IFlux<T> source, T element)
         {
             return HasElement(source, element, EqualityComparer<T>.Default);
         }
 
+        /// <summary>
+        /// Signals a single true if the source has the specified element, based on
+        /// the given comparer.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="element">The element to look for.</param>
+        /// <param name="comparer">The comparer to use to compare source elements with the given element.</param>
+        /// <returns>The new IMono instance</returns>
         public static IMono<bool> HasElement<T>(this IFlux<T> source, T element, IEqualityComparer<T> comparer)
         {
             return Any(source, v => comparer.Equals(v, element));
         }
 
+        /// <summary>
+        /// Signals a single true if the source IFlux sequence contains any elements (i.e., it's not empty).
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<bool> HasElements<T>(this IFlux<T> source)
         {
             // TODO implement HasElements
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Hides the external and internal identity of the source sequence; useful
+        /// to break identity based macro- and micro-optimizations.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Hide<T>(this IFlux<T> source)
         {
             return new PublisherHide<T>(source);
         }
 
+        /// <summary>
+        /// Ignores OnNext signals from the source and only relays the terminal signals.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <param name="source">The source IFlux to ignore elements of.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<T> IgnoreElements<T>(this IFlux<T> source)
         {
             return new PublisherIgnoreElements<T>(source);
         }
 
+        /// <summary>
+        /// Returns the last element from the source sequence or signal IndexOutOfRangeException.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<T> Last<T>(this IFlux<T> source)
         {
             // TODO implement Last

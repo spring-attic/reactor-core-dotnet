@@ -68,6 +68,18 @@ namespace Reactor.Core.publisher
 
         }
 
+        internal IFlux<T> AmbWith(IPublisher<T> other)
+        {
+            if (sources == null)
+            {
+                return null;
+            }
+
+            IPublisher<T>[] a = MultiSourceHelper.AppendLast(this.sources, other);
+
+            return new PublisherAmb<T>(a, null);
+        }
+
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         sealed class AmbSubscription : ISubscription
         {
