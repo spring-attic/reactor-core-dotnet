@@ -357,28 +357,14 @@ namespace Reactor.Core
         /// Concatenates an parameter array of IPublisher sources.
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
-        /// <param name="sources">The IEnumerable sequence if IPublisher sources.</param>
-        /// <returns>The new IFlux instance.</returns>
-        public static IFlux<T> Concat<T>(params IPublisher<T>[] sources)
-        {
-            return new PublisherConcatArray<T>(sources, false);
-        }
-
-        /// <summary>
-        /// Concatenates an IEnumerable sequence of IPublisher sources, delaying errors until
-        /// all sources have terminated.
-        /// </summary>
-        /// <remarks>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
         /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
-        /// Exceptions.
-        /// </remarks>
-        /// <typeparam name="T">The value type.</typeparam>
+        /// Exceptions</param>
         /// <param name="sources">The IEnumerable sequence if IPublisher sources.</param>
         /// <returns>The new IFlux instance.</returns>
-        public static IFlux<T> ConcatDelayError<T>(params IPublisher<T>[] sources)
+        public static IFlux<T> Concat<T>(bool delayErrors = false, params IPublisher<T>[] sources)
         {
-            // FIXME default vs params argument sometimes doesn't work together, like Concat(false, p...) can't map to Concat(bool, P[])
-            return new PublisherConcatArray<T>(sources, true);
+            return new PublisherConcatArray<T>(sources, delayErrors);
         }
 
         /// <summary>
@@ -503,6 +489,12 @@ namespace Reactor.Core
             return new PublisherWrap<T>(source);
         }
 
+        /// <summary>
+        /// Emits the elements of the given parameter array.
+        /// </summary>
+        /// <typeparam name="T">The element type of the array.</typeparam>
+        /// <param name="values">The array of values to emit.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> From<T>(params T[] values)
         {
             int n = values.Length;
@@ -519,11 +511,25 @@ namespace Reactor.Core
             return new PublisherArray<T>(values);
         }
 
+        /// <summary>
+        /// Emits the elements of the given IEnumerable sequence.
+        /// </summary>
+        /// <typeparam name="T">The element type of the IEnumerable.</typeparam>
+        /// <param name="enumerable">The IEnumerable source of elements to signal.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> From<T>(IEnumerable<T> enumerable)
         {
             return new PublisherEnumerable<T>(enumerable);
         }
 
+        /// <summary>
+        /// Wraps the specified IObservable into an IFlux and applies the specified backpressure strategy
+        /// (IObservables don't support backpressure on their own).
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IObservable instance.</param>
+        /// <param name="backpressure">The backpressure strategy. See <see cref="BackpressureHandling"/> enum constants.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> From<T>(IObservable<T> source, BackpressureHandling backpressure = BackpressureHandling.Error)
         {
             return new PublisherFromObservable<T>(source, backpressure);
@@ -564,88 +570,294 @@ namespace Reactor.Core
             return new PublisherAction<T>(action);
         }
 
+        /// <summary>
+        /// Emits the value returned by the supplier function to each individual subscriber.
+        /// </summary>
+        /// <typeparam name="T">The emitted value type.</typeparam>
+        /// <param name="supplier">The function that is called for each subscriber to return a value to be emitted.</param>
+        /// <param name="nullMeansEmpty">If the supplier returns null, should that be considered as empty source?
+        /// Note that value types don't have a notion of null and their default value is considered a normal value.</param>
+        /// <returns></returns>
         public static IFlux<T> From<T>(Func<T> supplier, bool nullMeansEmpty = false)
         {
             return new PublisherFunc<T>(supplier, nullMeansEmpty);
         }
 
+        /// <summary>
+        /// Generates signals when the downstream requests values in a stateless manner.
+        /// </summary>
+        /// <remarks>
+        /// The generator action is called as many times as the downstream amount.
+        /// For example, a downstream request(2) will call the action twice.
+        /// </remarks>
+        /// <typeparam name="T">The generated value type.</typeparam>
+        /// <param name="generator">The action called with an ISignalEmitter instance for each 
+        /// subscriber and for each downstream request to generate the next value to emit or a 
+        /// teriman signal.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Generate<T>(Action<ISignalEmitter<T>> generator)
         {
             return Generate<T, object>(() => default(object), (s, e) => { generator(e); return s; }, s => { });
         }
 
+        /// <summary>
+        /// Generates signals when the downstream requests values in a stateful manner.
+        /// </summary>
+        /// <remarks>
+        /// The generator action is called as many times as the downstream amount.
+        /// For example, a downstream request(2) will call the action twice.
+        /// </remarks>
+        /// <typeparam name="T">The generated value type.</typeparam>
+        /// <typeparam name="S">The state type.</typeparam>
+        /// <param name="stateSupplier">The function returning the initial state object or structure for each subscriber.</param>
+        /// <param name="generator">The action called with the current state value and a ISignalEmitter instance for each 
+        /// subscriber and for each downstream request to generate the next value to emit or a 
+        /// teriman signal. The function's return value should be the new state (which is used the next time this function is called).</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Generate<T, S>(Func<S> stateSupplier, Func<S, ISignalEmitter<T>, S> generator)
         {
             return Generate(stateSupplier, generator, s => { });
         }
 
+        /// <summary>
+        /// Generates signals when the downstream requests values in a stateful manner.
+        /// </summary>
+        /// <remarks>
+        /// The generator action is called as many times as the downstream amount.
+        /// For example, a downstream request(2) will call the action twice.
+        /// </remarks>
+        /// <typeparam name="T">The generated value type.</typeparam>
+        /// <typeparam name="S">The state type.</typeparam>
+        /// <param name="stateSupplier">The function returning the initial state object or structure for each subscriber.</param>
+        /// <param name="generator">The action called with the current state value and a ISignalEmitter instance for each 
+        /// subscriber and for each downstream request to generate the next value to emit or a 
+        /// teriman signal. The function's return value should be the new state (which is used the next time this function is called).</param>
+        /// <param name="stateDisposer">The action to call to dispose the state generated/modified by the other functions. This function
+        /// is called exactly once for each subscriber whenever the generator signals a terminal event or the sequence gets cancelled.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Generate<T, S>(Func<S> stateSupplier, Func<S, ISignalEmitter<T>, S> generator, Action<S> stateDisposer)
         {
             return new PublisherGenerate<T, S>(stateSupplier, generator, stateDisposer);
         }
 
+        /// <summary>
+        /// Generates a sequence of long numbers, starting from 0, with the given periodicity, running
+        /// on the default timed scheduler.
+        /// </summary>
+        /// <param name="period">The period at which numbers are signalled.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<long> Interval(TimeSpan period)
         {
             return Interval(period, period, DefaultScheduler.Instance);
         }
 
+        /// <summary>
+        /// Generates a sequence of long numbers, starting from 0, with the given periodicity, running
+        /// on the specified timed scheduler.
+        /// </summary>
+        /// <param name="period">The period at which numbers are signalled.</param>
+        /// <param name="scheduler">The scheduler to use for emitting each number.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<long> Interval(TimeSpan period, TimedScheduler scheduler)
         {
             return Interval(period, period, scheduler);
         }
 
+        /// <summary>
+        /// Generates a sequence of long numbers, starting from 0, with the given periodicity and after the
+        /// initial delay, running on the default timed scheduler.
+        /// </summary>
+        /// <param name="initialDelay">The initial delay before signalling 0.</param>
+        /// <param name="period">The period at which subsequent numbers are signalled.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<long> Interval(TimeSpan initialDelay, TimeSpan period)
         {
             return Interval(initialDelay, period, DefaultScheduler.Instance);
         }
 
+        /// <summary>
+        /// Generates a sequence of long numbers, starting from 0, with the given periodicity and after the
+        /// initial delay, running on the default timed scheduler.
+        /// </summary>
+        /// <param name="initialDelay">The initial delay before signalling 0.</param>
+        /// <param name="period">The period at which numbers are signalled.</param>
+        /// <param name="scheduler">The scheduler to use for emitting each number.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<long> Interval(TimeSpan initialDelay, TimeSpan period, TimedScheduler scheduler)
         {
             return new PublisherInterval(initialDelay, period, scheduler);
         }
 
+        /// <summary>
+        /// Merges the values from the specified parameter array of source IPublishers, optionally delaying
+        /// any of their errors until all sources terminate.
+        /// </summary>
+        /// <remarks>
+        /// The operator merges at most <see cref="BufferSize"/> number of sources at once and uses
+        /// <see cref="BufferSize"/> prefetch for those sources.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The parameter array of IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(bool delayErrors = false, params IPublisher<T>[] sources)
         {
             return Merge(BufferSize, BufferSize, delayErrors, sources);
         }
 
+        /// <summary>
+        /// Merges the values from the specified parameter array of source IPublishers, at most
+        /// <paramref name="maxConcurrency"/> sources at once, optionally delaying any of their errors until
+        /// all sources terminate.
+        /// </summary>
+        /// <remarks>
+        /// The operator uses <see cref="BufferSize"/> prefetch for those sources.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="maxConcurrency">The maximum number of sources to merge at once.</param>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The parameter array of IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(int maxConcurrency, bool delayErrors = false, params IPublisher<T>[] sources)
         {
             return Merge(BufferSize, maxConcurrency, delayErrors, sources);
         }
 
+        /// <summary>
+        /// Merges the values from the specified parameter array of source IPublishers, at most
+        /// <paramref name="maxConcurrency"/> sources at once, using the specified prefetch for these sources,
+        /// optionally delaying any of their errors until all sources terminate.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="maxConcurrency">The maximum number of sources to merge at once.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The parameter array of IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(int maxConcurrency, int prefetch, bool delayErrors = false, params IPublisher<T>[] sources)
         {
             // TODO implement Merge
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Merges the values from the specified IEnumerable sequence of source IPublishers, optionally delaying
+        /// any of their errors until all sources terminate.
+        /// </summary>
+        /// <remarks>
+        /// The operator merges at most <see cref="BufferSize"/> number of sources at once and uses
+        /// <see cref="BufferSize"/> prefetch for those sources.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The IEnumerable sequence of IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, bool delayErrors = false)
         {
             return Merge(sources, BufferSize, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Merges the values from the specified IEnumerable sequence of source IPublishers, at most
+        /// <paramref name="maxConcurrency"/> sources at once, optionally delaying any of their errors until
+        /// all sources terminate.
+        /// </summary>
+        /// <remarks>
+        /// The operator uses <see cref="BufferSize"/> prefetch for those sources.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="maxConcurrency">The maximum number of sources to merge at once.</param>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The IEnumerable sequence of IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, int maxConcurrency, bool delayErrors = false)
         {
             return Merge(sources, BufferSize, maxConcurrency, delayErrors);
         }
 
+        /// <summary>
+        /// Merges the values from the specified IEnumerable sequence of source IPublishers, at most
+        /// <paramref name="maxConcurrency"/> sources at once, using the specified prefetch for these sources,
+        /// optionally delaying any of their errors until all sources terminate.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="maxConcurrency">The maximum number of sources to merge at once.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The IEnumerable sequence of IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(IEnumerable<IPublisher<T>> sources, int maxConcurrency, int prefetch, bool delayErrors = false)
         {
-            // TODO implement Merge
-            throw new NotImplementedException();
+            return From(sources).FlatMap(v => v, maxConcurrency, prefetch, delayErrors);
         }
 
+        /// <summary>
+        /// Merges the values from the specified dynamic outer IPublisher sequence of inner source IPublishers, optionally delaying
+        /// any of their errors until all sources terminate.
+        /// </summary>
+        /// <remarks>
+        /// The operator merges at most <see cref="BufferSize"/> number of sources at once and uses
+        /// <see cref="BufferSize"/> prefetch for those sources.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The dynamic outer IPublisher of inner IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(this IPublisher<IPublisher<T>> sources, bool delayErrors = false)
         {
             return Merge(sources, BufferSize, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Merges the values from the specified dynamic outer IPublisher sequence of inner source IPublishers, at most
+        /// <paramref name="maxConcurrency"/> sources at once, optionally delaying any of their errors until
+        /// all sources terminate.
+        /// </summary>
+        /// <remarks>
+        /// The operator uses <see cref="BufferSize"/> prefetch for those sources.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="maxConcurrency">The maximum number of inner sources to merge at once.</param>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The dynamic outer IPublisher of inner IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(this IPublisher<IPublisher<T>> sources, int maxConcurrency = int.MaxValue, bool delayErrors = false)
         {
             return Merge(sources, BufferSize, maxConcurrency, delayErrors);
         }
 
+        /// <summary>
+        /// Merges the values from the specified dynamic outer IPublisher sequence of inner IPublishers, at most
+        /// <paramref name="maxConcurrency"/> sources at once, using the specified prefetch for these sources,
+        /// optionally delaying any of their errors until all sources terminate.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="maxConcurrency">The maximum number of inner sources to merge at once.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, errors are delayed until all all source IPublishers have terminated.
+        /// If multiple sources terminate with an OnError signal, the downstream will receive an AggregateException containing all
+        /// Exceptions</param>
+        /// <param name="sources">The dynamic outer IPublisher of inner IPublisher sources to merge.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(this IPublisher<IPublisher<T>> sources, int prefetch, int maxConcurrency = int.MaxValue, bool delayErrors = false)
         {
             return new PublisherFlatMap<IPublisher<T>, T>(sources, v => v, delayErrors, maxConcurrency, prefetch);
@@ -671,69 +883,203 @@ namespace Reactor.Core
             return new PublisherRange(start, count);
         }
 
+        /// <summary>
+        /// Creates an IFluxProcessor that accepts IPublisher instances, subscribes to them and
+        /// relays signals from them until the next IPublisher is signalled to the IFluxProcessor.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <returns>The new IFluxProcessor instance.</returns>
         public static IFluxProcessor<IPublisher<T>, T> SwitchOnNext<T>()
         {
             return SwitchOnNext<T>(BufferSize);
         }
 
+        /// <summary>
+        /// Creates an IFluxProcessor that accepts IPublisher instances, subscribes to them and
+        /// relays signals from them until the next IPublisher is signalled to the IFluxProcessor.
+        /// Each IPublisher instance is prefetched with the specified amount and using a low-watermark
+        /// of 25%.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <returns>The new IFluxProcessor instance.</returns>
         public static IFluxProcessor<IPublisher<T>, T> SwitchOnNext<T>(int prefetch)
         {
             // TODO implement SwitchOnNext
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Relays signals of the inner IPublisher sources until the outer IPublisher produces another inner source.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="sources">The dynamic IPublisher sequence of inner IPublisher sources.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> SwitchOnNext<T>(this IPublisher<IPublisher<T>> sources)
         {
             return SwitchOnNext<T>(sources, BufferSize);
         }
 
+        /// <summary>
+        /// Relays signals of the inner IPublisher sources until the outer IPublisher produces another inner source.
+        /// It uses the given prefetch amount on the inner IPublisher sources.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="sources">The dynamic IPublisher sequence of inner IPublisher sources.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <returns></returns>
         public static IFlux<T> SwitchOnNext<T>(this IPublisher<IPublisher<T>> sources, int prefetch)
         {
             return new PublisherSwitchMap<IPublisher<T>, T>(sources, v => v, prefetch);
         }
 
+        /// <summary>
+        /// Signals a single long 0 after the specified delay on the default timed scheduler.
+        /// </summary>
+        /// <param name="delay">The delay amount.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<long> Timer(TimeSpan delay)
         {
             return Timer(delay, DefaultScheduler.Instance);
         }
 
+        /// <summary>
+        /// Signals a single long 0 after the specified delay on the specified timed scheduler.
+        /// </summary>
+        /// <param name="delay">The delay amount.</param>
+        /// <param name="scheduler">The target timed scheduler.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<long> Timer(TimeSpan delay, TimedScheduler scheduler)
         {
             return new PublisherTimer(delay, scheduler);
         }
 
+        /// <summary>
+        /// Uses a generated resource, derives an IPublisher from it whose signals are relayed and
+        /// disposes the generated resource once the IPublisher terminates or gets cancelled.
+        /// </summary>
+        /// <typeparam name="T">The value type signalled.</typeparam>
+        /// <typeparam name="S">The resource type.</typeparam>
+        /// <param name="resourceSupplier">Function that returns a resource for each subscriber</param>
+        /// <param name="publisherFactory">Function that receives the generated resource and returns an IPublisher to be relayed for each subscriber.</param>
+        /// <param name="resourceDisposer">The action called to dispose the generated resource.</param>
+        /// <param name="eager">If true, the resourceDisposer is called before signalling the terminal event; after otherwise.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Using<T, S>(Func<S> resourceSupplier, Func<S, IPublisher<T>> publisherFactory, Action<S> resourceDisposer, bool eager = true)
         {
             return new PublisherUsing<T, S>(resourceSupplier, publisherFactory, resourceDisposer, eager);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source, through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T">The input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <param name="sources">The parameter array of IPublisher sources to combine.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T, R>(Func<T[], R> zipper, bool delayErrors = false, params IPublisher<T>[] sources)
         {
             return Zip(zipper, BufferSize, delayErrors, sources);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source, through a function and emits the resulting value
+        /// while prefetching the given amount from each of these IPublisher sources.
+        /// </summary>
+        /// <typeparam name="T">The input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <param name="sources">The parameter array of IPublisher sources to combine.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T, R>(Func<T[], R> zipper, int prefetch, bool delayErrors = false, params IPublisher<T>[] sources)
         {
             // TODO implement Using
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source from the IEnumerable sequence,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T">The input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <param name="sources">The IEnumerable sequence of IPublisher sources to combine.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T, R>(IEnumerable<IPublisher<T>> sources, Func<T[], R> zipper, bool delayErrors = false)
         {
             return Zip(sources, zipper, BufferSize);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source from the IEnumerable sequence,
+        /// through a function and emits the resulting value
+        /// while prefetching the given amount from each of these IPublisher sources.
+        /// </summary>
+        /// <typeparam name="T">The input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <param name="sources">The IEnumerable sequence of IPublisher sources to combine.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T, R>(IEnumerable<IPublisher<T>> sources, Func<T[], R> zipper, int prefetch, bool delayErrors = false)
         {
-            // TODO implement Using
+            // TODO implement Zip
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
         public static IFlux<R> Zip<T1, T2, R>(IPublisher<T1> p1, IPublisher<T2> p2, Func<T1, T2, R> zipper, bool delayErrors = false)
         {
             return Zip(p1, p2, zipper, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, R>(IPublisher<T1> p1, IPublisher<T2> p2, Func<T1, T2, R> zipper, int prefetch, bool delayErrors = false)
         {
             return Zip<object, R>(a =>
@@ -745,6 +1091,22 @@ namespace Reactor.Core
             );
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3,
@@ -753,6 +1115,24 @@ namespace Reactor.Core
             return Zip(p1, p2, p3, zipper, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3,
@@ -768,6 +1148,24 @@ namespace Reactor.Core
             );
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="T4">The fourth input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="p4">The fourth source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, T4, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3, IPublisher<T4> p4,
@@ -776,6 +1174,26 @@ namespace Reactor.Core
             return Zip(p1, p2, p3, p4, zipper, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="T4">The fourth input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="p4">The fourth source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, T4, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3, IPublisher<T4> p4,
@@ -791,6 +1209,26 @@ namespace Reactor.Core
             );
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="T4">The fourth input value type.</typeparam>
+        /// <typeparam name="T5">The fifth input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="p4">The fourth source IPublisher.</param>
+        /// <param name="p5">The fifth source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, T4, T5, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3, IPublisher<T4> p4,
@@ -800,6 +1238,28 @@ namespace Reactor.Core
             return Zip(p1, p2, p3, p4, p5, zipper, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="T4">The fourth input value type.</typeparam>
+        /// <typeparam name="T5">The fifth input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="p4">The fourth source IPublisher.</param>
+        /// <param name="p5">The fifth source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, T4, T5, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3, IPublisher<T4> p4,
@@ -816,6 +1276,28 @@ namespace Reactor.Core
             );
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="T4">The fourth input value type.</typeparam>
+        /// <typeparam name="T5">The fifth input value type.</typeparam>
+        /// <typeparam name="T6">The sixth input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="p4">The fourth source IPublisher.</param>
+        /// <param name="p5">The fifth source IPublisher.</param>
+        /// <param name="p6">The sixth source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, T4, T5, T6, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3, IPublisher<T4> p4,
@@ -825,6 +1307,30 @@ namespace Reactor.Core
             return Zip(p1, p2, p3, p4, p5, p6, zipper, BufferSize, delayErrors);
         }
 
+        /// <summary>
+        /// Combines a row of values, the next from each IPublisher source,
+        /// through a function and emits the resulting value.
+        /// </summary>
+        /// <typeparam name="T1">The first input value type.</typeparam>
+        /// <typeparam name="T2">The second input value type.</typeparam>
+        /// <typeparam name="T3">The third input value type.</typeparam>
+        /// <typeparam name="T4">The fourth input value type.</typeparam>
+        /// <typeparam name="T5">The fifth input value type.</typeparam>
+        /// <typeparam name="T6">The sixth input value type.</typeparam>
+        /// <typeparam name="R">The output value type.</typeparam>
+        /// <param name="p1">The first source IPublisher.</param>
+        /// <param name="p2">The second source IPublisher.</param>
+        /// <param name="p3">The third source IPublisher.</param>
+        /// <param name="p4">The fourth source IPublisher.</param>
+        /// <param name="p5">The fifth source IPublisher.</param>
+        /// <param name="p6">The sixth source IPublisher.</param>
+        /// <param name="zipper">The function that receives an array of values, as many as there are sources and returns
+        /// a value to be emitted.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="delayErrors">If true, Exceptions from OnError signals are delayed until all sources have terminated,
+        /// signalling an AggregateException if there were more than one Exception.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T1, T2, T3, T4, T5, T6, R>(
             IPublisher<T1> p1, IPublisher<T2> p2,
             IPublisher<T2> p3, IPublisher<T4> p4,
@@ -858,90 +1364,234 @@ namespace Reactor.Core
             return new PublisherMap<T, R>(source, mapper);
         }
 
+        /// <summary>
+        /// Apply the transformer function on the source IFlux; this allows fluent conversion
+        /// to any other type.
+        /// </summary>
+        /// <typeparam name="T">The input IFlux value type.</typeparam>
+        /// <typeparam name="R">The output type.</typeparam>
+        /// <param name="source">The source IFlux to transform.</param>
+        /// <param name="transformer">The transformer, receiving the IFlux source and returns a value.</param>
+        /// <returns>The value returned by the transformer function.</returns>
         public static R As<T, R>(this IFlux<T> source, Func<IFlux<T>, R> transformer)
         {
             return transformer(source);
         }
 
+        /// <summary>
+        /// Returns an IMono containing true if the source contains any item the predicate
+        /// matches.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="predicate">The predicate to apply to each item in the sequence.</param>
+        /// <returns>The new IMono containing either true or false.</returns>
         public static IMono<bool> Any<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
             // TODO implement Any
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Returns an IMono containing true if all items from the source match the predicate.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="predicate">The predicate to be mached by all source elements.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<bool> All<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
             // TODO implement All
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Buffers all elements from the source sequence into an IList.
+        /// This operator requires a finite source.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IMono instance holding the IList of all source values.</returns>
         public static IMono<IList<T>> Buffer<T>(this IFlux<T> source)
         {
             // TODO implement Buffer
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Buffers elements into non-overlapping sub-buffers with the specified number of elements in
+        /// each.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="size">The size of each IList buffer (except the last once which could be smaller).</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, int size)
         {
             return Buffer(source, size, size);
         }
 
+        /// <summary>
+        /// Buffers elements into potentially overlapping sub-buffers with the specified number of elements in
+        /// each and sub-buffers started after the skip amount.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="size">The number of elements to store in each sub-buffer.</param>
+        /// <param name="skip">The number of elements to let pass to start the next buffer.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, int size, int skip)
         {
             // TODO implement Buffer
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Buffers elements into non-overlapping sub-buffers whose boundary is established by
+        /// an OnNext signal from the boundary IPublisher.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="U">The boundary value type.</typeparam>
+        /// <param name="source">The source IFlux of values to buffer.</param>
+        /// <param name="boundary">The boundary IPublisher signalling the end and start of each sub-buffer.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T, U>(this IFlux<T> source, IPublisher<U> boundary)
         {
             // TODO implement Buffer
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Buffers elements into potentially overlapping sub-buffers which are opened by an IPublisher
+        /// and closed by another, derived IPublisher signalling.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="U">The buffer-opening sequence type.</typeparam>
+        /// <typeparam name="V">The buffer-closing sequence type.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <param name="open">The IPublisher opening buffers</param>
+        /// <param name="close">The function generating an IPublisher to close a buffer opened 
+        /// by the value from <paramref name="open"/> sequence.</param>
+        /// <returns>The nex IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T, U, V>(this IFlux<T> source, IPublisher<U> open, Func<U, IPublisher<V>> close)
         {
             // TODO implement Buffer
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Buffers elements into non-overlapping sub-buffers for the specified timespan duration each.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="timespan">The time duration for each sub-buffer.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, TimeSpan timespan)
         {
             return Buffer(source, timespan, timespan, DefaultScheduler.Instance);
         }
 
+        /// <summary>
+        /// Buffers elements into non-overlapping sub-buffers for the specified timespan duration each,
+        /// determined by the given timed scheduler.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="timespan">The time duration for each sub-buffer.</param>
+        /// <param name="scheduler">The timed scheduler to give the notion of time for the sub-buffer duration</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
         {
             return Buffer(source, timespan, timespan, scheduler);
         }
 
+        /// <summary>
+        /// Buffers elements into potentially overlapping sub-buffers, buffering for the specified timespan each
+        /// and starting new buffers after the specified timeskip time.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="timespan">The duration for each sub-buffer.</param>
+        /// <param name="timeskip">The time to skip before starting a new sub-buffer.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, TimeSpan timespan, TimeSpan timeskip)
         {
             return Buffer(source, timespan, timeskip, DefaultScheduler.Instance);
         }
 
+        /// <summary>
+        /// Buffers elements into potentially overlapping sub-buffers, buffering for the specified timespan each
+        /// and starting new buffers after the specified timeskip time, as determined by the given timed scheduler.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="timespan">The duration for each sub-buffer.</param>
+        /// <param name="timeskip">The time to skip before starting a new sub-buffer.</param>
+        /// <param name="scheduler">The timed scheduler to provide the timing of sub-buffer boundaries.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, TimeSpan timespan, TimeSpan timeskip, TimedScheduler scheduler)
         {
             // TODO implement Buffer
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Buffer elements into non-overlapping sub-buffers limited by a maximum size or buffering duration.
+        /// If the maximum size is reached, the time duration is restarted from that point.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="maxSize">The maximum number of elements in each sub-buffer.</param>
+        /// <param name="timespan">The duration of buffering into each sub-buffer.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, int maxSize, TimeSpan timespan)
         {
             return Buffer(source, maxSize, timespan, DefaultScheduler.Instance);
         }
 
+        /// <summary>
+        /// Buffer elements into non-overlapping sub-buffers limited by a maximum size or buffering duration.
+        /// If the maximum size is reached, the time duration is restarted from that point,
+        /// where timing is determined by the given timed scheduler.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="maxSize">The maximum number of elements in each sub-buffer.</param>
+        /// <param name="timespan">The duration of buffering into each sub-buffer.</param>
+        /// <param name="scheduler">The timed scheduler to provide the timing of sub-buffer boundaries.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, int maxSize, TimeSpan timespan, TimedScheduler scheduler)
         {
             // TODO implement Buffer
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Caches all (or the last <paramref name="history"/>) elements from the source IFlux and
+        /// replays them to every subscriber. The caching starts when the first subscriber subscribes.
+        /// </summary>
+        /// <remarks>
+        /// The cache can't be cleared or restarted. See <see cref="Replay{T}(IFlux{T})"/> to.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source sequence.</param>
+        /// <param name="history">The number of elements to retain.</param>
+        /// <returns>The IFlux instance.</returns>
         public static IFlux<T> Cache<T>(this IFlux<T> source, int history = int.MaxValue)
         {
             // TODO implement Cache
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Casts elements of the source sequence into the given type or
+        /// signals InvalidCastException if any of the source elements can't
+        /// be cast to that target type.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The target value type.</typeparam>
+        /// <param name="source">The source sequence.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Cast<T, R>(this IFlux<T> source) where T: class where R: class
         {
             return Map(source, v =>
@@ -955,26 +1605,75 @@ namespace Reactor.Core
             });
         }
 
+        /// <summary>
+        /// Collects values into a custom collection, provided by a factory for each subscriber,
+        /// via a collector action and emits this collection at the end.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="C">The collection type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="collectionSupplier">The supplier of the collection.</param>
+        /// <param name="collector">The action called with the collection and the current source value.</param>
+        /// <returns>The new IMono instance with the collection.</returns>
         public static IMono<C> Collect<T, C>(this IFlux<T> source, Func<C> collectionSupplier, Action<C, T> collector)
         {
             return new PublisherCollect<T, C>(source, collectionSupplier, collector);
         }
 
+        /// <summary>
+        /// Collects all source values into an IList and returns it as an IMono.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="capacityHint">The expected number of elements. (Reduce number of times the list has to be resized).</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<IList<T>> CollectList<T>(this IFlux<T> source, int capacityHint = 16)
         {
             return Collect<T, IList<T>>(source, () => new List<T>(capacityHint), (c, t) => c.Add(t));
         }
 
+        /// <summary>
+        /// Collects all source values into an sorted IList and returns it as an IMono.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="comparer">The comparer function to compare elements.</param>
+        /// <param name="capacityHint">The expected number of elements. (Reduce number of times the list has to be resized).</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<IList<T>> CollectSortedList<T>(this IFlux<T> source, IComparer<T> comparer, int capacityHint = 16)
         {
             return CollectList(source, capacityHint).Map(c => c.OrderBy(v => v, comparer).ToList());
         }
 
+        /// <summary>
+        /// Collects all values into a Dictionary where the keys are derived via function.
+        /// </summary>
+        /// <remarks>
+        /// Source values mapping to the same key are overwritten.
+        /// </remarks>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts the key from the source values.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<IDictionary<K, T>> CollectDictionary<T, K>(this IFlux<T> source, Func<T, K> keySelector)
         {
             return CollectDictionary(source, keySelector, v => v);
         }
 
+        /// <summary>
+        /// Collects all values into a Dictionary where the keys and values are derived via functions.
+        /// </summary>
+        /// <remarks>
+        /// Source values mapping to the same key are overwritten.
+        /// </remarks>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <typeparam name="V">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts the key from the source element.</param>
+        /// <param name="valueSelector">The function that extracts the value from the source element</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<IDictionary<K, V>> CollectDictionary<T, K, V>(this IFlux<T> source, Func<T, K> keySelector, Func<T, V> valueSelector)
         {
             return Collect<T, IDictionary<K, V>>(source, () => new Dictionary<K, V>(), (d, t) =>
@@ -991,11 +1690,29 @@ namespace Reactor.Core
             });
         }
 
+        /// <summary>
+        /// Collects elements mapping to the same key through a function into a list in a dictionary.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts the key from the source element.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<IDictionary<K, IList<T>>> CollectMultiDictionary<T, K>(this IFlux<T> source, Func<T, K> keySelector)
         {
             return CollectMultiDictionary(source, keySelector, v => v);
         }
 
+        /// <summary>
+        /// Collects elements, transformed by a function, mapping to the same key through a function into a list in a dictionary.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="K">The key type.</typeparam>
+        /// <typeparam name="V">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="keySelector">The function that extracts the key from the source element.</param>
+        /// <param name="valueSelector">The function that extracts the value from each source element.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<IDictionary<K, IList<V>>> CollectMultiDictionary<T, K, V>(this IFlux<T> source, Func<T, K> keySelector, Func<T, V> valueSelector)
         {
             return Collect<T, IDictionary<K, IList<V>>>(source, () => new Dictionary<K, IList<V>>(), (d, t) =>
@@ -1015,32 +1732,99 @@ namespace Reactor.Core
             });
         }
 
+        /// <summary>
+        /// Transforms the source IFlux into an IPublisher at subscription time (for each subscriber), allowing
+        /// custom behavior to be injected into a flow.
+        /// </summary>
+        /// <remarks>
+        /// Because the function is called at subscription time, the composition can have sequence-local
+        /// state associated. 
+        /// <p/>
+        /// To do an assembly time composition, use the <see cref="As{T, R}(IFlux{T}, Func{IFlux{T}, R})"/>
+        /// operator with a IPublisher-returning function.
+        /// </remarks>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The output value type</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="composer">The function called for each subscriber, receiving the source and returning
+        /// an IPublisher that will be subscribed to.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Compose<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> composer)
         {
             return Defer(() => composer(source));
         }
 
+        /// <summary>
+        /// Concatenates IPublishers generated by a mapper function from the values of the source IPublisher.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that maps each source value into an IPublisher.</param>
+        /// <param name="errorMode">Specifies the error handling behavior. See <see cref="ConcatErrorMode"/> constants.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> ConcatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             return ConcatMap(source, mapper, BufferSize, errorMode);
         }
 
+        /// <summary>
+        /// Concatenates IPublishers generated by a mapper function from the values of the source IPublisher.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that maps each source value into an IPublisher.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="errorMode">Specifies the error handling behavior. See <see cref="ConcatErrorMode"/> constants.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> ConcatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapper, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             return new PublisherConcatMap<T, R>(source, mapper, prefetch, errorMode);
         }
 
+        /// <summary>
+        /// Concatenates IEnumerable sequences generated by a mapper function from the values of the source IPublisher.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that maps each source value into an IEnumerable.</param>
+        /// <param name="errorMode">Specifies the error handling behavior. See <see cref="ConcatErrorMode"/> constants.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             return ConcatMap(source, mapper, BufferSize, errorMode);
         }
 
+        /// <summary>
+        /// Concatenates IEnumerable sequences generated by a mapper function from the values of the source IPublisher.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="R">The result value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="mapper">The function that maps each source value into an IEnumerable.</param>
+        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
+        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
+        /// <param name="errorMode">Specifies the error handling behavior. See <see cref="ConcatErrorMode"/> constants.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             // TODO implement ConcatMap
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Concatenates the source IFlux sequence with the other IPublisher sequence, optionally delaying an OnError signal
+        /// from the first one until the other sequence terminates.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="other">The other IPublisher sequence</param>
+        /// <param name="delayError">If true, OnError signals are delayed until the other IPublisher sequence terminates.
+        /// If both signal an OnError, the sequence signals an AggregateException of the two Exceptions.</param>
+        /// <returns></returns>
         public static IFlux<T> ConcatWith<T>(this IFlux<T> source, IFlux<T> other, bool delayError = false)
         {
             if (source is PublisherConcatArray<T>)
@@ -1050,35 +1834,109 @@ namespace Reactor.Core
             return new PublisherConcatArray<T>(new IPublisher<T>[] { source, other }, delayError);
         }
 
+        /// <summary>
+        /// Counts the number if elements in the IFlux sequence.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<long> Count<T>(this IFlux<T> source)
         {
             return new PublisherCount<T>(source);
         }
 
+        /// <summary>
+        /// Signals a default value if the source IFlux sequence is empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="defaultValue">The default value to signal.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DefaultIfEmpty<T>(this IFlux<T> source, T defaultValue)
         {
             // TODO implement DefaultIfEmpty
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Shifts the emission of the source IPublisher signals in time by the given amount,
+        /// determined by the default timed scheduler.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="delay">The shift amount.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Delay<T>(this IFlux<T> source, TimeSpan delay)
         {
             // TODO implement Delay
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Shifts the emission of the source IPublisher signals in time by the given amount,
+        /// determined by the given timed scheduler.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="delay">The shift amount.</param>
+        /// <param name="scheduler">The timed scheduler to use for the time shifting.</param>
+        /// <returns>The new IFlux instance.</returns>
+        public static IFlux<T> Delay<T>(this IFlux<T> source, TimeSpan delay, TimedScheduler scheduler)
+        {
+            // TODO implement Delay
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Delays the actual subscription to the source IFlux instance until the specified delay
+        /// has elapsed, as determined by the default timed scheduler.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="delay">The delay amount</param>
+        /// <returns>The new IFlux instance</returns>
         public static IFlux<T> DelaySubscription<T>(this IFlux<T> source, TimeSpan delay)
         {
             // TODO implement DelaySubscription
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Delays the actual subscription to the source IFlux instance until the specified delay
+        /// has elapsed, as determined by the given timed scheduler.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="delay">The delay amount</param>
+        /// <param name="scheduler">The timed scheduler to use for the time shifting.</param>
+        /// <returns>The new IFlux instance</returns>
+        public static IFlux<T> DelaySubscription<T>(this IFlux<T> source, TimeSpan delay, TimedScheduler scheduler)
+        {
+            // TODO implement DelaySubscription
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Delays the actual subscription to the source IFlux until the other IPublisher signals an
+        /// OnNext or OnComplete.
+        /// </summary>
+        /// <typeparam name="T">The source value type.</typeparam>
+        /// <typeparam name="U">The other value type.</typeparam>
+        /// <param name="source">The source IFlux.</param>
+        /// <param name="other">The other IPublisher which should trigger the actual subscription.</param>
+        /// <returns></returns>
         public static IFlux<T> DelaySubscription<T, U>(this IFlux<T> source, IPublisher<U> other)
         {
             // TODO implement DelaySubscription
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Transforms a sequence of ISignal instances back into OnNext, OnError and OnComplete signals.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux with ISignal type.</param>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Dematerialize<T>(this IFlux<ISignal<T>> source)
         {
             // TODO implement Dematerialize

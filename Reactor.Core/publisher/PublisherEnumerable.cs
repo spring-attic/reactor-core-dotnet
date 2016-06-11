@@ -76,6 +76,10 @@ namespace Reactor.Core.publisher
             public void Cancel()
             {
                 Volatile.Write(ref cancelled, true);
+                if (Interlocked.Increment(ref requested) == 1)
+                {
+                    Dispose(enumerator);
+                }
             }
 
             protected void Dispose(IEnumerator<T> e)
@@ -86,7 +90,7 @@ namespace Reactor.Core.publisher
                 }
                 catch (Exception ex)
                 {
-                    ExceptionHelper.OnErrorDropped(ex);
+                    ExceptionHelper.ThrowOrDrop(ex);
                 }
 
             }
@@ -118,6 +122,7 @@ namespace Reactor.Core.publisher
                 {
                     empty = true;
                     value = default(T);
+                    Dispose(enumerator);
                     return false;
                 }
                 value = enumerator.Current;
@@ -184,6 +189,8 @@ namespace Reactor.Core.publisher
                         ExceptionHelper.ThrowIfFatal(ex);
 
                         a.OnError(ex);
+
+                        Dispose(e);
                         return;
                     }
 
@@ -193,6 +200,8 @@ namespace Reactor.Core.publisher
                         {
                             a.OnComplete();
                         }
+
+                        Dispose(e);
 
                         return;
                     }
@@ -237,6 +246,9 @@ namespace Reactor.Core.publisher
                             {
                                 a.OnComplete();
                             }
+
+                            Dispose(et);
+
                             return;
                         }
 
@@ -291,6 +303,8 @@ namespace Reactor.Core.publisher
                         ExceptionHelper.ThrowIfFatal(ex);
 
                         a.OnError(ex);
+
+                        Dispose(e);
                         return;
                     }
 
@@ -300,6 +314,8 @@ namespace Reactor.Core.publisher
                         {
                             a.OnComplete();
                         }
+
+                        Dispose(e);
 
                         return;
                     }
@@ -335,6 +351,8 @@ namespace Reactor.Core.publisher
                         {
                             ExceptionHelper.ThrowIfFatal(ex);
                             a.OnError(ex);
+
+                            Dispose(et);
                             return;
                         }
 
@@ -344,6 +362,9 @@ namespace Reactor.Core.publisher
                             {
                                 a.OnComplete();
                             }
+
+                            Dispose(et);
+
                             return;
                         }
 

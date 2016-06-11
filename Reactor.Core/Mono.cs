@@ -292,11 +292,7 @@ namespace Reactor.Core
 
         public static IFlux<T> ConcatWith<T>(this IMono<T> source, IPublisher<T> other, bool delayErrors = false)
         {
-            if (delayErrors)
-            {
-                return Flux.ConcatDelayError(source, other);
-            }
-            return Flux.Concat<T>(source, other);
+            return Flux.Concat(delayErrors, source, other);
         }
 
         public static IMono<T> DefaultIfEmpty<T>(this IMono<T> source, T defaultValue)

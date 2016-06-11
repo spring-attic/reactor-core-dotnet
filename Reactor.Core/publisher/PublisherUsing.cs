@@ -110,6 +110,8 @@ namespace Reactor.Core.publisher
 
             readonly bool eager;
 
+            int once;
+
             public UsingSubscriber(ISubscriber<T> actual, S state, Action<S> stateDisposer, bool eager) : base(actual)
             {
                 this.state = state;
@@ -123,7 +125,7 @@ namespace Reactor.Core.publisher
                 {
                     try
                     {
-                        stateDisposer(state);
+                        Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -145,7 +147,7 @@ namespace Reactor.Core.publisher
             {
                 try
                 {
-                    stateDisposer(state);
+                    Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -159,7 +161,7 @@ namespace Reactor.Core.publisher
                 {
                     try
                     {
-                        stateDisposer(state);
+                        Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -190,6 +192,20 @@ namespace Reactor.Core.publisher
             {
                 return TransitiveAnyFusion(mode);
             }
+
+            public override void Cancel()
+            {
+                Dispose();
+                base.Cancel();
+            }
+
+            void Dispose()
+            {
+                if (Interlocked.CompareExchange(ref once, 1, 0) == 0)
+                {
+                    stateDisposer(state);
+                }
+            }
         }
 
         sealed class UsingConditionalSubscriber : BasicFuseableConditionalSubscriber<T, T>
@@ -199,6 +215,8 @@ namespace Reactor.Core.publisher
             readonly Action<S> stateDisposer;
 
             readonly bool eager;
+
+            int once;
 
             public UsingConditionalSubscriber(IConditionalSubscriber<T> actual, S state, Action<S> stateDisposer, bool eager) : base(actual)
             {
@@ -213,7 +231,7 @@ namespace Reactor.Core.publisher
                 {
                     try
                     {
-                        stateDisposer(state);
+                        Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -235,7 +253,7 @@ namespace Reactor.Core.publisher
             {
                 try
                 {
-                    stateDisposer(state);
+                    Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -249,7 +267,7 @@ namespace Reactor.Core.publisher
                 {
                     try
                     {
-                        stateDisposer(state);
+                        Dispose();
                     }
                     catch (Exception ex)
                     {
@@ -285,6 +303,21 @@ namespace Reactor.Core.publisher
             {
                 return TransitiveAnyFusion(mode);
             }
+
+            public override void Cancel()
+            {
+                Dispose();
+                base.Cancel();
+            }
+
+            void Dispose()
+            {
+                if (Interlocked.CompareExchange(ref once, 1, 0) == 0)
+                {
+                    stateDisposer(state);
+                }
+            }
+
         }
 
     }
