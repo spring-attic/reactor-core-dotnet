@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherError<T> : IFlux<T>, IMono<T>, IFuseable
+    sealed class PublisherError<T> : IFlux<T>, IMono<T>
     {
         readonly Exception error;
 

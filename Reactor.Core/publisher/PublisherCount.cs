@@ -14,7 +14,7 @@ using Reactor.Core.subscriber;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherCount<T> : IFlux<long>, IMono<long>, IFuseable
+    sealed class PublisherCount<T> : IFlux<long>, IMono<long>
     {
         readonly IPublisher<T> source;
 

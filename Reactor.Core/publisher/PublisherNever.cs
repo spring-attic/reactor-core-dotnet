@@ -13,7 +13,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherNever<T> : IFlux<T>, IMono<T>, IFuseable
+    sealed class PublisherNever<T> : IFlux<T>, IMono<T>
     {
         internal static readonly PublisherNever<T> Instance = new PublisherNever<T>();
 

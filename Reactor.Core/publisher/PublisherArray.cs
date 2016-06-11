@@ -13,7 +13,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherArray<T> : IFlux<T>, IFuseable
+    sealed class PublisherArray<T> : IFlux<T>
     {
         readonly T[] array;
 

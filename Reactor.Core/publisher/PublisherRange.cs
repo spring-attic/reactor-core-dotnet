@@ -13,7 +13,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherRange : IFlux<int>, IFuseable
+    sealed class PublisherRange : IFlux<int>
     {
         readonly int start;
 

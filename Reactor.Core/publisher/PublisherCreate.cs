@@ -15,7 +15,7 @@ using System.Runtime.InteropServices;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherCreate<T> : IFlux<T>, IFuseable
+    sealed class PublisherCreate<T> : IFlux<T>
     {
         readonly Action<IFluxEmitter<T>> emitter;
 

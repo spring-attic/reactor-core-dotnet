@@ -13,7 +13,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherFunc<T> : IFlux<T>, IMono<T>, IFuseable, ICallable<T>
+    sealed class PublisherFunc<T> : IFlux<T>, IMono<T>, ICallable<T>
     {
         readonly Func<T> supplier;
 

@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherTimer : IFlux<long>, IMono<long>, IFuseable
+    sealed class PublisherTimer : IFlux<long>, IMono<long>
     {
         readonly TimeSpan delay;
 

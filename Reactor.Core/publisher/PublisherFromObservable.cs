@@ -15,7 +15,7 @@ using System.Runtime.InteropServices;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherFromObservable<T> : IFlux<T>, IFuseable
+    sealed class PublisherFromObservable<T> : IFlux<T>
     {
         readonly IObservable<T> source;
 

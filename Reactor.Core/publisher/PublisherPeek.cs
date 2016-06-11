@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherPeek<T> : IFlux<T>, IMono<T>, IFuseable
+    sealed class PublisherPeek<T> : IFlux<T>, IMono<T>
     {
         readonly IPublisher<T> source;
 

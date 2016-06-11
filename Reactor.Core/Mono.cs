@@ -449,10 +449,6 @@ namespace Reactor.Core
             {
                 return source as IFlux<T>;
             }
-            if (source is IFuseable)
-            {
-                return new PublisherWrapFuseable<T>(source);
-            }
             return new PublisherWrap<T>(source);
         }
 

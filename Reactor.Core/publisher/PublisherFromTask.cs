@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherFromTask<T> : IFlux<T>, IMono<T>, IFuseable
+    sealed class PublisherFromTask<T> : IFlux<T>, IMono<T>
     {
         readonly Task<T> task;
 
@@ -64,7 +64,7 @@ namespace Reactor.Core.publisher
         }
     }
 
-    sealed class PublisherFromTask : IFlux<Void>, IMono<Void>, IFuseable
+    sealed class PublisherFromTask : IFlux<Void>, IMono<Void>
     {
         readonly Task task;
 

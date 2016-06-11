@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherDistinctUntilChanged<T, K> : IFlux<T>, IFuseable
+    sealed class PublisherDistinctUntilChanged<T, K> : IFlux<T>
     {
         readonly IPublisher<T> source;
 

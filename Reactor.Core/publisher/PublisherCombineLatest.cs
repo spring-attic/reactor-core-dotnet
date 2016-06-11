@@ -15,7 +15,7 @@ using System.Runtime.InteropServices;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherCombineLatest<T, R> : IFlux<R>, IFuseable
+    sealed class PublisherCombineLatest<T, R> : IFlux<R>
     {
         readonly IPublisher<T>[] sources;
 

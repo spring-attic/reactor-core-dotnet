@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherGenerate<T, S> : IFlux<T>, IFuseable
+    sealed class PublisherGenerate<T, S> : IFlux<T>
     {
         readonly Func<S> stateFactory;
 

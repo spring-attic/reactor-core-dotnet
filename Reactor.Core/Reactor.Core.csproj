@@ -45,7 +45,7 @@
     <Compile Include="IConnectableFlux.cs" />
     <Compile Include="flow\ICallable.cs" />
     <Compile Include="flow\IConditionalSubscriber.cs" />
-    <Compile Include="flow\IFuseable.cs" />
+    <Compile Include="flow\FuseableHelper.cs" />
     <Compile Include="flow\IQueue.cs" />
     <Compile Include="flow\IQueueSubscription.cs" />
     <Compile Include="IMonoEmitter.cs" />
@@ -101,7 +101,6 @@
     <Compile Include="publisher\PublisherSwitchMap.cs" />
     <Compile Include="publisher\PublisherTake.cs" />
     <Compile Include="publisher\PublisherUsing.cs" />
-    <Compile Include="publisher\PublisherWrapFuseable.cs" />
     <Compile Include="publisher\PublisherWrap.cs" />
     <Compile Include="IReactiveStreams.cs" />
     <Compile Include="ExceptionHelper.cs" />

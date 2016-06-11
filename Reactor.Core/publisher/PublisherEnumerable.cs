@@ -13,7 +13,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherEnumerable<T> : IFlux<T>, IFuseable
+    sealed class PublisherEnumerable<T> : IFlux<T>
     {
         readonly IEnumerable<T> enumerable;
 

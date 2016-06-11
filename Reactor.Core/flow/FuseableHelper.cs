@@ -7,15 +7,6 @@ using System.Threading.Tasks;
 namespace Reactor.Core.flow
 {
     /// <summary>
-    /// Marker interface indicating that the <see cref="Reactive.Streams.IPublisher{T}"/>
-    /// can be back-fused.
-    /// </summary>
-    /// <seealso cref="Reactor.Core.flow.FuseableHelper"/>
-    public interface IFuseable
-    {
-    }
-
-    /// <summary>
     /// Constants for <see cref="IQueueSubscription{T}.RequestFusion(int)"/> parameter
     /// and return types.
     /// </summary>

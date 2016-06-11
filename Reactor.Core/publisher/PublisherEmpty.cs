@@ -12,7 +12,7 @@ using Reactor.Core.subscription;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherEmpty<T> : IFlux<T>, IMono<T>, IFuseable
+    sealed class PublisherEmpty<T> : IFlux<T>, IMono<T>
     {
         internal static readonly PublisherEmpty<T> Instance = new PublisherEmpty<T>();
 
