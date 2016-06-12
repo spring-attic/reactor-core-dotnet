@@ -201,5 +201,136 @@ namespace Reactor.Core.util
             }
             return Volatile.Read(ref requested);
         }
+
+        /// <summary>
+        /// Atomically add to the requested amount and drain the queue
+        /// if in post-complete state.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="requested">The requested field.</param>
+        /// <param name="n">The request amount, positive (not validated).</param>
+        /// <param name="s">The target ISubscriber</param>
+        /// <param name="queue">The queue to drain.</param>
+        /// <param name="cancelled">The cancelled field</param>
+        /// <returns>True if in post-complete mode.</returns>
+        public static bool PostCompleteRequest<T>(ref long requested, long n, ISubscriber<T> s, IQueue<T> queue, ref bool cancelled)
+        {
+            long r = Volatile.Read(ref requested);
+            for (;;)
+            {
+                long c = r & COMPLETE_MASK;
+                long u = r & REQUESTED_MASK;
+
+                long v = AddCap(u, n) | c;
+
+                long w = Interlocked.CompareExchange(ref requested, v, r);
+                if (w == r)
+                {
+                    if (r == COMPLETE_MASK)
+                    {
+                        PostCompleteDrain(ref requested, s, queue, ref cancelled);
+                    }
+                    return c != 0L;
+                }
+                else
+                {
+                    r = w;
+                }
+
+            }
+        }
+
+        static long COMPLETE_MASK = long.MinValue;
+        static long REQUESTED_MASK = long.MaxValue;
+
+        /// <summary>
+        /// Atomically switches to post-complete mode and drains the queue.
+        /// </summary>
+        /// <typeparam name="T">The value type</typeparam>
+        /// <param name="requested">The requested field.</param>
+        /// <param name="s">The ISubscriber</param>
+        /// <param name="queue">The queue</param>
+        /// <param name="cancelled">The cancelled field.</param>
+        public static void PostComplete<T>(ref long requested, ISubscriber<T> s, IQueue<T> queue, ref bool cancelled)
+        {
+            long r = Volatile.Read(ref requested);
+            for (;;)
+            {
+                if ((r & COMPLETE_MASK) != 0)
+                {
+                    return;
+                }
+                long u = r | COMPLETE_MASK;
+                long v = Interlocked.CompareExchange(ref requested, u, r);
+                if (v == r)
+                {
+                    if (r != 0L)
+                    {
+                        PostCompleteDrain(ref requested, s, queue, ref cancelled);
+                    }
+                    return;
+                }
+                else
+                {
+                    r = v;
+                }
+            }
+        }
+
+        static void PostCompleteDrain<T>(ref long requested, ISubscriber<T> s, IQueue<T> queue, ref bool cancelled)
+        {
+            long r = Volatile.Read(ref requested);
+            long e = COMPLETE_MASK;
+            for (;;)
+            {
+                while (e != r)
+                {
+                    if (Volatile.Read(ref cancelled))
+                    {
+                        queue.Clear();
+                        return;
+                    }
+
+                    T t;
+
+                    if (queue.Poll(out t))
+                    {
+                        s.OnNext(t);
+                        e++;
+                    }
+                    else
+                    {
+                        s.OnComplete();
+                        return;
+                    }
+                }
+
+                if (e == r)
+                {
+                    if (Volatile.Read(ref cancelled))
+                    {
+                        queue.Clear();
+                        return;
+                    }
+
+                    if (queue.IsEmpty())
+                    {
+                        s.OnComplete();
+                        return;
+                    }
+                }
+
+                r = Volatile.Read(ref requested);
+                if (r == e)
+                {
+                    r = Interlocked.Add(ref requested, -e);
+                    if (r == COMPLETE_MASK)
+                    {
+                        break;
+                    }
+                    e = COMPLETE_MASK;
+                }
+            }
+        }
     }
 }

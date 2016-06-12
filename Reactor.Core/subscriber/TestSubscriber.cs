@@ -11,6 +11,7 @@ using Reactor.Core.flow;
 using Reactor.Core.subscriber;
 using Reactor.Core.subscription;
 using Reactor.Core.util;
+using System.Collections;
 
 namespace Reactor.Core.subscriber
 {
@@ -305,13 +306,86 @@ namespace Reactor.Core.subscriber
         string ToString(T[] ts)
         {
             return string.Join(",",
-                          ts.Select(x => x.ToString()).ToArray());
+                          ts.Select(x => {
+                              if (x is IEnumerable)
+                              {
+                                  return "[" + ToString(x as IEnumerable) + "]";
+                              }
+                              else
+                              {
+                                  return x.ToString();
+                              }
+                          }).ToArray());
         }
 
         string ToString(IEnumerable<T> ts)
         {
             return string.Join(",",
-                          ts.Select(x => x.ToString()).ToArray());
+                          ts.Select(x => {
+                              if (x is IEnumerable) {
+                                  return "[" + ToString(x as IEnumerable) + "]";
+                              } else
+                              {
+                                  return x.ToString();
+                              }
+                          }).ToArray());
+        }
+
+        string ToString(IEnumerable ts)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var o in ts)
+            {
+                if (sb.Length != 0)
+                {
+                    sb.Append(",");
+                }
+                if (o is IEnumerable)
+                {
+                    sb.Append("[");
+                    sb.Append(ToString(o as IEnumerable));
+                    sb.Append("]");
+                }
+                else
+                {
+                    sb.Append(o.ToString());
+                }
+            }
+            return sb.ToString();
+        }
+
+        bool SequenceEqual(IEnumerable a, IEnumerable b)
+        {
+            var i1 = a.GetEnumerator();
+            var i2 = b.GetEnumerator();
+
+            for (;;)
+            {
+                bool b1 = i1.MoveNext();
+                bool b2 = i2.MoveNext();
+
+                if (b1 == b2)
+                {
+                    if (!b1)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        var o1 = i1.Current;
+                        var o2 = i2.Current;
+
+                        if (!((o1 == o2) || (o1 != null && o2 != null && o1.Equals(o2))))
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         /// <summary>
@@ -334,9 +408,18 @@ namespace Reactor.Core.subscriber
             {
                 var a = values[i];
                 var b = expected[i];
-                if (!ec.Equals(a, b))
+
+                if (a is IEnumerable && b is IEnumerable)
                 {
-                    AssertionError(string.Format("Values at {0} differ: Expected = {1}, Actual = {2}", i, a, b));
+                    if (!SequenceEqual(a as IEnumerable, b as IEnumerable))
+                    {
+                        AssertionError(string.Format("Values at {0} differ: Expected = {1}, Actual = {2}", i, ToString(b as IEnumerable), ToString(a as IEnumerable)));
+                    }
+                }
+                else
+                if (!(((object)a == (object)b) || (a != null && b != null && a.Equals(b))))
+                {
+                    AssertionError(string.Format("Values at {0} differ: Expected = {1}, Actual = {2}", i, b, a));
                 }
             }
 

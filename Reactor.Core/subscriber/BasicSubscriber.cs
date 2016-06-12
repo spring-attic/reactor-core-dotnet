@@ -34,7 +34,7 @@ namespace Reactor.Core.subscriber
             this.actual = actual;
         }
 
-        public void Cancel()
+        public virtual void Cancel()
         {
             s.Cancel();
         }
@@ -58,7 +58,7 @@ namespace Reactor.Core.subscriber
             }
         }
 
-        public void Request(long n)
+        public virtual void Request(long n)
         {
             s.Request(n);
         }

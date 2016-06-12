@@ -31,6 +31,10 @@ namespace Reactor.Core.publisher
 
         public void Subscribe(ISubscriber<R> s)
         {
+            if (PublisherCallableXMap<T, R>.CallableXMap(source, s, mapper))
+            {
+                return;
+            }
             source.Subscribe(new SwitchMapSubscriber(s, mapper, prefetch));
         }
 

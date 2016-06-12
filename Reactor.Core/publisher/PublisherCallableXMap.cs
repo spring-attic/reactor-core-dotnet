@@ -15,6 +15,13 @@ namespace Reactor.Core.publisher
 {
     sealed class PublisherCallableXMap<T, R>
     {
+        /// <summary>
+        /// Applies shortcuts if the source is the empty instance or an ICallable.
+        /// </summary>
+        /// <param name="source">The source IPublisher.</param>
+        /// <param name="s">The ISubscriber</param>
+        /// <param name="mapper">The function that takes a source value and maps it into an IPublisher.</param>
+        /// <returns>True if the optimizations were applied.</returns>
         internal static bool CallableXMap(IPublisher<T> source, ISubscriber<R> s, Func<T, IPublisher<R>> mapper)
         {
             if (source == PublisherEmpty<T>.Instance)

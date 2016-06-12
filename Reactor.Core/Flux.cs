@@ -883,33 +883,6 @@ namespace Reactor.Core
         }
 
         /// <summary>
-        /// Creates an IFluxProcessor that accepts IPublisher instances, subscribes to them and
-        /// relays signals from them until the next IPublisher is signalled to the IFluxProcessor.
-        /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
-        /// <returns>The new IFluxProcessor instance.</returns>
-        public static IFluxProcessor<IPublisher<T>, T> SwitchOnNext<T>()
-        {
-            return SwitchOnNext<T>(BufferSize);
-        }
-
-        /// <summary>
-        /// Creates an IFluxProcessor that accepts IPublisher instances, subscribes to them and
-        /// relays signals from them until the next IPublisher is signalled to the IFluxProcessor.
-        /// Each IPublisher instance is prefetched with the specified amount and using a low-watermark
-        /// of 25%.
-        /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
-        /// <param name="prefetch">The number of items to prefetch from each source. If negative, each source is run in
-        /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
-        /// <returns>The new IFluxProcessor instance.</returns>
-        public static IFluxProcessor<IPublisher<T>, T> SwitchOnNext<T>(int prefetch)
-        {
-            // TODO implement SwitchOnNext
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Relays signals of the inner IPublisher sources until the outer IPublisher produces another inner source.
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
@@ -1385,8 +1358,7 @@ namespace Reactor.Core
         /// <returns>The new IMono containing either true or false.</returns>
         public static IMono<bool> Any<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
-            // TODO implement Any
-            throw new NotImplementedException();
+            return new PublisherAny<T>(source, predicate);
         }
 
         /// <summary>
@@ -1398,8 +1370,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<bool> All<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
-            // TODO implement All
-            throw new NotImplementedException();
+            return new PublisherAll<T>(source, predicate);
         }
 
         /// <summary>
@@ -1408,11 +1379,10 @@ namespace Reactor.Core
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
         /// <param name="source">The source IFlux.</param>
-        /// <returns>The new IMono instance holding the IList of all source values.</returns>
-        public static IMono<IList<T>> Buffer<T>(this IFlux<T> source)
+        /// <returns>The new IFlux instance holding the IList of all source values.</returns>
+        public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source)
         {
-            // TODO implement Buffer
-            throw new NotImplementedException();
+            return new PublisherCollect<T, IList<T>>(source, () => new List<T>(), (a, b) => a.Add(b));
         }
 
         /// <summary>
@@ -1439,8 +1409,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, int size, int skip)
         {
-            // TODO implement Buffer
-            throw new NotImplementedException();
+            return new PublisherBufferSize<T>(source, size, skip);
         }
 
         /// <summary>
