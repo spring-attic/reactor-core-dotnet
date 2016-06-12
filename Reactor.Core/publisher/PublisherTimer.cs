@@ -78,7 +78,7 @@ namespace Reactor.Core.publisher
 
             public void Clear()
             {
-                throw new NotImplementedException();
+                // nothing to do
             }
 
             public bool IsEmpty()

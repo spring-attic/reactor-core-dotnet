@@ -24,7 +24,7 @@ namespace Reactor.Core.publisher
 
         public void Subscribe(ISubscriber<T> s)
         {
-            throw new NotImplementedException();
+            source.Subscribe(new FirstOrEmptySubscriber(s));
         }
 
         sealed class FirstOrEmptySubscriber : DeferredScalarSubscriber<T, T>

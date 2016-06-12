@@ -24,7 +24,7 @@ namespace Reactor.Core.publisher
 
         public void Subscribe(ISubscriber<bool> s)
         {
-            throw new NotImplementedException();
+            source.Subscribe(new HasElementsSubscriber(s));
         }
 
         sealed class HasElementsSubscriber : DeferredScalarSubscriber<T, bool>
