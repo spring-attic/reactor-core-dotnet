@@ -41,6 +41,12 @@ namespace Reactor.Core.publisher
                 this.predicate = predicate;
             }
 
+            protected override void OnStart()
+            {
+                s.Request(long.MaxValue);
+            }
+
+
             public override void OnComplete()
             {
                 if (done)
@@ -84,7 +90,7 @@ namespace Reactor.Core.publisher
                 {
                     s.Cancel();
                     done = true;
-                    Complete(true);
+                    Complete(false);
                 }
             }
         }

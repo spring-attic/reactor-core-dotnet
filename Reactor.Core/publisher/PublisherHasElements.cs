@@ -13,32 +13,27 @@ using System.Threading;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherAny<T> : IMono<bool>
+    sealed class PublisherHasElements<T> : IMono<bool>
     {
         readonly IPublisher<T> source;
 
-        readonly Func<T, bool> predicate;
-
-        public PublisherAny(IPublisher<T> source, Func<T, bool> predicate)
+        internal PublisherHasElements(IPublisher<T> source)
         {
             this.source = source;
-            this.predicate = predicate;
         }
 
         public void Subscribe(ISubscriber<bool> s)
         {
-            source.Subscribe(new AnySubscriber(s, predicate));
+            throw new NotImplementedException();
         }
 
-        sealed class AnySubscriber : DeferredScalarSubscriber<T, bool>
+        sealed class HasElementsSubscriber : DeferredScalarSubscriber<T, bool>
         {
-            readonly Func<T, bool> predicate;
-
             bool done;
 
-            public AnySubscriber(ISubscriber<bool> actual, Func<T, bool> predicate) : base(actual)
+            public HasElementsSubscriber(ISubscriber<bool> actual) : base(actual)
             {
-                this.predicate = predicate;
+
             }
 
             protected override void OnStart()
@@ -46,13 +41,13 @@ namespace Reactor.Core.publisher
                 s.Request(long.MaxValue);
             }
 
-
             public override void OnComplete()
             {
                 if (done)
                 {
                     return;
                 }
+                done = true;
                 Complete(false);
             }
 
@@ -73,25 +68,9 @@ namespace Reactor.Core.publisher
                 {
                     return;
                 }
-
-                bool b;
-
-                try
-                {
-                    b = predicate(t);
-                }
-                catch (Exception ex)
-                {
-                    done = true;
-                    Fail(ex);
-                    return;
-                }
-                if (b)
-                {
-                    s.Cancel();
-                    done = true;
-                    Complete(true);
-                }
+                done = true;
+                s.Cancel();
+                Complete(true);
             }
         }
     }

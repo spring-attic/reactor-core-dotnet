@@ -465,20 +465,55 @@ namespace Reactor.Core
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Maps the Exception in the OnError signal via a mapper function.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IMono.</param>
+        /// <param name="mapper">The function that receives the Exception from the source and returns an Exception in exchange.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<T> MapError<T>(this IMono<T> source, Func<Exception, Exception> mapper)
         {
-            return MapError(source, e => true, mapper);
+            return new PublisherMapError<T>(source, mapper);
         }
 
+        /// <summary>
+        /// Maps the Exception in the OnError signal, if it is of the specified type, via a mapper function.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <typeparam name="E">The Exception type to map.</typeparam>
+        /// <param name="source">The source IMono.</param>
+        /// <param name="mapper">The function that is called if the upstream Exception is of the specified 
+        /// type and returns an Exception in exchange.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<T> MapError<T, E>(this IMono<T> source, Func<E, Exception> mapper) where E : Exception
         {
-            return MapError(source, e => e is E, e => mapper(e as E));
+            return MapError(source, e => {
+                if (e is E)
+                {
+                    return mapper(e as E);
+                }
+                return e;
+            });
         }
 
+        /// <summary>
+        /// Maps the Exception in the OnError signal, if it matches a predicate, via a mapper function.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IMono.</param>
+        /// <param name="predicate">The predicate called with the upstream Exception and if returns true, the <paramref name="mapper"/> is called.</param>
+        /// <param name="mapper">The function called with the upstream Exception, if the predicate matched, and returns an Exception in exchange.</param>
+        /// <returns>The new IMono instance.</returns>
         public static IMono<T> MapError<T>(this IMono<T> source, Func<Exception, bool> predicate, Func<Exception, Exception> mapper)
         {
-            // TODO implement MapError
-            throw new NotImplementedException();
+            return MapError(source, e => {
+                if (predicate(e))
+                {
+                    return mapper(e);
+                }
+                return e;
+            });
         }
 
         public static IMono<ISignal<T>> Materialize<T>(this IMono<T> source)

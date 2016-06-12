@@ -56,10 +56,13 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="HasElementsTest.cs" />
+    <Compile Include="AllTest.cs" />
     <Compile Include="DirectProcessorTest.cs" />
     <Compile Include="FlatMapTest.cs" />
     <Compile Include="FilterTest.cs" />
     <Compile Include="BufferTest.cs" />
+    <Compile Include="AnyTest.cs" />
     <Compile Include="ZipTest.cs" />
     <Compile Include="SwitchMapTest.cs" />
     <Compile Include="UsingTest.cs" />

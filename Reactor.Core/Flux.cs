@@ -2480,8 +2480,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<bool> HasElements<T>(this IFlux<T> source)
         {
-            // TODO implement HasElements
-            throw new NotImplementedException();
+            return new PublisherHasElements<T>(source);
         }
 
         /// <summary>
@@ -2515,8 +2514,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> Last<T>(this IFlux<T> source)
         {
-            // TODO implement Last
-            throw new NotImplementedException();
+            return new PublisherLast<T>(source);
         }
 
         /// <summary>
@@ -2528,7 +2526,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> MapError<T>(this IFlux<T> source, Func<Exception, Exception> mapper)
         {
-            return MapError(source, e => true, mapper);
+            return new PublisherMapError<T>(source, mapper);
         }
 
         /// <summary>
@@ -2536,13 +2534,19 @@ namespace Reactor.Core
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
         /// <typeparam name="E">The Exception type to map.</typeparam>
-        /// <param name="source">The source value type.</param>
+        /// <param name="source">The source IFlux.</param>
         /// <param name="mapper">The function that is called if the upstream Exception is of the specified 
         /// type and returns an Exception in exchange.</param>
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> MapError<T, E>(this IFlux<T> source, Func<E, Exception> mapper) where E : Exception
         {
-            return MapError(source, e => e is E, e => mapper(e as E));
+            return MapError(source, e => {
+                if (e is E)
+                {
+                    return mapper(e as E);
+                }
+                return e;
+            });
         }
 
         /// <summary>
@@ -2555,8 +2559,13 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> MapError<T>(this IFlux<T> source, Func<Exception, bool> predicate, Func<Exception, Exception> mapper)
         {
-            // TODO implement MapError
-            throw new NotImplementedException();
+            return MapError(source, e => {
+                if (predicate(e))
+                {
+                    return mapper(e);
+                }
+                return e;
+            });
         }
 
         /// <summary>
@@ -2611,8 +2620,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> Next<T>(this IFlux<T> source)
         {
-            // TODO implement Last
-            throw new NotImplementedException();
+            return new PublisherFirstOrEmpty<T>(source);
         }
 
         /// <summary>
@@ -2638,8 +2646,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> OnBackpressureDrop<T>(this IFlux<T> source, Action<T> onDrop = null)
         {
-            // TODO implement OnBackpressureDrop
-            throw new NotImplementedException();
+            return new PublisherOnBackpressureDrop<T>(source, onDrop);
         }
 
         /// <summary>
