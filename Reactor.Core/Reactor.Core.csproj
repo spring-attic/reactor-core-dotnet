@@ -92,6 +92,7 @@
     <Compile Include="publisher\PublisherInterval.cs" />
     <Compile Include="publisher\PublisherJust.cs" />
     <Compile Include="publisher\PublisherMap.cs" />
+    <Compile Include="publisher\PublisherMergeArray.cs" />
     <Compile Include="publisher\PublisherNever.cs" />
     <Compile Include="publisher\PublisherArray.cs" />
     <Compile Include="publisher\PublisherPeek.cs" />
@@ -104,6 +105,7 @@
     <Compile Include="publisher\PublisherWrap.cs" />
     <Compile Include="IReactiveStreams.cs" />
     <Compile Include="ExceptionHelper.cs" />
+    <Compile Include="publisher\PublisherZip.cs" />
     <Compile Include="publisher\PublisherZipEnumerable.cs" />
     <Compile Include="Scheduler.cs" />
     <Compile Include="scheduler\DefaultScheduler.cs" />

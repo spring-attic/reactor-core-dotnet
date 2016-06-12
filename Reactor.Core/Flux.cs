@@ -743,8 +743,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Merge<T>(int maxConcurrency, int prefetch, bool delayErrors = false, params IPublisher<T>[] sources)
         {
-            // TODO implement Merge
-            throw new NotImplementedException();
+            return new PublisherMergeArray<T>(sources, delayErrors, maxConcurrency, prefetch);
         }
 
         /// <summary>
@@ -1004,8 +1003,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T, R>(Func<T[], R> zipper, int prefetch, bool delayErrors = false, params IPublisher<T>[] sources)
         {
-            // TODO implement Using
-            throw new NotImplementedException();
+            return new PublisherZip<T, R>(sources, null, zipper, delayErrors, prefetch);
         }
 
         /// <summary>
@@ -1042,8 +1040,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Zip<T, R>(IEnumerable<IPublisher<T>> sources, Func<T[], R> zipper, int prefetch, bool delayErrors = false)
         {
-            // TODO implement Zip
-            throw new NotImplementedException();
+            return new PublisherZip<T, R>(null, sources, zipper, delayErrors, prefetch);
         }
 
         /// <summary>
@@ -2614,8 +2611,11 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> MergeWith<T>(this IFlux<T> source, IPublisher<T> other)
         {
-            // TODO implement MergeWith
-            throw new NotImplementedException();
+            if (source is PublisherMergeArray<T>)
+            {
+                return (source as PublisherMergeArray<T>).MergeWith(other, false);
+            }
+            return new PublisherMergeArray<T>(new IPublisher<T>[] { source, other }, false, 2, BufferSize);
         }
 
         /// <summary>
@@ -4336,8 +4336,7 @@ namespace Reactor.Core
         public static IFlux<R> ZipWith<T, R>(this IFlux<T> source, IPublisher<T> other, Func<T, T, R> zipper, int prefetch)
         {
             // Allows fusing only if all soures have the same type due to no type erasure, unlike Java
-            // TODO implement ZipWith
-            throw new NotImplementedException();
+            return Zip<T, T, R>(source, other, zipper, prefetch);
         }
 
         /// <summary>
@@ -4373,8 +4372,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> ZipWith<T, U, R>(this IFlux<T> source, IPublisher<U> other, Func<T, U, R> zipper, int prefetch)
         {
-            // TODO implement ZipWith
-            throw new NotImplementedException();
+            return Zip<T, U, R>(source, other, zipper, prefetch);
         }
 
         /// <summary>

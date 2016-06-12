@@ -34,7 +34,7 @@ namespace Reactor.Core.publisher
             }
         }
 
-        abstract class ArrayBaseSubscription : IQueueSubscription<T>
+        internal abstract class ArrayBaseSubscription : IQueueSubscription<T>
         {
             protected readonly T[] array;
 
@@ -109,7 +109,7 @@ namespace Reactor.Core.publisher
 
         }
 
-        sealed class ArraySubscription : ArrayBaseSubscription
+        internal sealed class ArraySubscription : ArrayBaseSubscription
         {
             readonly ISubscriber<T> actual;
 

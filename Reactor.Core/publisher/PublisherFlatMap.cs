@@ -44,7 +44,7 @@ namespace Reactor.Core.publisher
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        sealed class FlatMapSubscriber : ISubscriber<T>, ISubscription
+        internal sealed class FlatMapSubscriber : ISubscriber<T>, ISubscription
         {
             readonly ISubscriber<R> actual;
 
@@ -611,7 +611,7 @@ namespace Reactor.Core.publisher
             }
         }
 
-        sealed class FlatMapInnerSubscriber : ISubscriber<R>
+        internal sealed class FlatMapInnerSubscriber : ISubscriber<R>
         {
             readonly FlatMapSubscriber parent;
 
