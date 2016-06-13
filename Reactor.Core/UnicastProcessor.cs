@@ -31,7 +31,7 @@ namespace Reactor.Core
 
         bool cancelled;
 
-        int done;
+        bool done;
 
         Exception error;
 
@@ -74,7 +74,7 @@ namespace Reactor.Core
 
         bool lvDone()
         {
-            return Volatile.Read(ref done) != 0;
+            return Volatile.Read(ref done);
         }
 
         bool lvCancelled()
@@ -126,7 +126,7 @@ namespace Reactor.Core
                 return;
             }
             error = e;
-            Interlocked.Exchange(ref done, 1);
+            Volatile.Write(ref done, true);
             SignalTerminated();
             Drain();
         }
@@ -138,7 +138,7 @@ namespace Reactor.Core
             {
                 return;
             }
-            Interlocked.Exchange(ref done, 1);
+            Volatile.Write(ref done, true);
             SignalTerminated();
             Drain();
         }
@@ -447,42 +447,52 @@ namespace Reactor.Core
 
         void Drain()
         {
-            //Interlocked.MemoryBarrier();
-            var a = Volatile.Read(ref regular);
-
-            if (a != null)
+            if (!QueueDrainHelper.Enter(ref wip))
             {
-                if (!QueueDrainHelper.Enter(ref wip))
-                {
-                    return;
-                }
+                return;
+            }
 
-                if (outputFused)
-                {
-                    DrainRegularFused(a);
-                }
-                else
-                {
-                    DrainRegular(a);
-                }
-            } else
+            int missed = 1;
+
+            for (;;)
             {
-                var b = Volatile.Read(ref conditional);
-                if (b != null)
+                //Interlocked.MemoryBarrier();
+                var a = Volatile.Read(ref regular);
+
+                if (a != null)
                 {
-                    if (!QueueDrainHelper.Enter(ref wip))
-                    {
-                        return;
-                    }
 
                     if (outputFused)
                     {
-                        DrainConditionalFused(b);
+                        DrainRegularFused(a);
                     }
                     else
                     {
-                        DrainConditional(b);
+                        DrainRegular(a);
                     }
+                    return;
+                }
+                else
+                {
+                    var b = Volatile.Read(ref conditional);
+                    if (b != null)
+                    {
+                        if (outputFused)
+                        {
+                            DrainConditionalFused(b);
+                        }
+                        else
+                        {
+                            DrainConditional(b);
+                        }
+                        return;
+                    }
+                }
+
+                missed = QueueDrainHelper.Leave(ref wip, missed);
+                if (missed == 0)
+                {
+                    break;
                 }
             }
         }
