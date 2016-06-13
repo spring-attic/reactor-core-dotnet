@@ -11,6 +11,7 @@ using Reactor.Core.flow;
 using Reactor.Core.subscriber;
 using Reactor.Core.subscription;
 using Reactor.Core.util;
+using System.Diagnostics;
 
 namespace Reactor.Core
 {
@@ -20,7 +21,7 @@ namespace Reactor.Core
     /// </summary>
     /// <remarks>
     /// The class publicly implements IQueueSubscription for performance reasons
-    /// but one should not call its methods methods.
+    /// but one should not call its methods.
     /// </remarks>
     /// <typeparam name="T">The input and output type.</typeparam>
     public sealed class UnicastProcessor<T> : IFluxProcessor<T>, IQueueSubscription<T>
@@ -30,7 +31,7 @@ namespace Reactor.Core
 
         bool cancelled;
 
-        bool done;
+        int done;
 
         Exception error;
 
@@ -73,7 +74,7 @@ namespace Reactor.Core
 
         bool lvDone()
         {
-            return Volatile.Read(ref done);
+            return Volatile.Read(ref done) != 0;
         }
 
         bool lvCancelled()
@@ -125,7 +126,7 @@ namespace Reactor.Core
                 return;
             }
             error = e;
-            Volatile.Write(ref done, true);
+            Interlocked.Exchange(ref done, 1);
             SignalTerminated();
             Drain();
         }
@@ -137,7 +138,7 @@ namespace Reactor.Core
             {
                 return;
             }
-            Volatile.Write(ref done, true);
+            Interlocked.Exchange(ref done, 1);
             SignalTerminated();
             Drain();
         }
@@ -446,6 +447,7 @@ namespace Reactor.Core
 
         void Drain()
         {
+            //Interlocked.MemoryBarrier();
             var a = Volatile.Read(ref regular);
 
             if (a != null)
