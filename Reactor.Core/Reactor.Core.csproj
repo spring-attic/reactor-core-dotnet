@@ -72,6 +72,8 @@
     <Compile Include="publisher\PublisherBufferBoundary.cs" />
     <Compile Include="publisher\PublisherBufferOpenClose.cs" />
     <Compile Include="publisher\PublisherBufferSize.cs" />
+    <Compile Include="publisher\PublisherBufferTimeAndSize.cs" />
+    <Compile Include="publisher\PublisherCache.cs" />
     <Compile Include="publisher\PublisherCallableXMap.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
     <Compile Include="publisher\PublisherCombineLatest.cs" />
@@ -156,6 +158,7 @@
     <Compile Include="util\SpscFreelistTracker.cs" />
     <Compile Include="util\SpscLinkedArrayQueue.cs" />
     <Compile Include="util\SpscOneQueue.cs" />
+    <Compile Include="util\TrackingArray.cs" />
     <Compile Include="Void.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

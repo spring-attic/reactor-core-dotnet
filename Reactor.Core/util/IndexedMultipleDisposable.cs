@@ -17,7 +17,7 @@ namespace Reactor.Core.util
     /// Tracks IDisposables with an associated index and replaces them
     /// only if an incoming index is bigger than the hosted index.
     /// </summary>
-    internal sealed class IndexedMultipleDisposable : IDisposable
+    internal struct IndexedMultipeDisposableStruct
     {
         IndexedEntry entry;
 
@@ -63,6 +63,26 @@ namespace Reactor.Core.util
                     a?.d?.Dispose();
                 }
             }
+        }
+    }
+
+
+    /// <summary>
+    /// Tracks IDisposables with an associated index and replaces them
+    /// only if an incoming index is bigger than the hosted index.
+    /// </summary>
+    internal sealed class IndexedMultipleDisposable : IDisposable
+    {
+        IndexedMultipeDisposableStruct entry;
+
+        public bool Replace(IDisposable next, long nextIndex)
+        {
+            return entry.Replace(next, nextIndex);
+        }
+
+        public void Dispose()
+        {
+            entry.Dispose();
         }
     }
 

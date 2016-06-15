@@ -1495,8 +1495,8 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, TimeSpan timespan, TimeSpan timeskip, TimedScheduler scheduler)
         {
-            // TODO implement Buffer
-            throw new NotImplementedException();
+            // FIXME natively timed operator would run on the same timed worker
+            return Buffer(source, Interval(timeskip, scheduler), v => Timer(timespan, scheduler));
         }
 
         /// <summary>
@@ -1526,8 +1526,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T>(this IFlux<T> source, int maxSize, TimeSpan timespan, TimedScheduler scheduler)
         {
-            // TODO implement Buffer
-            throw new NotImplementedException();
+            return new PublisherBufferTimeAndSize<T>(source, maxSize, timespan, scheduler, BufferSize);
         }
 
         /// <summary>
@@ -1535,7 +1534,7 @@ namespace Reactor.Core
         /// replays them to every subscriber. The caching starts when the first subscriber subscribes.
         /// </summary>
         /// <remarks>
-        /// The cache can't be cleared or restarted. See <see cref="Replay{T}(IFlux{T})"/> to.
+        /// The cache can't be cleared or restarted. See <see cref="Replay{T}(IFlux{T})"/>.
         /// </remarks>
         /// <typeparam name="T">The value type.</typeparam>
         /// <param name="source">The source sequence.</param>
@@ -1543,8 +1542,11 @@ namespace Reactor.Core
         /// <returns>The IFlux instance.</returns>
         public static IFlux<T> Cache<T>(this IFlux<T> source, int history = int.MaxValue)
         {
-            // TODO implement Cache
-            throw new NotImplementedException();
+            if (history == int.MaxValue)
+            {
+                return new PublisherCache<T>(source, -BufferSize);
+            }
+            return new PublisherCache<T>(source, history);
         }
 
         /// <summary>

@@ -69,7 +69,7 @@ namespace Reactor.Core.publisher
             internal BufferCloseSubscriber buffer;
         }
 
-        sealed class BufferOpenCloseSubscriber : ISubscriber<T>, ISubscription
+        sealed class BufferOpenCloseSubscriber : ISubscriber<T>, ISubscription, IQueue<IList<T>>
         {
             readonly ISubscriber<IList<T>> actual;
 
@@ -88,6 +88,10 @@ namespace Reactor.Core.publisher
             Exception error;
 
             ISubscription s;
+
+            long requested;
+
+            long produced;
 
             internal BufferOpenCloseSubscriber(ISubscriber<IList<T>> actual,
                 Func<U, IPublisher<V>> close, int capacityHint)
@@ -116,6 +120,7 @@ namespace Reactor.Core.publisher
                     {
                         close.Cancel();
                     }
+                    buffers.Clear();
                     queue.Clear();
                 }
             }
@@ -171,7 +176,13 @@ namespace Reactor.Core.publisher
 
             public void Request(long n)
             {
-                open.Request(n);
+                if (SubscriptionHelper.Validate(n))
+                {
+                    if (!BackpressureHelper.PostCompleteRequest(ref requested, n, actual, this, ref cancelled))
+                    {
+                        open.Request(n);
+                    }
+                }
             }
 
             internal void OpenNext(U u)
@@ -259,6 +270,7 @@ namespace Reactor.Core.publisher
                             {
                                 close.Cancel();
                             }
+                            buffers.Clear();
                             queue.Clear();
                             return;
                         }
@@ -290,17 +302,12 @@ namespace Reactor.Core.publisher
 
                                             q.Clear();
                                         }
-
-                                        foreach (var buffer in bs)
+                                        long p = produced;
+                                        if (p != 0L)
                                         {
-                                            var b = buffer.buffer;
-                                            if (b.Count != 0)
-                                            {
-                                                a.OnNext(b);
-                                            }
+                                            BackpressureHelper.Produced(ref requested, produced);
                                         }
-
-                                        a.OnComplete();
+                                        BackpressureHelper.PostComplete(ref requested, actual, this, ref cancelled);
                                         return;
                                     }
                                 case BufferWorkType.OPEN:
@@ -338,6 +345,10 @@ namespace Reactor.Core.publisher
                                             if (b.Count != 0)
                                             {
                                                 a.OnNext(b);
+                                            }
+                                            else
+                                            {
+                                                Request(1);
                                             }
                                         }
                                     }
@@ -377,6 +388,7 @@ namespace Reactor.Core.publisher
 
                     if (c == null)
                     {
+                        buffers.Clear();
                         q.Clear();
 
                         a.OnSubscribe(EmptySubscription<IList<T>>.Instance);
@@ -385,6 +397,7 @@ namespace Reactor.Core.publisher
                     {
                         c.Cancel();
 
+                        buffers.Clear();
                         q.Clear();
                     }
 
@@ -392,6 +405,36 @@ namespace Reactor.Core.publisher
                     return true;
                 }
                 return false;
+            }
+
+            public bool Offer(IList<T> value)
+            {
+                return FuseableHelper.DontCallOffer();
+            }
+
+            public bool Poll(out IList<T> value)
+            {
+                var bs = buffers;
+                var e = bs.First;
+                if (e == null)
+                {
+                    value = null;
+                    return false;
+                }
+
+                value = e.Value.buffer;
+                bs.RemoveFirst();
+                return true;
+            }
+
+            public bool IsEmpty()
+            {
+                return buffers.First == null;
+            }
+
+            public void Clear()
+            {
+                buffers.Clear();
             }
         }
 
