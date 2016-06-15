@@ -41,7 +41,7 @@ namespace Reactor.Core.util
                 }
                 int n = a.Length;
                 var b = new T[n + 1];
-                Array.Copy(a, 0, b, 0, n);
+                System.Array.Copy(a, 0, b, 0, n);
                 b[n] = item;
                 var c = Interlocked.CompareExchange(ref array, b, a);
                 if (c == a)
@@ -86,8 +86,8 @@ namespace Reactor.Core.util
                 else
                 {
                     b = new T[n - 1];
-                    Array.Copy(a, 0, b, 0, j);
-                    Array.Copy(a, j + 1, b, j, n - j - 1);
+                    System.Array.Copy(a, 0, b, 0, j);
+                    System.Array.Copy(a, j + 1, b, j, n - j - 1);
                 }
 
                 var c = Interlocked.CompareExchange(ref array, b, a);
