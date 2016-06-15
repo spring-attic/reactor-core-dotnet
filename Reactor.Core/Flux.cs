@@ -1423,8 +1423,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T, U>(this IFlux<T> source, IPublisher<U> boundary)
         {
-            // TODO implement Buffer
-            throw new NotImplementedException();
+            return new PublisherBufferBoundary<T, U>(source, boundary, BufferSize);
         }
 
         /// <summary>
@@ -1441,8 +1440,7 @@ namespace Reactor.Core
         /// <returns>The nex IFlux instance.</returns>
         public static IFlux<IList<T>> Buffer<T, U, V>(this IFlux<T> source, IPublisher<U> open, Func<U, IPublisher<V>> close)
         {
-            // TODO implement Buffer
-            throw new NotImplementedException();
+            return new PublisherBufferOpenClose<T, U, V>(source, open, close, BufferSize);
         }
 
         /// <summary>

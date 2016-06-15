@@ -69,6 +69,8 @@
     <Compile Include="publisher\PublisherAny.cs" />
     <Compile Include="publisher\PublisherAsEnumerable.cs" />
     <Compile Include="publisher\PublisherAsObservable.cs" />
+    <Compile Include="publisher\PublisherBufferBoundary.cs" />
+    <Compile Include="publisher\PublisherBufferOpenClose.cs" />
     <Compile Include="publisher\PublisherBufferSize.cs" />
     <Compile Include="publisher\PublisherCallableXMap.cs" />
     <Compile Include="publisher\PublisherCollect.cs" />
