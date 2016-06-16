@@ -48,17 +48,18 @@ namespace Reactor.Core.subscriber
 
         public abstract bool TryOnNext(T t);
 
-        public void OnSubscribe(ISubscription s)
+        public virtual void OnSubscribe(ISubscription s)
         {
             if (SubscriptionHelper.Validate(ref this.s, s))
             {
                 qs = s as IQueueSubscription<T>;
 
-                OnSubscribe();
+                if (BeforeSubscribe())
+                {
+                    actual.OnSubscribe(this);
 
-                actual.OnSubscribe(this);
-
-                OnStart();
+                    AfterSubscribe();
+                }
             }
         }
 
@@ -71,16 +72,17 @@ namespace Reactor.Core.subscriber
         /// Called after a successful OnSubscribe call but
         /// before the downstream's OnSubscribe is called with this.
         /// </summary>
-        protected virtual void OnSubscribe()
+        /// <returns>True if calling the downstream's OnSubscribe can happen.</returns>
+        protected virtual bool BeforeSubscribe()
         {
-
+            return true;
         }
 
         /// <summary>
         /// Called once the OnSubscribe has been called the first time
         /// and this has been set on the child ISubscriber.
         /// </summary>
-        protected virtual void OnStart()
+        protected virtual void AfterSubscribe()
         {
 
         }

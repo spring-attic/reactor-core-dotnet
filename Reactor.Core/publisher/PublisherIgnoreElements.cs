@@ -74,7 +74,7 @@ namespace Reactor.Core.publisher
                 // ignored
             }
 
-            protected override void OnStart()
+            protected override void AfterSubscribe()
             {
                 if (fusionMode != FuseableHelper.SYNC)
                 {

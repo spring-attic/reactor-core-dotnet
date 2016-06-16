@@ -1759,7 +1759,7 @@ namespace Reactor.Core
         /// <param name="mapper">The function that maps each source value into an IEnumerable.</param>
         /// <param name="errorMode">Specifies the error handling behavior. See <see cref="ConcatErrorMode"/> constants.</param>
         /// <returns>The new IFlux instance.</returns>
-        public static IFlux<T> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
+        public static IFlux<R> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             return ConcatMap(source, mapper, BufferSize, errorMode);
         }
@@ -1775,10 +1775,9 @@ namespace Reactor.Core
         /// unbounded mode and the absolute amount is used for the link size of the internal unbounded queue.</param>
         /// <param name="errorMode">Specifies the error handling behavior. See <see cref="ConcatErrorMode"/> constants.</param>
         /// <returns>The new IFlux instance.</returns>
-        public static IFlux<T> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
+        public static IFlux<R> ConcatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
-            // TODO implement ConcatMap
-            throw new NotImplementedException();
+            return new PublisherFlattenEnumerable<T, R>(source, mapper, prefetch); // TODO errorMode
         }
 
         /// <summary>
@@ -1820,8 +1819,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> DefaultIfEmpty<T>(this IFlux<T> source, T defaultValue)
         {
-            // TODO implement DefaultIfEmpty
-            throw new NotImplementedException();
+            return new PublisherDefaultIfEmpty<T>(source, defaultValue);
         }
 
         /// <summary>
@@ -1834,8 +1832,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Delay<T>(this IFlux<T> source, TimeSpan delay)
         {
-            // TODO implement Delay
-            throw new NotImplementedException();
+            return Delay(source, delay, DefaultScheduler.Instance);
         }
 
         /// <summary>
@@ -1849,8 +1846,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Delay<T>(this IFlux<T> source, TimeSpan delay, TimedScheduler scheduler)
         {
-            // TODO implement Delay
-            throw new NotImplementedException();
+            return new PublisherDelay<T>(source, delay, scheduler);
         }
 
         /// <summary>
@@ -1863,8 +1859,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance</returns>
         public static IFlux<T> DelaySubscription<T>(this IFlux<T> source, TimeSpan delay)
         {
-            // TODO implement DelaySubscription
-            throw new NotImplementedException();
+            return DelaySubscription(source, delay, DefaultScheduler.Instance);
         }
 
         /// <summary>
@@ -1878,8 +1873,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance</returns>
         public static IFlux<T> DelaySubscription<T>(this IFlux<T> source, TimeSpan delay, TimedScheduler scheduler)
         {
-            // TODO implement DelaySubscription
-            throw new NotImplementedException();
+            return DelaySubscription(source, Timer(delay, scheduler));
         }
 
         /// <summary>
@@ -1893,8 +1887,7 @@ namespace Reactor.Core
         /// <returns></returns>
         public static IFlux<T> DelaySubscription<T, U>(this IFlux<T> source, IPublisher<U> other)
         {
-            // TODO implement DelaySubscription
-            throw new NotImplementedException();
+            return new PublisherDelaySubscription<T, U>(source, other);
         }
 
         /// <summary>
@@ -1905,8 +1898,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Dematerialize<T>(this IFlux<ISignal<T>> source)
         {
-            // TODO implement Dematerialize
-            throw new NotImplementedException();
+            return new PublisherDematerialize<T>(source);
         }
 
         /// <summary>
@@ -2204,8 +2196,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<Timed<T>> Elapsed<T>(this IFlux<T> source, TimedScheduler scheduler)
         {
-            // TODO implement Elapsed
-            throw new NotImplementedException();
+            return new PublisherElapsed<T>(source, scheduler);
         }
 
         /// <summary>
@@ -2218,8 +2209,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IMono<T> ElementAt<T>(this IFlux<T> source, long index)
         {
-            // TODO implement ElementAt
-            throw new NotImplementedException();
+            return new PublisherElementAt<T>(source, index, default(T), false);
         }
 
         /// <summary>
@@ -2233,8 +2223,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IMono<T> ElementAt<T>(this IFlux<T> source, long index, T defaultValue)
         {
-            // TODO implement ElementAt
-            throw new NotImplementedException();
+            return new PublisherElementAt<T>(source, index, defaultValue, true);
         }
 
         /// <summary>
@@ -2395,8 +2384,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper, int prefetch)
         {
-            // TODO implement FlatMap
-            throw new NotImplementedException();
+            return new PublisherFlattenEnumerable<T, R>(source, mapper, prefetch);
         }
 
         /// <summary>

@@ -64,6 +64,9 @@
     <Compile Include="BufferTest.cs" />
     <Compile Include="AnyTest.cs" />
     <Compile Include="BufferBoundaryTest.cs" />
+    <Compile Include="FlattenEnumerableTest.cs" />
+    <Compile Include="DefaultIfEmptyTest.cs" />
+    <Compile Include="DelaySubscriptionTest.cs" />
     <Compile Include="ZipTest.cs" />
     <Compile Include="SwitchMapTest.cs" />
     <Compile Include="UsingTest.cs" />

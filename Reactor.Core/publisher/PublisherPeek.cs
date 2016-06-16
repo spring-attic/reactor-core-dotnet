@@ -207,7 +207,7 @@ namespace Reactor.Core.publisher
                 this.onCancel = onCancel;
             }
 
-            protected override void OnSubscribe()
+            protected override bool BeforeSubscribe()
             {
                 try
                 {
@@ -217,6 +217,7 @@ namespace Reactor.Core.publisher
                 {
                     ExceptionHelper.ThrowOrDrop(ex);
                 }
+                return true;
             }
 
             public override void OnComplete()
@@ -397,7 +398,7 @@ namespace Reactor.Core.publisher
                 this.onCancel = onCancel;
             }
 
-            protected override void OnSubscribe()
+            protected override bool BeforeSubscribe()
             {
                 try
                 {
@@ -407,6 +408,7 @@ namespace Reactor.Core.publisher
                 {
                     ExceptionHelper.ThrowOrDrop(ex);
                 }
+                return true;
             }
 
             public override void OnComplete()

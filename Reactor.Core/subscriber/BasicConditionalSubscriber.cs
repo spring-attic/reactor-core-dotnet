@@ -51,15 +51,18 @@ namespace Reactor.Core.subscriber
         {
             if (SubscriptionHelper.Validate(ref this.s, s))
             {
-                OnSubscribe();
 
-                actual.OnSubscribe(this);
 
-                OnStart();
+                if (BeforeSubscribe())
+                {
+                    actual.OnSubscribe(this);
+
+                    AfterSubscribe();
+                }
             }
         }
 
-        public void Request(long n)
+        public virtual void Request(long n)
         {
             s.Request(n);
         }
@@ -68,16 +71,16 @@ namespace Reactor.Core.subscriber
         /// Called after a successful OnSubscribe call but
         /// before the downstream's OnSubscribe is called with this.
         /// </summary>
-        protected virtual void OnSubscribe()
+        protected virtual bool BeforeSubscribe()
         {
-
+            return true;
         }
 
         /// <summary>
         /// Called once the OnSubscribe has been called the first time
         /// and this has been set on the child ISubscriber.
         /// </summary>
-        protected virtual void OnStart()
+        protected virtual void AfterSubscribe()
         {
 
         }

@@ -103,7 +103,7 @@ namespace Reactor.Core.publisher
                 return TransitiveAnyFusion(mode);
             }
 
-            protected override void OnStart()
+            protected override void AfterSubscribe()
             {
                 s.Request(n);
             }
@@ -185,7 +185,7 @@ namespace Reactor.Core.publisher
                 return TransitiveAnyFusion(mode);
             }
 
-            protected override void OnStart()
+            protected override void AfterSubscribe()
             {
                 s.Request(n);
             }

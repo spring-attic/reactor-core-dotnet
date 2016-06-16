@@ -82,8 +82,14 @@
     <Compile Include="publisher\PublisherConcatMap.cs" />
     <Compile Include="publisher\PublisherCount.cs" />
     <Compile Include="publisher\PublisherCreate.cs" />
+    <Compile Include="publisher\PublisherDefaultIfEmpty.cs" />
+    <Compile Include="publisher\PublisherDelay.cs" />
+    <Compile Include="publisher\PublisherDelaySubscription.cs" />
+    <Compile Include="publisher\PublisherDematerialize.cs" />
     <Compile Include="publisher\PublisherDistinctUntilChanged.cs" />
     <Compile Include="publisher\PublisherDistinct.cs" />
+    <Compile Include="publisher\PublisherElapsed.cs" />
+    <Compile Include="publisher\PublisherElementAt.cs" />
     <Compile Include="publisher\PublisherEnumerable.cs" />
     <Compile Include="publisher\PublisherDefer.cs" />
     <Compile Include="publisher\PublisherEmpty.cs" />
@@ -91,6 +97,7 @@
     <Compile Include="publisher\PublisherFilter.cs" />
     <Compile Include="publisher\PublisherFirstOrEmpty.cs" />
     <Compile Include="publisher\PublisherFlatMap.cs" />
+    <Compile Include="publisher\PublisherFlattenEnumerable.cs" />
     <Compile Include="publisher\PublisherFromObservable.cs" />
     <Compile Include="publisher\PublisherFromTask.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
