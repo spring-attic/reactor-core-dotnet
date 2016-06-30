@@ -9,6 +9,7 @@ using Reactor.Core.subscriber;
 namespace Reactor.Core.Test
 {
     [TestFixture]
+    [Timeout(30000)]
     public class UnicastProcessorTest
     {
         [Test]

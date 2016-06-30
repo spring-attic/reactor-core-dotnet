@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 namespace Reactor.Core.Test
 {
     [TestFixture]
+    [Timeout(30000)]
     public class ToEnumerableTest
     {
         [Test]

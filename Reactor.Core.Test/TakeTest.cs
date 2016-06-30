@@ -6,6 +6,7 @@ using NUnit.Framework;
 namespace Reactor.Core.Test
 {
     [TestFixture]
+    [Timeout(30000)]
     public class TakeTest
     {
         [Test]
