@@ -2,7 +2,7 @@ language: csharp
 solution: reactor-core-dotnet.sln
 install:
   - nuget restore reactor-core-dotnet.sln
-  - nuget install NUnit.Runners -Version 3.2.1 -OutputDirectory testrunner
+  - nuget install NUnit.Runners -Version 3.4.0 -OutputDirectory testrunner
 script:
   - xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5" reactor-core-dotnet.sln
-  - mono ./testrunner/NUnit.ConsoleRunner.3.2.1/tools/nunit3-console.exe ./Reactor.Core.Test/bin/Release/Reactor.Core.Test.dll
+  - mono ./testrunner/NUnit.ConsoleRunner.3.4.0/tools/nunit3-console.exe ./Reactor.Core.Test/bin/Release/Reactor.Core.Test.dll
