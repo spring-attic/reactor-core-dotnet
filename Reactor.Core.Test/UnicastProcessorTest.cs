@@ -56,7 +56,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Scheduled()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
@@ -77,7 +77,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Fused_Scheduled()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
@@ -98,7 +98,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Fused_Scheduled_2()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
@@ -131,7 +131,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Fused_Scheduled_3()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
@@ -165,7 +165,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Fused_Scheduled_4()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
@@ -199,7 +199,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Fused_Scheduled_5()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
@@ -233,7 +233,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Fused_Scheduled_6()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
@@ -266,7 +266,7 @@ namespace Reactor.Core.Test
         [Test]
         public void UnicastProcessor_Online_Hidden_Scheduled()
         {
-            for (int i = 0; i < 100000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 var up = new UnicastProcessor<int>();
 
