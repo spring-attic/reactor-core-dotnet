@@ -37,6 +37,7 @@ namespace Reactor.Core.publisher
             {
                 this.buffer = new CacheBoundedBuffer(history);
             }
+            subscribers.Init();
         }
 
         public void Subscribe(ISubscriber<T> s)

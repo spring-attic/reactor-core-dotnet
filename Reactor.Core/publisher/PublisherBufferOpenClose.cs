@@ -344,6 +344,7 @@ namespace Reactor.Core.publisher
                                             var b = bw.buffer.buffer;
                                             if (b.Count != 0)
                                             {
+                                                produced++;
                                                 a.OnNext(b);
                                             }
                                             else

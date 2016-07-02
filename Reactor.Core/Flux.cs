@@ -475,12 +475,12 @@ namespace Reactor.Core
         }
 
         /// <summary>
-        /// Expose the specified IPublisher with the IFlux API.
+        /// Wraps the given IPublisher into an IFlux instance if not already an IFlux.
         /// </summary>
         /// <typeparam name="T">the source sequence type</typeparam>
         /// <param name="source">the source to decorate</param>
         /// <returns>The source or an new IFlux wrapper of it.</returns>
-        public static IFlux<T> From<T>(IPublisher<T> source)
+        public static IFlux<T> Wrap<T>(IPublisher<T> source)
         {
             if (source is IFlux<T>)
             {
@@ -2561,8 +2561,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux with ISignal element type.</returns>
         public static IFlux<ISignal<T>> Materialize<T>(this IFlux<T> source)
         {
-            // TODO implement Materialize
-            throw new NotImplementedException();
+            return new PublisherMaterialize<T>(source);
         }
 
         /// <summary>
@@ -2579,22 +2578,6 @@ namespace Reactor.Core
                 return (source as PublisherMergeArray<T>).MergeWith(other, false);
             }
             return new PublisherMergeArray<T>(new IPublisher<T>[] { source, other }, false, 2, BufferSize);
-        }
-
-        /// <summary>
-        /// Dispatches the source items in a round-robin fashion to multiple parallel groups, applies a transformation
-        /// function on each group and merges them back into a single sequence.
-        /// </summary>
-        /// <typeparam name="T">The source value type.</typeparam>
-        /// <typeparam name="R">The output value type.</typeparam>
-        /// <param name="source">The source IFlux.</param>
-        /// <param name="concurrency">The number of parallel groups.</param>
-        /// <param name="mapper">The function that maps each group into an IPublisher output.</param>
-        /// <returns>The new IFlux instance.</returns>
-        public static IFlux<R> Multiplex<T, R>(this IFlux<T> source, int concurrency, Func<IGroupedFlux<int, T>, IPublisher<R>> mapper)
-        {
-            // TODO implement Multiplex
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -2617,8 +2600,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> OnBackpressureBuffer<T>(this IFlux<T> source)
         {
-            // TODO implement OnBackpressureBuffer
-            throw new NotImplementedException();
+            return new PublisherOnBackpressureBuffer<T>(source, BufferSize);
         }
 
         /// <summary>
@@ -2655,8 +2637,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> OnBackpressureLatest<T>(this IFlux<T> source)
         {
-            // TODO implement OnBackpressureLatest
-            throw new NotImplementedException();
+            return new PublisherOnBackpressureLatest<T>(source);
         }
 
         /// <summary>
@@ -2700,8 +2681,7 @@ namespace Reactor.Core
 
         public static IFlux<T> OnErrorResumeWith<T>(this IFlux<T> source, Func<Exception, bool> predicate, Func<Exception, IPublisher<T>> resumeFunction)
         {
-            // TODO implement OnErrorResumeWith
-            throw new NotImplementedException();
+            return new PublisherOnErrorResumeWith<T>(source, predicate, resumeFunction);
         }
 
         /// <summary>
@@ -2742,8 +2722,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> OnErrorReturn<T>(this IFlux<T> source, Func<Exception, bool> predicate, T value)
         {
-            // TODO implement OnErrorReturn
-            throw new NotImplementedException();
+            return OnErrorResumeWith(source, predicate, e => Just(value));
         }
 
         /// <summary>
@@ -2755,36 +2734,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> OnTerminateDetach<T>(this IFlux<T> source)
         {
-            // TODO implement OnTerminateDetach
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Partitions (groups) the source elements into distinct sub-sequences based on their
-        /// hashCode modulo the <see cref="Environment.ProcessorCount"/>. The group key
-        /// is the value of the modulo.
-        /// </summary>
-        /// <typeparam name="T">The source value type.</typeparam>
-        /// <param name="source">The source IFlux.</param>
-        /// <returns>The new IFlux instance.</returns>
-        public static IFlux<IGroupedFlux<int, T>> Partition<T>(this IFlux<T> source)
-        {
-            return Partition(source, Environment.ProcessorCount);
-        }
-
-        /// <summary>
-        /// Partitions (groups) the source elements into distinct sub-sequences based on their
-        /// hashCode modulo the specified number of partitions. The group key
-        /// is the value of the modulo.
-        /// </summary>
-        /// <typeparam name="T">The source value type.</typeparam>
-        /// <param name="source">The source IFlux.</param>
-        /// <param name="partitions">The number of partitions.</param>
-        /// <returns>The new IFlux instance.</returns>
-        public static IFlux<IGroupedFlux<int, T>> Partition<T>(this IFlux<T> source, int partitions)
-        {
-            // TODO implement Partition
-            throw new NotImplementedException();
+            return new PublisherOnTerminateDetach<T>(source);
         }
 
         /// <summary>
@@ -2814,8 +2764,7 @@ namespace Reactor.Core
         /// <returns>The new IConnectableFlux instance</returns>
         public static IConnectableFlux<T> Process<T>(this IFlux<T> source, Func<IProcessor<T, T>> processorSupplier)
         {
-            // TODO implement Process
-            throw new NotImplementedException();
+            return Process(source, processorSupplier, p => p);
         }
 
         /// <summary>
@@ -2831,7 +2780,7 @@ namespace Reactor.Core
         /// <param name="processor">The processor to signal the events at and subscribe to.</param>
         /// <param name="selector">The function that receives the processor and returns an IPublisher to be the output.</param>
         /// <returns>The new IConnectableFlux instance</returns>
-        public static IConnectableFlux<T> Process<T, U>(this IFlux<T> source, IProcessor<T, T> processor, Func<IFlux<T>, IPublisher<U>> selector)
+        public static IConnectableFlux<U> Process<T, U>(this IFlux<T> source, IProcessor<T, T> processor, Func<IFlux<T>, IPublisher<U>> selector)
         {
             return Process(source, () => processor, selector);
         }
@@ -2848,11 +2797,10 @@ namespace Reactor.Core
         /// <param name="processorSupplier">The function called for each subscriber to return an IProcessor to run elements through.</param>
         /// <param name="selector">The function that receives the processor returned by <paramref name="processorSupplier"/> and returns an IPublisher to be the output.</param>
         /// <returns>The new IConnectableFlux instance</returns>
-        public static IConnectableFlux<T> Process<T, U>(this IFlux<T> source, Func<IProcessor<T, T>> processorSupplier, 
+        public static IConnectableFlux<U> Process<T, U>(this IFlux<T> source, Func<IProcessor<T, T>> processorSupplier, 
             Func<IFlux<T>, IPublisher<U>> selector)
         {
-            // TODO implement Process
-            throw new NotImplementedException();
+            return new PublisherProcess<T, U>(source, processorSupplier, selector);
         }
 
         /// <summary>
@@ -2878,8 +2826,8 @@ namespace Reactor.Core
         /// <returns>The new IConnectableFlux instance.</returns>
         public static IConnectableFlux<T> Publish<T>(this IFlux<T> source, int prefetch)
         {
-            // TODO implement Publish
-            throw new NotImplementedException();
+            // TODO implement Publish more directly?
+            return Process(source, () => new PublishProcessor<T>(prefetch));
         }
 
         /// <summary>
@@ -2915,8 +2863,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> Publish<T, R>(this IFlux<T> source, Func<IFlux<T>, IPublisher<R>> transformer, int prefetch)
         {
-            // TODO implement Publish
-            throw new NotImplementedException();
+            return new PublisherPublishSelector<T, R>(source, transformer, prefetch);
         }
 
         /// <summary>
@@ -2978,8 +2925,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> Reduce<T>(this IFlux<T> source, Func<T, T, T> reducer)
         {
-            // TODO implement Reduce
-            throw new NotImplementedException();
+            return new PublisherReduce<T>(source, reducer);
         }
 
         /// <summary>
@@ -2996,8 +2942,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<A> Reduce<T, A>(this IFlux<T> source, A initial, Func<A, T, A> reducer)
         {
-            // TODO implement Reduce
-            throw new NotImplementedException();
+            return ReduceWith(source, () => initial, reducer);
         }
 
         /// <summary>
@@ -3012,10 +2957,9 @@ namespace Reactor.Core
         /// <param name="reducer">The function that receives the current accumulator value, the current source element
         /// and returns a new accumulator value.</param>
         /// <returns>The new IMono instance.</returns>
-        public static IFlux<A> ReduceWith<T, A>(this IFlux<T> source, Func<A> initialSupplier, Func<A, T, A> reducer)
+        public static IMono<A> ReduceWith<T, A>(this IFlux<T> source, Func<A> initialSupplier, Func<A, T, A> reducer)
         {
-            // TODO implement ReduceWith
-            throw new NotImplementedException();
+            return new PublisherReduceWith<T, A>(source, initialSupplier, reducer);
         }
 
         /// <summary>
@@ -3354,8 +3298,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Scan<T>(this IFlux<T> source, Func<T, T, T> scanner)
         {
-            // TODO implement Reduce
-            throw new NotImplementedException();
+            return new PublisherScan<T>(source, scanner);
         }
 
         /// <summary>
@@ -3371,8 +3314,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<A> Scan<T, A>(this IFlux<T> source, A initial, Func<A, T, A> scanner)
         {
-            // TODO implement Reduce
-            throw new NotImplementedException();
+            return ScanWith<T, A>(source, () => initial, scanner);
         }
 
         /// <summary>
@@ -3388,8 +3330,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<A> ScanWith<T, A>(this IFlux<T> source, Func<A> initialSupplier, Func<A, T, A> scanner)
         {
-            // TODO implement ReduceWith
-            throw new NotImplementedException();
+            return new PublisherScanWith<T, A>(source, initialSupplier, scanner);
         }
 
         /// <summary>

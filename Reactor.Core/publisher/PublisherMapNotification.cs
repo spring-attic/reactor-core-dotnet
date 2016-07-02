@@ -40,19 +40,13 @@ namespace Reactor.Core.publisher
             source.Subscribe(new MapNotificationSubscriber(s, onNextMapper, onErrorMapper, onCompleteMapper));
         }
 
-        sealed class MapNotificationSubscriber : BasicSubscriber<T, IPublisher<R>>, IQueue<IPublisher<R>>
+        sealed class MapNotificationSubscriber : BasicSinglePostCompleteSubscriber<T, IPublisher<R>>
         {
             readonly Func<T, IPublisher<R>> onNextMapper;
 
             readonly Func<Exception, IPublisher<R>> onErrorMapper;
 
             readonly Func<IPublisher<R>> onCompleteMapper;
-
-            IPublisher<R> last;
-
-            long requested;
-
-            bool cancelled;
 
             internal MapNotificationSubscriber(
                 ISubscriber<IPublisher<R>> actual,
@@ -67,6 +61,8 @@ namespace Reactor.Core.publisher
 
             public override void OnNext(T t)
             {
+                produced++;
+
                 IPublisher<R> p;
 
                 try
@@ -84,6 +80,7 @@ namespace Reactor.Core.publisher
 
             public override void OnError(Exception e)
             {
+                IPublisher<R> last;
                 try
                 {
                     last = ObjectHelper.RequireNonNull(onErrorMapper(e), "The onErrorMapper returned a null IPublisher");
@@ -94,11 +91,12 @@ namespace Reactor.Core.publisher
                     return;
                 }
 
-                BackpressureHelper.PostComplete(ref requested, actual, this, ref cancelled);
+                Complete(last);
             }
 
             public override void OnComplete()
             {
+                IPublisher<R> last;
                 try
                 {
                     last = ObjectHelper.RequireNonNull(onCompleteMapper(), "The onCompleteMapper returned a null IPublisher");
@@ -109,52 +107,7 @@ namespace Reactor.Core.publisher
                     return;
                 }
 
-                BackpressureHelper.PostComplete(ref requested, actual, this, ref cancelled);
-            }
-
-            public override void Request(long n)
-            {
-                if (SubscriptionHelper.Validate(n))
-                {
-                    if (!BackpressureHelper.PostCompleteRequest(ref requested, n, actual, this, ref cancelled))
-                    {
-                        s.Request(n);
-                    }
-                }
-            }
-
-            public bool Offer(IPublisher<R> value)
-            {
-                return FuseableHelper.DontCallOffer();
-            }
-
-            public bool Poll(out IPublisher<R> value)
-            {
-                var o = last;
-                if (o != null)
-                {
-                    last = null;
-                    value = o;
-                    return true;
-                }
-                value = null;
-                return false;
-            }
-
-            public bool IsEmpty()
-            {
-                return last == null;
-            }
-
-            public void Clear()
-            {
-                last = null;
-            }
-
-            public override void Cancel()
-            {
-                Volatile.Write(ref cancelled, true);
-                base.Cancel();
+                Complete(last);
             }
         }
     }

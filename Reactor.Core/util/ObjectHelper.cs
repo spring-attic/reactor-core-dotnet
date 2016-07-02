@@ -30,7 +30,7 @@ namespace Reactor.Core.util
         {
             if (value == null)
             {
-                throw new Exception(errorMessage);
+                throw new NullReferenceException(errorMessage);
             }
             return value;
         }

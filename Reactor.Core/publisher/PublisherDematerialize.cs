@@ -25,7 +25,7 @@ namespace Reactor.Core.publisher
 
         public void Subscribe(ISubscriber<T> s)
         {
-            throw new NotImplementedException();
+            source.Subscribe(new DematerializeSubscriber(s));
         }
 
         sealed class DematerializeSubscriber : BasicSubscriber<ISignal<T>, T>, ISubscription
@@ -64,7 +64,7 @@ namespace Reactor.Core.publisher
                 {
                     if (s.IsNext)
                     {
-                        actual.OnNext(t.Next);
+                        actual.OnNext(s.Next);
                     }
                     else
                     if (s.IsError)
@@ -82,7 +82,7 @@ namespace Reactor.Core.publisher
                     }
                 }
 
-                value = s;
+                value = t;
             }
         }
     }

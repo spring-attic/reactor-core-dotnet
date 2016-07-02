@@ -577,8 +577,7 @@ namespace Reactor.Core
 
         public static IMono<T> OnTerminateDetach<T>(this IMono<T> source)
         {
-            // TODO implement OnTerminateDetach
-            throw new NotImplementedException();
+            return new PublisherOnTerminateDetach<T>(source);
         }
 
         public static IMono<R> Publish<T, R>(this IMono<T> source, Func<IMono<T>, IMono<R>> transformer)

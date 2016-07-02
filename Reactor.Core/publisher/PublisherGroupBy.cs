@@ -90,11 +90,6 @@ namespace Reactor.Core.publisher
                 this.queue = new SpscLinkedArrayQueue<IGroupedFlux<K, V>>(prefetch);
             }
 
-            internal void InnerCancelled()
-            {
-                DoCancel();
-            }
-
             internal void InnerConsumed(long n)
             {
                 s.Request(n);
@@ -221,6 +216,19 @@ namespace Reactor.Core.publisher
                 {
                     DoCancel();
                 }
+            }
+
+            internal void InnerCancelled(K key)
+            {
+                lock(this)
+                {
+                    var gs = groups;
+                    if (gs != null && gs.ContainsKey(key))
+                    {
+                        gs.Remove(key);
+                    }
+                }
+                DoCancel();
             }
 
             void DoCancel()
@@ -526,7 +534,7 @@ namespace Reactor.Core.publisher
             {
                 if (Interlocked.CompareExchange(ref cancelled, 1, 0) == 0)
                 {
-                    parent.InnerCancelled();
+                    parent.InnerCancelled(key);
                 }
             }
 

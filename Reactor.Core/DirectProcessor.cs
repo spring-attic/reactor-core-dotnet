@@ -21,96 +21,63 @@ namespace Reactor.Core
     /// <typeparam name="T">The input and output value type</typeparam>
     public sealed class DirectProcessor<T> : IFluxProcessor<T>
     {
-        DirectSubscription[] subscribers = EMPTY;
 
-        static DirectSubscription[] EMPTY = new DirectSubscription[0];
-        static DirectSubscription[] TERMINATED = new DirectSubscription[0];
+        TrackingArray<DirectSubscription> subscribers;
 
         Exception error;
 
-        bool Add(DirectSubscription s)
+        /// <inheritDoc/>
+        public bool HasSubscribers
         {
-            var a = Volatile.Read(ref subscribers);
-            for (;;)
+            get
             {
-                if (a == TERMINATED)
-                {
-                    return false;
-                }
-
-                int n = a.Length;
-                var b = new DirectSubscription[n + 1];
-                Array.Copy(a, 0, b, 0, n);
-                b[n] = s;
-
-                var c = Interlocked.CompareExchange(ref subscribers, b, a);
-                if (c == a)
-                {
-                    return true;
-                }
-                else
-                {
-                    a = c;
-                }
+                return subscribers.Array().Length != 0;
             }
         }
 
-        void Remove(DirectSubscription s)
+        /// <inheritDoc/>
+        public bool IsComplete
         {
-            var a = Volatile.Read(ref subscribers);
-
-            for (;;)
+            get
             {
-                if (a == EMPTY || a == TERMINATED)
-                {
-                    return;
-                }
-
-                int n = a.Length;
-                int j = -1;
-                for (int i = 0; i < n; i++)
-                {
-                    if (a[i] == s)
-                    {
-                        j = i;
-                        break;
-                    }
-                }
-
-                if (j < 0)
-                {
-                    break;
-                }
-
-                DirectSubscription[] b;
-
-                if (n == 1)
-                {
-                    b = EMPTY;
-                }
-                else
-                {
-                    b = new DirectSubscription[n - 1];
-                    Array.Copy(a, 0, b, 0, j);
-                    Array.Copy(a, j + 1, b, j, n - j - 1);
-                }
-
-                var c = Interlocked.CompareExchange(ref subscribers, b, a);
-                if (c == a)
-                {
-                    return;
-                }
-                else
-                {
-                    a = c;
-                }
+                return subscribers.IsTerminated() && error == null;
             }
+        }
+
+        /// <inheritDoc/>
+        public bool HasError
+        {
+            get
+            {
+                return subscribers.IsTerminated() && error != null;
+            }
+        }
+
+        /// <inheritDoc/>
+        public Exception Error
+        {
+            get
+            {
+                if (subscribers.IsTerminated())
+                {
+                    return error;
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Constructs a fresh DirectProcessor.
+        /// </summary>
+        public DirectProcessor()
+        {
+            subscribers.Init();
         }
 
         /// <inheritdoc/>
         public void OnSubscribe(ISubscription s)
         {
-            if (Volatile.Read(ref subscribers) == TERMINATED)
+            if (subscribers.IsTerminated())
             {
                 s.Cancel();
             }
@@ -123,7 +90,7 @@ namespace Reactor.Core
         /// <inheritdoc/>
         public void OnNext(T t)
         {
-            foreach (var ds in Volatile.Read(ref subscribers))
+            foreach (var ds in subscribers.Array())
             {
                 ds.OnNext(t);
             }
@@ -132,10 +99,10 @@ namespace Reactor.Core
         /// <inheritdoc/>
         public void OnError(Exception e)
         {
-            if (Volatile.Read(ref subscribers) != TERMINATED)
+            if (!subscribers.IsTerminated())
             {
                 error = e;
-                foreach (var ds in Interlocked.Exchange(ref subscribers, TERMINATED))
+                foreach (var ds in subscribers.Terminate())
                 {
                     ds.OnError(e);
                 }
@@ -145,7 +112,7 @@ namespace Reactor.Core
         /// <inheritdoc/>
         public void OnComplete()
         {
-            foreach (var ds in Interlocked.Exchange(ref subscribers, TERMINATED))
+            foreach (var ds in subscribers.Terminate())
             {
                 ds.OnComplete();
             }
@@ -157,11 +124,11 @@ namespace Reactor.Core
             DirectSubscription ds = new DirectSubscription(s, this);
             s.OnSubscribe(ds);
 
-            if (Add(ds))
+            if (subscribers.Add(ds))
             {
                 if (ds.IsCancelled())
                 {
-                    Remove(ds);
+                    subscribers.Remove(ds);
                 }
             }
             else
@@ -175,46 +142,6 @@ namespace Reactor.Core
                 {
                     s.OnComplete();
                 }
-            }
-        }
-
-        /// <summary>
-        /// True if this DirectProcessor has subscribers.
-        /// </summary>
-        public bool HasSubscribers
-        {
-            get { return Volatile.Read(ref subscribers).Length != 0; }
-        }
-
-        /// <summary>
-        /// True if this DirectProcessor has been terminated with an Exception.
-        /// </summary>
-        /// <seealso cref="Exception"/>
-        public bool HasException
-        {
-            get { return Volatile.Read(ref subscribers) == TERMINATED && error != null; }
-        }
-
-        /// <summary>
-        /// True if this DirectProcessor has been completed normally.
-        /// </summary>
-        public bool IsComplete
-        {
-            get { return Volatile.Read(ref subscribers) == TERMINATED && error == null; }
-        }
-
-        /// <summary>
-        /// Returns the exception that terminated this DirectProcessor, null otherwise.
-        /// </summary>
-        public Exception Exception
-        {
-            get
-            {
-                if (Volatile.Read(ref subscribers) == TERMINATED)
-                {
-                    return error;
-                }
-                return null;
             }
         }
 
@@ -274,7 +201,7 @@ namespace Reactor.Core
             {
                 if (Interlocked.CompareExchange(ref cancelled, 1, 0) == 0)
                 {
-                    parent.Remove(this);
+                    parent.subscribers.Remove(this);
                 }
             }
 

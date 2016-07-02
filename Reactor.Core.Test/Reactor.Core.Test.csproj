@@ -69,6 +69,15 @@
     <Compile Include="DefaultIfEmptyTest.cs" />
     <Compile Include="DelaySubscriptionTest.cs" />
     <Compile Include="GroupByTest.cs" />
+    <Compile Include="ScanTest.cs" />
+    <Compile Include="ReduceTest.cs" />
+    <Compile Include="PublishSelectorTest.cs" />
+    <Compile Include="PublishProcessorTest.cs" />
+    <Compile Include="ProcessTest.cs" />
+    <Compile Include="OnErrorResumeWith.cs" />
+    <Compile Include="OnBackpressureLatestTest.cs" />
+    <Compile Include="OnBackpressureBufferTest.cs" />
+    <Compile Include="MaterializeTest.cs" />
     <Compile Include="MapNotificationTest.cs" />
     <Compile Include="ZipTest.cs" />
     <Compile Include="SwitchMapTest.cs" />

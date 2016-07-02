@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="BackpressureHandling.cs" />
     <Compile Include="ConcatErrorMode.cs" />
+    <Compile Include="ConnectableFlux.cs" />
     <Compile Include="DirectProcessor.cs" />
     <Compile Include="IConnectableFlux.cs" />
     <Compile Include="flow\ICallable.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="parallel\ParallelUnorderedFork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="publisher\MonoPublishOn.cs" />
+    <Compile Include="publisher\PublisherOnBackpressureLatest.cs" />
     <Compile Include="publisher\PublisherAction.cs" />
     <Compile Include="publisher\PublisherAmb.cs" />
     <Compile Include="publisher\PublisherAll.cs" />
@@ -112,13 +114,23 @@
     <Compile Include="publisher\PublisherMap.cs" />
     <Compile Include="publisher\PublisherMapError.cs" />
     <Compile Include="publisher\PublisherMapNotification.cs" />
+    <Compile Include="publisher\PublisherMaterialize.cs" />
     <Compile Include="publisher\PublisherMergeArray.cs" />
     <Compile Include="publisher\PublisherNever.cs" />
     <Compile Include="publisher\PublisherArray.cs" />
+    <Compile Include="publisher\PublisherOnBackpressureBuffer.cs" />
     <Compile Include="publisher\PublisherOnBackpressureDrop.cs" />
+    <Compile Include="publisher\PublisherOnErrorResumeWith.cs" />
+    <Compile Include="publisher\PublisherOnTerminateDetach.cs" />
     <Compile Include="publisher\PublisherPeek.cs" />
+    <Compile Include="publisher\PublisherProcess.cs" />
     <Compile Include="publisher\PublisherPublishOn.cs" />
+    <Compile Include="publisher\PublisherPublishSelector.cs" />
     <Compile Include="publisher\PublisherRange.cs" />
+    <Compile Include="publisher\PublisherScanWith.cs" />
+    <Compile Include="publisher\PublisherScan.cs" />
+    <Compile Include="publisher\PublisherReduceWith.cs" />
+    <Compile Include="publisher\PublisherReduce.cs" />
     <Compile Include="publisher\PublisherSkip.cs" />
     <Compile Include="publisher\PublisherSwitchMap.cs" />
     <Compile Include="publisher\PublisherTake.cs" />
@@ -128,6 +140,7 @@
     <Compile Include="ExceptionHelper.cs" />
     <Compile Include="publisher\PublisherZip.cs" />
     <Compile Include="publisher\PublisherZipEnumerable.cs" />
+    <Compile Include="PublishProcessor.cs" />
     <Compile Include="Scheduler.cs" />
     <Compile Include="scheduler\DefaultScheduler.cs" />
     <Compile Include="ISignalEmitter.cs" />
@@ -135,6 +148,7 @@
     <Compile Include="subscriber\BasicConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableConditionalSubscriber.cs" />
     <Compile Include="subscriber\BasicFuseableSubscriber.cs" />
+    <Compile Include="subscriber\BasicPostCompleteSubscriber.cs" />
     <Compile Include="subscriber\TestSubscriber.cs" />
     <Compile Include="subscription\BasicRejectingSubscription.cs" />
     <Compile Include="subscriber\BasicSubscriber.cs" />

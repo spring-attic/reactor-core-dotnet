@@ -49,6 +49,46 @@ namespace Reactor.Core
 
         bool outputFused;
 
+        /// <inheritDoc/>
+        public bool HasSubscribers
+        {
+            get
+            {
+                return Volatile.Read(ref regular) != null || Volatile.Read(ref conditional) != null;
+            }
+        }
+
+        /// <inheritDoc/>
+        public bool IsComplete
+        {
+            get
+            {
+                return Volatile.Read(ref done) && error == null;
+            }
+        }
+
+        /// <inheritDoc/>
+        public bool HasError
+        {
+            get
+            {
+                return Volatile.Read(ref done) && error != null;
+            }
+        }
+
+        /// <inheritDoc/>
+        public Exception Error
+        {
+            get
+            {
+                if (Volatile.Read(ref done))
+                {
+                    return error;
+                }
+                return null;
+            }
+        }
+
         /// <summary>
         /// Construct a default UnicastProcessor with an optional termination action
         /// and the default Flux.BufferSize queue.
