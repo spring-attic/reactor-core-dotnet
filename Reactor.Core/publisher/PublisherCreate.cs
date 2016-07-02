@@ -402,7 +402,7 @@ namespace Reactor.Core.publisher
 
                     T v;
 
-                    bool empty = queue.Poll(out v);
+                    bool empty = !queue.Poll(out v);
 
                     if (!empty)
                     {
@@ -454,7 +454,7 @@ namespace Reactor.Core.publisher
 
                         T v;
 
-                        bool empty = queue.Poll(out v);
+                        bool empty = !queue.Poll(out v);
 
                         if (d && empty)
                         {
@@ -670,7 +670,7 @@ namespace Reactor.Core.publisher
 
                     T v;
 
-                    bool empty = queue.Poll(out v);
+                    bool empty = !queue.Poll(out v);
 
                     if (!empty)
                     {
@@ -722,7 +722,7 @@ namespace Reactor.Core.publisher
 
                         T v;
 
-                        bool empty = queue.Poll(out v);
+                        bool empty = !queue.Poll(out v);
 
                         if (d && empty)
                         {

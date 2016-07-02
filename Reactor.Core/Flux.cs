@@ -2354,8 +2354,7 @@ namespace Reactor.Core
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IPublisher<R>> mapperOnNext, 
             Func<Exception, IPublisher<R>> mapperOnError, Func<IPublisher<R>> mapperOnComplete)
         {
-            // TODO implement FlatMap
-            throw new NotImplementedException();
+            return FlatMap(new PublisherMapNotification<T, R>(source, mapperOnNext, mapperOnError, mapperOnComplete), v => v);
         }
 
         /// <summary>
@@ -2368,8 +2367,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> FlatMap<T, R>(this IFlux<T> source, Func<T, IEnumerable<R>> mapper)
         {
-            // TODO implement FlatMap
-            throw new NotImplementedException();
+            return FlatMap<T, R>(source, mapper, BufferSize);
         }
 
         /// <summary>
@@ -2429,8 +2427,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<IGroupedFlux<K, V>> GroupBy<T, K, V>(this IFlux<T> source, Func<T, K> keySelector, Func<T, V> valueSelector, int prefetch)
         {
-            // TODO implement GroupBy
-            throw new NotImplementedException();
+            return new PublisherGroupBy<T, K, V>(source, keySelector, valueSelector, prefetch);
         }
 
         /// <summary>

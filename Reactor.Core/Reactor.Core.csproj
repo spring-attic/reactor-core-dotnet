@@ -102,6 +102,7 @@
     <Compile Include="publisher\PublisherFromTask.cs" />
     <Compile Include="publisher\PublisherFunc.cs" />
     <Compile Include="publisher\PublisherGenerate.cs" />
+    <Compile Include="publisher\PublisherGroupBy.cs" />
     <Compile Include="publisher\PublisherHasElements.cs" />
     <Compile Include="publisher\PublisherHide.cs" />
     <Compile Include="publisher\PublisherIgnoreElements.cs" />
@@ -110,6 +111,7 @@
     <Compile Include="publisher\PublisherLast.cs" />
     <Compile Include="publisher\PublisherMap.cs" />
     <Compile Include="publisher\PublisherMapError.cs" />
+    <Compile Include="publisher\PublisherMapNotification.cs" />
     <Compile Include="publisher\PublisherMergeArray.cs" />
     <Compile Include="publisher\PublisherNever.cs" />
     <Compile Include="publisher\PublisherArray.cs" />
@@ -159,6 +161,7 @@
     <Compile Include="util\IndexedMultipleDisposable.cs" />
     <Compile Include="util\MultipleDisposable.cs" />
     <Compile Include="util\MultiSourceHelper.cs" />
+    <Compile Include="util\ObjectHelper.cs" />
     <Compile Include="util\QueueDrainHelper.cs" />
     <Compile Include="util\QueueHelper.cs" />
     <Compile Include="util\SpscArrayQueue.cs" />
