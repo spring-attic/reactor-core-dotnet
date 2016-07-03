@@ -128,10 +128,12 @@
     <Compile Include="publisher\PublisherPublishOn.cs" />
     <Compile Include="publisher\PublisherPublishSelector.cs" />
     <Compile Include="publisher\PublisherRange.cs" />
+    <Compile Include="publisher\PublisherSample.cs" />
     <Compile Include="publisher\PublisherScanWith.cs" />
     <Compile Include="publisher\PublisherScan.cs" />
     <Compile Include="publisher\PublisherReduceWith.cs" />
     <Compile Include="publisher\PublisherReduce.cs" />
+    <Compile Include="publisher\PublisherSingle.cs" />
     <Compile Include="publisher\PublisherSkip.cs" />
     <Compile Include="publisher\PublisherTakeLast.cs" />
     <Compile Include="publisher\PublisherSkipLast.cs" />
@@ -146,6 +148,7 @@
     <Compile Include="publisher\PublisherThen.cs" />
     <Compile Include="publisher\PublisherTimeout.cs" />
     <Compile Include="publisher\PublisherUsing.cs" />
+    <Compile Include="publisher\PublisherWithLatestFrom.cs" />
     <Compile Include="publisher\PublisherWrap.cs" />
     <Compile Include="IReactiveStreams.cs" />
     <Compile Include="ExceptionHelper.cs" />

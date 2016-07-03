@@ -3179,8 +3179,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Sample<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
         {
-            // TODO implement Sample
-            throw new NotImplementedException();
+            return Sample(source, Interval(timespan, scheduler));
         }
 
         /// <summary>
@@ -3193,8 +3192,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Sample<T, U>(this IFlux<T> source, IPublisher<U> sampler)
         {
-            // TODO implement Sample
-            throw new NotImplementedException();
+            return new PublisherSample<T, U>(source, sampler);
         }
 
         /// <summary>
@@ -3221,8 +3219,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> SampleFirst<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
         {
-            // TODO implement Sample
-            throw new NotImplementedException();
+            return SampleFirst(source, t => Timer(timespan, scheduler));
         }
 
         /// <summary>
@@ -3266,8 +3263,7 @@ namespace Reactor.Core
         /// <returns>THe new IFlux instance.</returns>
         public static IFlux<T> SampleTimeout<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
         {
-            // TODO implement Sample
-            throw new NotImplementedException();
+            return SampleTimeout(source, e => Timer(timespan, scheduler));
         }
 
         /// <summary>
@@ -3343,8 +3339,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> Single<T>(this IFlux<T> source)
         {
-            // TODO implement Single
-            throw new NotImplementedException();
+            return new PublisherSingle<T>(source, false, false, default(T));
         }
 
         /// <summary>
@@ -3358,8 +3353,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> Single<T>(this IFlux<T> source, T defaultValue)
         {
-            // TODO implement Single
-            throw new NotImplementedException();
+            return new PublisherSingle<T>(source, false, true, defaultValue);
         }
 
         /// <summary>
@@ -3371,8 +3365,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> SingleOrEmpty<T>(this IFlux<T> source)
         {
-            // TODO implement Single
-            throw new NotImplementedException();
+            return new PublisherSingle<T>(source, true, false, default(T));
         }
 
         /// <summary>
@@ -3804,6 +3797,7 @@ namespace Reactor.Core
 
         /// <summary>
         /// Converts this IFlux into an IMono.
+        /// If the source flux has multiple values, only the very last is kept.
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
         /// <param name="source">The source to convert</param>
@@ -3814,8 +3808,7 @@ namespace Reactor.Core
             {
                 return source as IMono<T>;
             }
-            // TODO implement ToMono
-            throw new NotImplementedException();
+            return new PublisherTakeLastOne<T>(source);
         }
 
         /// <summary>
@@ -4069,8 +4062,9 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> WithLatestFrom<T1, T2, R>(this IFlux<T1> source, IPublisher<T2> other, Func<T1, T2, R> combiner)
         {
-            // TODO implement WithLatestFrom
-            throw new NotImplementedException();
+            return WithLatestFrom<object, R>(Box(source), a =>
+                combiner((T1)a[0], (T2)a[1]),
+                Box(other));
         }
 
         /// <summary>
@@ -4090,8 +4084,9 @@ namespace Reactor.Core
             IPublisher<T2> p2, IPublisher<T3> p3,
             Func<T1, T2, T3, R> combiner)
         {
-            // TODO implement WithLatestFrom
-            throw new NotImplementedException();
+            return WithLatestFrom<object, R>(Box(source), a =>
+                combiner((T1)a[0], (T2)a[1], (T3)a[2]),
+                Box(p2), Box(p3));
         }
 
         /// <summary>
@@ -4114,8 +4109,9 @@ namespace Reactor.Core
             IPublisher<T4> p4,
             Func<T1, T2, T3, T4, R> combiner)
         {
-            // TODO implement WithLatestFrom
-            throw new NotImplementedException();
+            return WithLatestFrom<object, R>(Box(source), a =>
+                combiner((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3]),
+                Box(p2), Box(p3), Box(p4));
         }
 
         /// <summary>
@@ -4140,8 +4136,9 @@ namespace Reactor.Core
             IPublisher<T4> p4, IPublisher<T5> p5,
             Func<T1, T2, T3, T4, T5, R> combiner)
         {
-            // TODO implement WithLatestFrom
-            throw new NotImplementedException();
+            return WithLatestFrom<object, R>(Box(source), a =>
+                combiner((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3], (T5)a[4]),
+                Box(p2), Box(p3), Box(p4), Box(p5));
         }
 
         /// <summary>
@@ -4169,8 +4166,9 @@ namespace Reactor.Core
             IPublisher<T6> p6,
             Func<T1, T2, T3, T4, T5, T6, R> combiner)
         {
-            // TODO implement WithLatestFrom
-            throw new NotImplementedException();
+            return WithLatestFrom<object, R>(Box(source), a =>
+                combiner((T1)a[0], (T2)a[1], (T3)a[2], (T4)a[3], (T5)a[4], (T6)a[5]),
+                Box(p2), Box(p3), Box(p4), Box(p5), Box(p6));
         }
 
         /// <summary>
@@ -4185,8 +4183,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> WithLatestFrom<T, R>(this IFlux<T> source, Func<T[], R> combiner, params IPublisher<T>[] others)
         {
-            // TODO implement WithLatestFrom
-            throw new NotImplementedException();
+            return new PublisherWithLatestFrom<T, R>(source, others, combiner);
         }
 
         /// <summary>

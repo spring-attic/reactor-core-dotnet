@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherTakeLastOne<T> : IFlux<T>
+    sealed class PublisherTakeLastOne<T> : IFlux<T>, IMono<T>
     {
         readonly IPublisher<T> source;
 

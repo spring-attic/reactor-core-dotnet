@@ -142,7 +142,7 @@ namespace Reactor.Core.util
         }
 
         /// <summary>
-        /// Accumulate the request amounts until the current field is null or
+        /// Accumulate the request amounts (validated) until the current field is null or
         /// request directly from the ISubscription.
         /// </summary>
         /// <param name="current">The current ISubscription field</param>
