@@ -621,25 +621,48 @@ namespace Reactor.Core
         /// having a total number of simultaneous subscriptions to the inner Publishers
         /// and using the given prefetch amount for the inner Publishers.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="R"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="mapper"></param>
-        /// <param name="maxConcurrency"></param>
-        /// <param name="prefetch"></param>
-        /// <param name="delayErrors"></param>
-        /// <returns></returns>
+        /// <typeparam name="T">the value type</typeparam>
+        /// <typeparam name="R">The result type</typeparam>
+        /// <param name="source">The source IParallelPublisher instance.</param>
+        /// <param name="mapper">the function to map each rail's value into a IPublisher</param>
+        /// <param name="maxConcurrency">the maximum number of simultaneous subscriptions to the generated inner IPublishers</param>
+        /// <param name="prefetch">the number of items to prefetch from each inner IPublisher</param>
+        /// <param name="delayErrors">should the errors from the main and the inner sources delayed till everybody terminates?</param>
+        /// <returns>The new IParallelFlux instance</returns>
         public static IParallelFlux<R> FlatMap<T, R>(this IParallelFlux<T> source, Func<T, IPublisher<R>> mapper, int maxConcurrency, int prefetch, bool delayErrors = false)
         {
             // TODO implement FlatMap
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Generates and concatenates Publishers on each 'rail', signalling errors immediately 
+        /// and using the given prefetch amount for generating Publishers upfront.
+        /// </summary>
+        /// <typeparam name="T">the value type</typeparam>
+        /// <typeparam name="R">The result type</typeparam>
+        /// <param name="source">The source IParallelPublisher instance.</param>
+        /// <param name="mapper">the function to map each rail's value into a IPublisher</param>
+        /// <param name="errorMode">the error handling, i.e., when to report errors from the main
+        /// source and the inner Publishers (immediate, boundary, end)</param>
+        /// <returns>The new IParallelFlux instance</returns>
         public static IParallelFlux<R> ConcatMap<T, R>(this IParallelFlux<T> source, Func<T, IPublisher<R>> mapper, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             return ConcatMap(source, mapper, 2, errorMode);
         }
 
+        /// <summary>
+        /// Generates and concatenates Publishers on each 'rail', optionally delaying errors
+        /// and using the given prefetch amount for generating IPublishers upfront.
+        /// </summary>
+        /// <typeparam name="T">the value type</typeparam>
+        /// <typeparam name="R">The result type</typeparam>
+        /// <param name="source">The source IParallelPublisher instance.</param>
+        /// <param name="mapper">the function to map each rail's value into a IPublisher</param>
+        /// <param name="prefetch">the number of items to prefetch from each inner IPublisher</param>
+        /// <param name="errorMode">the error handling, i.e., when to report errors from the main
+        /// source and the inner Publishers (immediate, boundary, end)</param>
+        /// <returns>The new IParallelFlux instance</returns>
         public static IParallelFlux<R> ConcatMap<T, R>(this IParallelFlux<T> source, Func<T, IPublisher<R>> mapper, int prefetch, ConcatErrorMode errorMode = ConcatErrorMode.Immediate)
         {
             // TODO implement ConcatMap
