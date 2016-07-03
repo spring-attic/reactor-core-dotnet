@@ -2068,7 +2068,6 @@ namespace Reactor.Core
         /// <param name="source">The source IFlux.</param>
         /// <param name="onComplete">The action to call.</param>
         /// <returns>The new IFlux instance.</returns>
-
         public static IFlux<T> DoOnComplete<T>(this IFlux<T> source, Action onComplete)
         {
             return PublisherPeek<T>.withOnComplete(source, onComplete);

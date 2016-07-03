@@ -28,58 +28,74 @@ namespace Reactor.Core.publisher
             source.Subscribe(new IgnoreElementsSubscriber(s));
         }
 
-        sealed class IgnoreElementsSubscriber : BasicFuseableSubscriber<T, R>
+        sealed class IgnoreElementsSubscriber : ISubscriber<T>, IQueueSubscription<R>
         {
-            public IgnoreElementsSubscriber(ISubscriber<R> actual) : base(actual)
+            readonly ISubscriber<R> actual;
+
+            ISubscription s;
+
+            public IgnoreElementsSubscriber(ISubscriber<R> actual)
             {
+                this.actual = actual;
             }
 
-            public override void OnComplete()
+            public void Cancel()
             {
-                Complete();
+                s.Cancel();
             }
 
-            public override void OnError(Exception e)
+            public void Clear()
             {
-                Error(e);
+                // always empty
             }
 
-            public override void OnNext(T t)
+            public bool IsEmpty()
+            {
+                return true;
+            }
+
+            public bool Offer(R value)
+            {
+                return FuseableHelper.DontCallOffer();
+            }
+
+            public void OnComplete()
+            {
+                actual.OnComplete();
+            }
+
+            public void OnError(Exception e)
+            {
+                actual.OnError(e);
+            }
+
+            public void OnNext(T t)
             {
                 // ignored
             }
 
-            public override bool Poll(out R value)
+            public void OnSubscribe(ISubscription s)
             {
-                for (;;)
+                if (SubscriptionHelper.Validate(ref this.s, s))
                 {
-                    T local;
-
-                    if (!qs.Poll(out local))
-                    {
-                        break;
-                    }
+                    s.Request(long.MaxValue);
                 }
+            }
+
+            public bool Poll(out R value)
+            {
                 value = default(R);
                 return false;
             }
 
-            public override int RequestFusion(int mode)
+            public void Request(long n)
             {
-                return TransitiveAnyFusion(mode);
+                // ignored, always empty
             }
 
-            public override void Request(long n)
+            public int RequestFusion(int mode)
             {
-                // ignored
-            }
-
-            protected override void AfterSubscribe()
-            {
-                if (fusionMode != FuseableHelper.SYNC)
-                {
-                    s.Request(long.MaxValue);
-                }
+                return mode & FuseableHelper.ASYNC;
             }
         }
     }

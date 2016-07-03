@@ -13,7 +13,7 @@ using System.Threading;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherUsing<T, S> : IFlux<T>
+    sealed class PublisherUsing<T, S> : IFlux<T>, IMono<T>
     {
         readonly Func<S> stateFactory;
 
