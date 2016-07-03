@@ -92,7 +92,20 @@ namespace Reactor.Core.subscription
         }
 
         /// <summary>
-        /// Request the specified amount from the current ISubscription if present
+        /// Request the specified amount (validated) from the current ISubscription if present
+        /// or accumulate it until an ISubscription is set.
+        /// </summary>
+        /// <param name="n">The request amount, positive (validated)</param>
+        public void ValidateAndRequest(long n)
+        {
+            if (SubscriptionHelper.Validate(n))
+            {
+                Request(n);
+            }
+        }
+
+        /// <summary>
+        /// Request the specified amount (not validated) from the current ISubscription if present
         /// or accumulate it until an ISubscription is set.
         /// </summary>
         /// <param name="n">The request amount, positive (not validated)</param>

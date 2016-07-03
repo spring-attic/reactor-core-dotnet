@@ -681,14 +681,12 @@ namespace Reactor.Core
 
         public static IMono<R> Then<T, R>(this IMono<T> source, Func<T, IMono<R>> transformer)
         {
-            // TODO implement Then
-            throw new NotImplementedException();
+            return FlatMap(source, transformer);
         }
 
         public static IMono<R> Then<T, R>(this IMono<T> source, IMono<R> other)
         {
-            // TODO implement Then
-            throw new NotImplementedException();
+            return new PublisherThen<T, R>(source, other);
         }
 
         public static IMono<R> Then<T, R>(this IMono<T> source, Func<IMono<R>> other)
@@ -698,8 +696,7 @@ namespace Reactor.Core
 
         public static IFlux<R> ThenMany<T, R>(this IMono<T> source, IFlux<R> other)
         {
-            // TODO implement Then
-            throw new NotImplementedException();
+            return new PublisherThen<T, R>(source, other);
         }
 
         public static IFlux<R> ThenMany<T, R>(this IMono<T> source, Func<IFlux<R>> other)

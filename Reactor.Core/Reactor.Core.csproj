@@ -64,6 +64,7 @@
     <Compile Include="parallel\ParallelUnorderedFork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="publisher\MonoPublishOn.cs" />
+    <Compile Include="publisher\PublisherIgnoreBoth.cs" />
     <Compile Include="publisher\PublisherOnBackpressureLatest.cs" />
     <Compile Include="publisher\PublisherAction.cs" />
     <Compile Include="publisher\PublisherAmb.cs" />
@@ -142,6 +143,8 @@
     <Compile Include="publisher\PublisherTakeUntil.cs" />
     <Compile Include="publisher\PublisherTakeWhile.cs" />
     <Compile Include="publisher\PublisherTakeUntilPredicate.cs" />
+    <Compile Include="publisher\PublisherThen.cs" />
+    <Compile Include="publisher\PublisherTimeout.cs" />
     <Compile Include="publisher\PublisherUsing.cs" />
     <Compile Include="publisher\PublisherWrap.cs" />
     <Compile Include="IReactiveStreams.cs" />

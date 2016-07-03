@@ -3684,22 +3684,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<Void> Then<T>(this IFlux<T> source, IPublisher<Void> other)
         {
-            // TODO implement Then
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Runs the source IFlux to completion, ignoring its elements, then relays elements of
-        /// the after IPublisher.
-        /// </summary>
-        /// <typeparam name="T">The value type.</typeparam>
-        /// <param name="source">The source IFlux.</param>
-        /// <param name="after">The IPublisher to run and relay signals of after the source.</param>
-        /// <returns></returns>
-        public static IFlux<T> ThenMany<T>(this IFlux<T> source, IPublisher<T> after)
-        {
-            // Can't fuse multiple applications into one operator unless all the types are the same due to non-erasure, unlike Java.
-            return ThenMany<T, T>(source, after);
+            return new PublisherIgnoreBoth<T, Void, Void>(source, other);
         }
 
         /// <summary>
@@ -3710,11 +3695,10 @@ namespace Reactor.Core
         /// <typeparam name="R">The after value type.</typeparam>
         /// <param name="source">The source IFlux.</param>
         /// <param name="after">The IPublisher to run and relay signals of after the source.</param>
-        /// <returns></returns>
+        /// <returns>The new IFlux instance.</returns>
         public static IFlux<R> ThenMany<T, R>(this IFlux<T> source, IPublisher<R> after)
         {
-            // TODO implement ThenMany
-            throw new NotImplementedException();
+            return new PublisherThen<T, R>(source, after);
         }
 
         /// <summary>
@@ -3744,8 +3728,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Timeout<T>(this IFlux<T> source, TimeSpan timeout, TimedScheduler scheduler, IPublisher<T> fallback = null)
         {
-            // TODO implement Timeout
-            throw new NotImplementedException();
+            return Timeout(source, Timer(timeout, scheduler), e => Timer(timeout, scheduler), fallback);
         }
 
         /// <summary>
@@ -3760,8 +3743,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Timeout<T, U>(this IFlux<T> source, IPublisher<U> firstTimeout, IPublisher<T> fallback = null)
         {
-            // TODO implement Timeout
-            throw new NotImplementedException();
+            return Timeout(source, firstTimeout, e => Never<int>(), fallback);
         }
 
         /// <summary>
@@ -3779,8 +3761,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Timeout<T, U, V>(this IFlux<T> source, IPublisher<U> firstTimeout, Func<T, IPublisher<V>> itemTimeout, IPublisher<T> fallback = null)
         {
-            // TODO implement Timeout
-            throw new NotImplementedException();
+            return new PublisherTimeout<T, U, V>(source, firstTimeout, itemTimeout, fallback);
         }
 
         /// <summary>
