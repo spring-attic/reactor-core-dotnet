@@ -164,7 +164,7 @@ namespace Reactor.Core
 
         public static IMono<T> IgnoreElements<T>(IPublisher<T> source)
         {
-            return new PublisherIgnoreElements<T>(source);
+            return new PublisherIgnoreElements<T, T>(source);
         }
 
         public static IMono<T> Using<T, R>(Func<R> resourceFactory, Func<R, IMono<T>> monoFactory, Action<R> resourceDisposer, bool eager = true)
@@ -666,8 +666,12 @@ namespace Reactor.Core
 
         public static IMono<T> SubscribeOn<T>(this IMono<T> source, Scheduler scheduler)
         {
-            // TODO implement SubscribeOn
-            throw new NotImplementedException();
+            return new PublisherSubscribeOn<T>(source, scheduler);
+        }
+
+        public static IMono<T> SwitchIfEmpty<T>(this IMono<T> source, IMono<T> other)
+        {
+            return new PublisherSwitchIfEmpty<T>(source, other);
         }
 
         public static IMono<Void> Then<T>(this IMono<T> source)

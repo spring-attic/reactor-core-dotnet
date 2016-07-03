@@ -14,7 +14,7 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherIgnoreElements<T> : IFlux<T>, IMono<T>
+    sealed class PublisherIgnoreElements<T, R> : IFlux<R>, IMono<R>
     {
         readonly IPublisher<T> source;
 
@@ -23,14 +23,14 @@ namespace Reactor.Core.publisher
             this.source = source;
         }
 
-        public void Subscribe(ISubscriber<T> s)
+        public void Subscribe(ISubscriber<R> s)
         {
             source.Subscribe(new IgnoreElementsSubscriber(s));
         }
 
-        sealed class IgnoreElementsSubscriber : BasicFuseableSubscriber<T, T>
+        sealed class IgnoreElementsSubscriber : BasicFuseableSubscriber<T, R>
         {
-            public IgnoreElementsSubscriber(ISubscriber<T> actual) : base(actual)
+            public IgnoreElementsSubscriber(ISubscriber<R> actual) : base(actual)
             {
             }
 
@@ -49,7 +49,7 @@ namespace Reactor.Core.publisher
                 // ignored
             }
 
-            public override bool Poll(out T value)
+            public override bool Poll(out R value)
             {
                 for (;;)
                 {
@@ -60,7 +60,7 @@ namespace Reactor.Core.publisher
                         break;
                     }
                 }
-                value = default(T);
+                value = default(R);
                 return false;
             }
 

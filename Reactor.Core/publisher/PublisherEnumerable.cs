@@ -27,13 +27,13 @@ namespace Reactor.Core.publisher
 
             IEnumerator<T> enumerator;
 
-            bool empty;
+            bool hasValue;
 
             try
             {
                 enumerator = enumerable.GetEnumerator();
 
-                empty = enumerator.MoveNext();
+                hasValue = enumerator.MoveNext();
             }
             catch (Exception ex)
             {
@@ -42,7 +42,7 @@ namespace Reactor.Core.publisher
                 return;
             }
 
-            if (empty)
+            if (!hasValue)
             {
                 EmptySubscription<T>.Complete(s);
                 return;

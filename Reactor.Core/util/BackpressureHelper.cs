@@ -323,7 +323,7 @@ namespace Reactor.Core.util
                 r = Volatile.Read(ref requested);
                 if (r == e)
                 {
-                    r = Interlocked.Add(ref requested, -e);
+                    r = Interlocked.Add(ref requested, -(e & REQUESTED_MASK));
                     if (r == COMPLETE_MASK)
                     {
                         break;

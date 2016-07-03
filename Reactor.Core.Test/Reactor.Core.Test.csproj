@@ -69,6 +69,16 @@
     <Compile Include="DefaultIfEmptyTest.cs" />
     <Compile Include="DelaySubscriptionTest.cs" />
     <Compile Include="GroupByTest.cs" />
+    <Compile Include="FromEnumerable.cs" />
+    <Compile Include="TakeLastTest.cs" />
+    <Compile Include="SkipLastTest.cs" />
+    <Compile Include="SwitchIfEmptyTest.cs" />
+    <Compile Include="TakeWhileTest.cs" />
+    <Compile Include="TakeUntilPredicateTest.cs" />
+    <Compile Include="TakeUntilTest.cs" />
+    <Compile Include="SkipWhileTest.cs" />
+    <Compile Include="SkipUntilTest.cs" />
+    <Compile Include="SubscribeOnTest.cs" />
     <Compile Include="ScanTest.cs" />
     <Compile Include="ReduceTest.cs" />
     <Compile Include="PublishSelectorTest.cs" />

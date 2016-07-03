@@ -14,13 +14,13 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.publisher
 {
-    sealed class PublisherFilter<T> : IFlux<T>, IMono<T>
+    sealed class PublisherSkipWhile<T> : IFlux<T>
     {
         readonly IPublisher<T> source;
 
         readonly Func<T, bool> predicate;
 
-        internal PublisherFilter(IPublisher<T> source, Func<T, bool> predicate)
+        internal PublisherSkipWhile(IPublisher<T> source, Func<T, bool> predicate)
         {
             this.source = source;
             this.predicate = predicate;
@@ -30,19 +30,21 @@ namespace Reactor.Core.publisher
         {
             if (s is IConditionalSubscriber<T>)
             {
-                source.Subscribe(new FilterConditionalSubscriber((IConditionalSubscriber<T>)s, predicate));
+                source.Subscribe(new SkipWhileConditionalSubscriber((IConditionalSubscriber<T>)s, predicate));
             }
             else
             {
-                source.Subscribe(new FilterSubscriber(s, predicate));
+                source.Subscribe(new SkipWhileSubscriber(s, predicate));
             }
         }
 
-        sealed class FilterSubscriber : BasicFuseableSubscriber<T, T>, IConditionalSubscriber<T>
+        sealed class SkipWhileSubscriber : BasicFuseableSubscriber<T, T>, IConditionalSubscriber<T>
         {
             readonly Func<T, bool> predicate;
 
-            internal FilterSubscriber(ISubscriber<T> actual, Func<T, bool> predicate) : base(actual)
+            bool passThrough;
+
+            public SkipWhileSubscriber(ISubscriber<T> actual, Func<T, bool> predicate) : base(actual)
             {
                 this.predicate = predicate;
             }
@@ -59,6 +61,7 @@ namespace Reactor.Core.publisher
 
             public override void OnNext(T t)
             {
+                
                 if (!TryOnNext(t))
                 {
                     s.Request(1);
@@ -78,6 +81,12 @@ namespace Reactor.Core.publisher
                     return true;
                 }
 
+                if (passThrough)
+                {
+                    actual.OnNext(t);
+                    return true;
+                }
+
                 bool b;
 
                 try
@@ -87,68 +96,49 @@ namespace Reactor.Core.publisher
                 catch (Exception ex)
                 {
                     Fail(ex);
+                    return false;
+                }
+
+                if (!b)
+                {
+                    passThrough = true;
+                    actual.OnNext(t);
                     return true;
                 }
-
-                if (b)
-                {
-                    actual.OnNext(t);
-                }
-
-                return b;
+                return false;
             }
 
             public override bool Poll(out T value)
             {
-                var qs = this.qs;
-                T local;
-
-                if (fusionMode == FuseableHelper.SYNC)
+                for (;;)
                 {
-                    for (;;)
+                    if (passThrough)
                     {
-                        if (qs.Poll(out local))
-                        {
-                            if (predicate(local))
-                            {
-                                value = local;
-                                return true;
-                            }
-                        }
-                        else
-                        {
-                            value = default(T);
-                            return false;
-                        }
+                        return qs.Poll(out value);
                     }
-                }
-                else
-                {
-                    long p = 0;
-                    for (;;)
+
+                    T t;
+                    bool b = qs.Poll(out t);
+
+                    if (b)
                     {
-                        if (qs.Poll(out local))
+                        if (!predicate(t))
                         {
-                            if (predicate(local))
-                            {
-                                if (p != 0)
-                                {
-                                    qs.Request(p);
-                                }
-                                value = local;
-                                return true;
-                            }
-                            p++;
+                            passThrough = true;
+                            value = t;
+                            return true;
                         }
                         else
                         {
-                            if (p != 0)
+                            if (fusionMode != FuseableHelper.SYNC)
                             {
-                                qs.Request(p);
+                                s.Request(1);
                             }
-                            value = default(T);
-                            return false;
                         }
+                    } else
+                    {
+                        value = default(T);
+                        return false;
                     }
                 }
             }
@@ -159,11 +149,13 @@ namespace Reactor.Core.publisher
             }
         }
 
-        sealed class FilterConditionalSubscriber : BasicFuseableConditionalSubscriber<T, T>
+        sealed class SkipWhileConditionalSubscriber : BasicFuseableConditionalSubscriber<T, T>
         {
             readonly Func<T, bool> predicate;
 
-            internal FilterConditionalSubscriber(IConditionalSubscriber<T> actual, Func<T, bool> predicate) : base(actual)
+            bool passThrough;
+
+            public SkipWhileConditionalSubscriber(IConditionalSubscriber<T> actual, Func<T, bool> predicate) : base(actual)
             {
                 this.predicate = predicate;
             }
@@ -192,8 +184,12 @@ namespace Reactor.Core.publisher
                 {
                     return false;
                 }
-
                 if (fusionMode != FuseableHelper.NONE)
+                {
+                    return actual.TryOnNext(t);
+                }
+
+                if (passThrough)
                 {
                     return actual.TryOnNext(t);
                 }
@@ -207,67 +203,49 @@ namespace Reactor.Core.publisher
                 catch (Exception ex)
                 {
                     Fail(ex);
-                    return true;
+                    return false;
                 }
 
-                if (b)
+                if (!b)
                 {
+                    passThrough = true;
                     return actual.TryOnNext(t);
                 }
-                return b;
+                return false;
             }
 
             public override bool Poll(out T value)
             {
-                var qs = this.qs;
-                T local;
-
-                if (fusionMode == FuseableHelper.SYNC)
+                for (;;)
                 {
-                    for (;;)
+                    if (passThrough)
                     {
-                        if (qs.Poll(out local))
+                        return qs.Poll(out value);
+                    }
+
+                    T t;
+                    bool b = qs.Poll(out t);
+
+                    if (b)
+                    {
+                        if (!predicate(t))
                         {
-                            if (predicate(local))
-                            {
-                                value = local;
-                                return true;
-                            }
+                            passThrough = true;
+                            value = t;
+                            return true;
                         }
                         else
                         {
-                            value = default(T);
-                            return false;
+                            if (fusionMode != FuseableHelper.SYNC)
+                            {
+                                s.Request(1);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    long p = 0;
-                    for (;;)
+                    else
                     {
-                        if (qs.Poll(out local))
-                        {
-                            if (predicate(local))
-                            {
-                                if (p != 0)
-                                {
-                                    qs.Request(p);
-                                }
-                                value = local;
-                                return true;
-                            }
-                            p++;
-                        }
-                        else
-                        {
-                            if (p != 0)
-                            {
-                                qs.Request(p);
-                            }
-                            value = default(T);
-                            return false;
-                        }
+                        value = default(T);
+                        return false;
                     }
                 }
             }

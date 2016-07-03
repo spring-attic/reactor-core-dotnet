@@ -93,7 +93,7 @@ namespace Reactor.Core.subscriber
         {
             ExceptionHelper.ThrowIfFatal(ex);
             s.Cancel();
-            Error(ex);
+            OnError(ex);
         }
     }
 }

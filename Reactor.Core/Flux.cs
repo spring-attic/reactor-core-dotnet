@@ -2488,7 +2488,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> IgnoreElements<T>(this IFlux<T> source)
         {
-            return new PublisherIgnoreElements<T>(source);
+            return new PublisherIgnoreElements<T, T>(source);
         }
 
         /// <summary>
@@ -3414,8 +3414,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Skip<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
         {
-            // TODO implement Skip
-            throw new NotImplementedException();
+            return SkipUntil(source, Timer(timespan, scheduler));
         }
 
         /// <summary>
@@ -3427,8 +3426,11 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> SkipLast<T>(this IFlux<T> source, long n)
         {
-            // TODO implement SkipLast
-            throw new NotImplementedException();
+            if (n <= 0L)
+            {
+                return source;
+            }
+            return new PublisherSkipLast<T>(source, n);
         }
 
         /// <summary>
@@ -3443,8 +3445,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> SkipUntil<T, U>(this IFlux<T> source, IPublisher<U> other)
         {
-            // TODO implement SkipUntil
-            throw new NotImplementedException();
+            return new PublisherSkipUntil<T, U>(source, other);
         }
 
         /// <summary>
@@ -3457,8 +3458,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> SkipWhile<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
-            // TODO implement SkipWhile
-            throw new NotImplementedException();
+            return new PublisherSkipWhile<T>(source, predicate);
         }
 
         /// <summary>
@@ -3512,8 +3512,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux isntance.</returns>
         public static IFlux<T> SubscribeOn<T>(this IFlux<T> source, Scheduler scheduler)
         {
-            // TODO implement SubscribeOn
-            throw new NotImplementedException();
+            return new PublisherSubscribeOn<T>(source, scheduler);
         }
 
         /// <summary>
@@ -3557,8 +3556,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> SwitchIfEmpty<T>(this IFlux<T> source, IPublisher<T> other)
         {
-            // TODO implement SwitchIfEmpty
-            throw new NotImplementedException();
+            return new PublisherSwitchIfEmpty<T>(source, other);
         }
 
         /// <summary>
@@ -3597,8 +3595,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> Take<T>(this IFlux<T> source, TimeSpan timespan, TimedScheduler scheduler)
         {
-            // TODO implement Take
-            throw new NotImplementedException();
+            return TakeUntil(source, Timer(timespan, scheduler));
         }
 
         /// <summary>
@@ -3610,8 +3607,17 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> TakeLast<T>(this IFlux<T> source, long n)
         {
-            // TODO implement TakeLast
-            throw new NotImplementedException();
+            if (n == 0)
+            {
+                return new PublisherIgnoreElements<T, T>(source);
+            }
+            else
+            if (n == 1)
+            {
+                return new PublisherTakeLastOne<T>(source);
+            }
+
+            return new PublisherTakeLast<T>(source, n);
         }
 
         /// <summary>
@@ -3626,8 +3632,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> TakeUntil<T, U>(this IFlux<T> source, IPublisher<U> other)
         {
-            // TODO implement TakeUntil
-            throw new NotImplementedException();
+            return new PublisherTakeUntil<T, U>(source, other);
         }
 
         /// <summary>
@@ -3641,8 +3646,7 @@ namespace Reactor.Core
         /// <returns></returns>
         public static IFlux<T> TakeUntil<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
-            // TODO implement TakeUntil
-            throw new NotImplementedException();
+            return new PublisherTakeUntilPredicate<T>(source, predicate);
         }
 
         /// <summary>
@@ -3656,8 +3660,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance.</returns>
         public static IFlux<T> TakeWhile<T>(this IFlux<T> source, Func<T, bool> predicate)
         {
-            // TODO implement TakeWhile
-            throw new NotImplementedException();
+            return new PublisherTakeWhile<T>(source, predicate);
         }
 
         /// <summary>
@@ -3668,8 +3671,7 @@ namespace Reactor.Core
         /// <returns>The new IMono instance.</returns>
         public static IMono<T> Then<T>(this IFlux<T> source)
         {
-            // TODO implement Then
-            throw new NotImplementedException();
+            return new PublisherIgnoreElements<T, T>(source);
         }
 
         /// <summary>

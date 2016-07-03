@@ -36,6 +36,11 @@ namespace Reactor.Core.publisher
         public void Subscribe(ISubscriber<T> s)
         {
 
+            if (PublisherSubscribeOn<T>.TrySingleSchedule(source, s, scheduler))
+            {
+                return;
+            }
+
             Worker worker = scheduler.CreateWorker();
 
             if (s is IConditionalSubscriber<T>)
