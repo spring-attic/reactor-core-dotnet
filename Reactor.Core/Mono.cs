@@ -115,8 +115,11 @@ namespace Reactor.Core
 
         public static IMono<T> From<T>(IPublisher<T> source)
         {
-            // TODO implement From
-            throw new NotImplementedException();
+            if (source is IMono<T>)
+            {
+                return (IMono<T>)source;
+            }
+            return new PublisherWrap<T>(source);
         }
 
         public static IMono<T> From<T>(Func<T> generator, bool nullMeansEmpty = false)
@@ -161,8 +164,7 @@ namespace Reactor.Core
 
         public static IMono<T> IgnoreElements<T>(IPublisher<T> source)
         {
-            // TODO implement IgnoreElements
-            throw new NotImplementedException();
+            return new PublisherIgnoreElements<T>(source);
         }
 
         public static IMono<T> Using<T, R>(Func<R> resourceFactory, Func<R, IMono<T>> monoFactory, Action<R> resourceDisposer, bool eager = true)
@@ -409,28 +411,27 @@ namespace Reactor.Core
 
         public static IFlux<R> FlatMap<T, R>(this IMono<T> source, Func<T, IPublisher<R>> mapper)
         {
-            // TODO implement Elapsed
-            throw new NotImplementedException();
+            // TODO implement custom FlatMap
+            return new PublisherConcatMap<T, R>(source, mapper, 1, ConcatErrorMode.End);
         }
 
         public static IMono<R> FlatMap<T, R>(this IMono<T> source, Func<T, IMono<R>> mapper)
         {
-            // TODO implement Elapsed
-            throw new NotImplementedException();
+            // TODO implement custom FlatMap
+            return From(new PublisherConcatMap<T, R>(source, mapper, 1, ConcatErrorMode.End));
         }
 
         public static IFlux<R> FlatMap<T, R>(this IMono<T> source, Func<T, IEnumerable<R>> mapper)
         {
-            // TODO implement Elapsed
-            throw new NotImplementedException();
+            // TODO implement custom FlatMap
+            return new PublisherFlattenEnumerable<T, R>(source, mapper, 1);
         }
 
         public static IFlux<R> FlatMap<T, R>(this IMono<T> source, 
             Func<T, IPublisher<R>> onNextMapper, Func<Exception, IPublisher<R>> onErrorMapper,
             Func<IPublisher<R>> onCompleteMapper)
         {
-            // TODO implement Elapsed
-            throw new NotImplementedException();
+            return new PublisherMapNotification<T, R>(source, onNextMapper, onErrorMapper, onCompleteMapper).FlatMap(v => v);
         }
 
         /// <summary>
