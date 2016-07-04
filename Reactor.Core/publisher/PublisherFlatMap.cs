@@ -560,7 +560,7 @@ namespace Reactor.Core.publisher
                             Interlocked.Decrement(ref requested);
                         }
 
-                        ScalarConsumed();
+                        sender.RequestOne();
                     }
                     else
                     {

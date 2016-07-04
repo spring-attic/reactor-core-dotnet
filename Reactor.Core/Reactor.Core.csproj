@@ -61,6 +61,8 @@
     <Compile Include="Flux.cs" />
     <Compile Include="IOrderedItem.cs" />
     <Compile Include="ParallelFlux.cs" />
+    <Compile Include="parallel\ParallelFromPublishers.cs" />
+    <Compile Include="parallel\ParallelGroups.cs" />
     <Compile Include="parallel\ParallelOrderedFilter.cs" />
     <Compile Include="parallel\ParallelOrderedFork.cs" />
     <Compile Include="parallel\ParallelOrderedJoin.cs" />

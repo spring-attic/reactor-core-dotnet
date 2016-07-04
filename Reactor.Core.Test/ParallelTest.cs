@@ -320,5 +320,24 @@ namespace Reactor.Core.Test
                 }
             }
         }
+
+
+        [Test]
+        public void Parallel_Groups()
+        {
+            for (int i = 1; i <= 32; i++) {
+                for (int j = 1; j <= 100000; j *= 10)
+                {
+                    Flux.Range(1, j)
+                        .Parallel(i)
+                        .Groups()
+                        .FlatMap(v => v)
+                        .Test()
+                        .AssertValueCount(j)
+                        .AssertNoError()
+                        .AssertComplete();
+                }
+            }
+        }
     }
 }

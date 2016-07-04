@@ -518,8 +518,7 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance with the inner IGroupedFlux instances.</returns>
         public static IFlux<IGroupedFlux<int, T>> Groups<T>(this IParallelFlux<T> source)
         {
-            // TODO implement Groups
-            throw new NotImplementedException();
+            return new ParallelGroups<T>(source);
         }
 
         /// <summary>
@@ -531,8 +530,7 @@ namespace Reactor.Core
         /// <returns>The new IParallelFlux instance</returns>
         public static IParallelFlux<T> From<T>(params IPublisher<T>[] sources)
         {
-            // TODO implement From
-            throw new NotImplementedException();
+            return new ParallelFromPublishers<T>(sources);
         }
 
         /// <summary>
