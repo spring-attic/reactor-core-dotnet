@@ -63,6 +63,8 @@
     <Compile Include="ParallelFlux.cs" />
     <Compile Include="parallel\ParallelOrderedFilter.cs" />
     <Compile Include="parallel\ParallelOrderedFork.cs" />
+    <Compile Include="parallel\ParallelReduce.cs" />
+    <Compile Include="parallel\ParallelReduceFull.cs" />
     <Compile Include="parallel\ParallelUnorderedFork.cs" />
     <Compile Include="parallel\ParallelUnorderedJoin.cs" />
     <Compile Include="parallel\ParallelUnorderedFilter.cs" />

@@ -175,8 +175,7 @@ namespace Reactor.Core
         /// <returns>the new IFlux instance emitting the reduced value or empty if the IParallelPublisher was empty</returns>
         public static IFlux<T> Reduce<T>(this IParallelFlux<T> source, Func<T, T, T> reducer)
         {
-            // TODO implement Reduce
-            throw new NotImplementedException();
+            return new ParallelReduceFull<T>(source, reducer);
         }
 
         /// <summary>
@@ -192,12 +191,7 @@ namespace Reactor.Core
         /// <returns>the new IParallelPublisher instance</returns>
         public static IParallelFlux<R> Reduce<T, R>(this IParallelFlux<T> source, Func<R> initialValue, Func<R, T, R> reducer)
         {
-            if (source.IsOrdered)
-            {
-
-            }
-            // TODO implement Reduce
-            throw new NotImplementedException();
+            return new ParallelReduce<T, R>(source, initialValue, reducer);
         }
 
         /// <summary>

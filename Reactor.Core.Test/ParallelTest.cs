@@ -120,5 +120,98 @@ namespace Reactor.Core.Test
 
             Assert.AreEqual(10000, set.Count);
         }
+
+        [Test]
+        public void Parallel_ReduceAll_Sync()
+        {
+            for (int j = 1; j < 9; j++)
+            {
+                for (int i = 1; i <= 1000000; i *= 10)
+                {
+                    var ts = Flux.Range(1, i)
+                        .Map(v => (long)v)
+                        .Parallel(j)
+                        .Reduce((a, b) => a + b)
+                        .Test()
+                        ;
+
+                    long result = ((long)i) * ((long)i + 1) / 2;
+
+                    ts.AssertResult(result);
+                }
+            }
+        }
+
+        [Test]
+        public void Parallel_ReduceAll_Async()
+        {
+            for (int j = 1; j < 9; j++)
+            {
+                for (int i = 1; i <= 1000000; i *= 10)
+                {
+                    var ts = Flux.Range(1, i)
+                        .Map(v => (long)v)
+                        .Parallel(j)
+                        .RunOn(DefaultScheduler.Instance)
+                        .Reduce((a, b) => a + b)
+                        .Test()
+                        ;
+
+                    long result = ((long)i) * ((long)i + 1) / 2;
+
+                    ts
+                        .AwaitTerminalEvent(TimeSpan.FromSeconds(5))
+                        .AssertResult(result);
+                }
+            }
+        }
+
+
+        [Test]
+        public void Parallel_Reduce_Sync()
+        {
+            for (int j = 1; j < 9; j++)
+            {
+                for (int i = 1; i <= 1000000; i *= 10)
+                {
+                    var ts = Flux.Range(1, i)
+                        .Map(v => (long)v)
+                        .Parallel(j)
+                        .Reduce(() => 0L, (a, b) => a + b)
+                        .Reduce((a, b) => a + b)
+                        .Test()
+                        ;
+
+                    long result = ((long)i) * ((long)i + 1) / 2;
+
+                    ts.AssertResult(result);
+                }
+            }
+        }
+
+        [Test]
+        public void Parallel_Reduce_Async()
+        {
+            for (int j = 1; j < 9; j++)
+            {
+                for (int i = 1; i <= 1000000; i *= 10)
+                {
+                    var ts = Flux.Range(1, i)
+                        .Map(v => (long)v)
+                        .Parallel(j)
+                        .RunOn(DefaultScheduler.Instance)
+                        .Reduce(() => 0L, (a, b) => a + b)
+                        .Reduce((a, b) => a + b)
+                        .Test()
+                        ;
+
+                    long result = ((long)i) * ((long)i + 1) / 2;
+
+                    ts
+                        .AwaitTerminalEvent(TimeSpan.FromSeconds(5))
+                        .AssertResult(result);
+                }
+            }
+        }
     }
 }

@@ -47,7 +47,7 @@ namespace Reactor.Core.publisher
             source.Subscribe(new ReduceWithSubscriber(s, accumulator, reducer));
         }
 
-        sealed class ReduceWithSubscriber : DeferredScalarSubscriber<T, A>
+        internal sealed class ReduceWithSubscriber : DeferredScalarSubscriber<T, A>
         {
             readonly Func<A, T, A> reducer;
 
