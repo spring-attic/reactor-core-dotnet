@@ -124,7 +124,7 @@ namespace Reactor.Core.Test
         [Test]
         public void Parallel_ReduceAll_Sync()
         {
-            for (int j = 1; j < 9; j++)
+            for (int j = 1; j <= 32; j++)
             {
                 for (int i = 1; i <= 1000000; i *= 10)
                 {
@@ -145,7 +145,7 @@ namespace Reactor.Core.Test
         [Test]
         public void Parallel_ReduceAll_Async()
         {
-            for (int j = 1; j < 9; j++)
+            for (int j = 1; j <= Environment.ProcessorCount; j++)
             {
                 for (int i = 1; i <= 1000000; i *= 10)
                 {
@@ -160,7 +160,7 @@ namespace Reactor.Core.Test
                     long result = ((long)i) * ((long)i + 1) / 2;
 
                     ts
-                        .AwaitTerminalEvent(TimeSpan.FromSeconds(5))
+                        .AwaitTerminalEvent(TimeSpan.FromSeconds(20))
                         .AssertResult(result);
                 }
             }
@@ -170,7 +170,7 @@ namespace Reactor.Core.Test
         [Test]
         public void Parallel_Reduce_Sync()
         {
-            for (int j = 1; j < 9; j++)
+            for (int j = 1; j <= 32; j++)
             {
                 for (int i = 1; i <= 1000000; i *= 10)
                 {
@@ -192,7 +192,7 @@ namespace Reactor.Core.Test
         [Test]
         public void Parallel_Reduce_Async()
         {
-            for (int j = 1; j < 9; j++)
+            for (int j = 1; j <= Environment.ProcessorCount; j++)
             {
                 for (int i = 1; i <= 1000000; i *= 10)
                 {
@@ -208,7 +208,7 @@ namespace Reactor.Core.Test
                     long result = ((long)i) * ((long)i + 1) / 2;
 
                     ts
-                        .AwaitTerminalEvent(TimeSpan.FromSeconds(5))
+                        .AwaitTerminalEvent(TimeSpan.FromSeconds(20))
                         .AssertResult(result);
                 }
             }
