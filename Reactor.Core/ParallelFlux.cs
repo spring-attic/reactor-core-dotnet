@@ -1,4 +1,5 @@
 ﻿using Reactive.Streams;
+using Reactor.Core.parallel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,8 +29,7 @@ namespace Reactor.Core
         /// <returns>the new IParallelPublisher instance</returns>
         public static IParallelFlux<T> Parallel<T>(this IFlux<T> source, bool ordered = false)
         {
-            // TODO implement Parallel
-            throw new NotImplementedException();
+            return Parallel(source, Environment.ProcessorCount, ordered);
         }
 
         /// <summary>
@@ -43,8 +43,7 @@ namespace Reactor.Core
         /// <returns>the new IParallelPublisher instance</returns>
         public static IParallelFlux<T> Parallel<T>(this IFlux<T> source, int parallelism, bool ordered = false)
         {
-            // TODO implement Parallel
-            throw new NotImplementedException();
+            return Parallel(source, parallelism, Flux.BufferSize, ordered);
         }
 
         /// <summary>
@@ -60,8 +59,12 @@ namespace Reactor.Core
         /// <returns>the new IParallelPublisher instance</returns>
         public static IParallelFlux<T> Parallel<T>(this IFlux<T> source, int parallelism, int prefetch, bool ordered = false)
         {
-            // TODO implement Parallel
-            throw new NotImplementedException();
+            if (ordered)
+            {
+                // TODO implement Map
+                throw new NotImplementedException();
+            }
+            return new ParallelUnorderedFork<T>(source, parallelism, prefetch);
         }
 
         /// <summary>
@@ -81,8 +84,7 @@ namespace Reactor.Core
             {
 
             }
-            // TODO implement Map
-            throw new NotImplementedException();
+            return new ParallelUnorderedMap<T, R>(source, mapper);
         }
 
         /// <summary>
@@ -101,8 +103,7 @@ namespace Reactor.Core
             {
 
             }
-            // TODO implement Filter
-            throw new NotImplementedException();
+            return new ParallelUnorderedFilter<T>(source, predicate);
         }
 
         /// <summary>
@@ -236,8 +237,7 @@ namespace Reactor.Core
             {
 
             }
-            // TODO implement Sequential
-            throw new NotImplementedException();
+            return new ParallelUnorderedJoin<T>(source, prefetch);
         }
 
         /// <summary>

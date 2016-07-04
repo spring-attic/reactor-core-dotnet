@@ -4,7 +4,7 @@ using System;
 namespace Reactor.Core.Test
 {
     [TestFixture]
-    //[Timeout(30000)]
+    [Timeout(30000)]
     public class TimeoutTest
     {
         [Test]
