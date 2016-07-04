@@ -116,13 +116,17 @@ namespace Reactor.Core.parallel
                         {
                             Interlocked.Decrement(ref requested);
                         }
-                        inner.Request(1);
+                        inner.RequestOne();
 
                     } else
                     {
                         var q = inner.Queue();
 
-                        q.Offer(value);
+                        if (!q.Offer(value))
+                        {
+                            InnerError(BackpressureHelper.MissingBackpressureException("Queue full?!"));
+                            return;
+                        }
                     }
 
                     if (QueueDrainHelper.Leave(ref wip, 1) == 0)
@@ -133,7 +137,11 @@ namespace Reactor.Core.parallel
                 {
                     var q = inner.Queue();
 
-                    q.Offer(value);
+                    if (!q.Offer(value))
+                    {
+                        InnerError(BackpressureHelper.MissingBackpressureException("Queue full?!"));
+                        return;
+                    }
 
                     if (!QueueDrainHelper.Enter(ref wip))
                     {
@@ -208,7 +216,7 @@ namespace Reactor.Core.parallel
 
                         foreach (var inner in array)
                         {
-                            var q = inner.queue;
+                            var q = Volatile.Read(ref inner.queue);
 
                             if (q != null)
                             {
@@ -234,6 +242,7 @@ namespace Reactor.Core.parallel
                                 {
                                     empty = false;
                                     a.OnNext(v);
+                                    inner.RequestOne();
                                     if (++e == r)
                                     {
                                         full = true;
@@ -284,7 +293,7 @@ namespace Reactor.Core.parallel
 
                         foreach (var inner in array)
                         {
-                            var q = inner.queue;
+                            var q = Volatile.Read(ref inner.queue);
                             if (q != null && !q.IsEmpty())
                             {
                                 empty = false;
@@ -312,7 +321,7 @@ namespace Reactor.Core.parallel
                 }
             }
 
-            internal sealed class JoinInnerSubscriber : ISubscriber<T>, ISubscription
+            internal sealed class JoinInnerSubscriber : ISubscriber<T>
             {
                 readonly JoinSubscription parent;
 
@@ -403,17 +412,20 @@ namespace Reactor.Core.parallel
                     return q;
                 }
 
-                public void Request(long n)
+                public void RequestOne()
                 {
-                    long p = produced +  n;
-                    if (p >= limit)
+                    if (fusionMode != FuseableHelper.SYNC)
                     {
-                        produced = 0;
-                        s.Request(n);
-                    }
-                    else
-                    {
-                        produced = p;
+                        long p = produced + 1;
+                        if (p == limit)
+                        {
+                            produced = 0;
+                            s.Request(p);
+                        }
+                        else
+                        {
+                            produced = p;
+                        }
                     }
                 }
             }

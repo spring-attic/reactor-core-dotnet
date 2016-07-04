@@ -70,6 +70,7 @@
     <Compile Include="DelaySubscriptionTest.cs" />
     <Compile Include="GroupByTest.cs" />
     <Compile Include="FromEnumerable.cs" />
+    <Compile Include="PublishOnTest.cs" />
     <Compile Include="ParallelTest.cs" />
     <Compile Include="SampleTest.cs" />
     <Compile Include="SingleTest.cs" />

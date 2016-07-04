@@ -61,10 +61,15 @@
     <Compile Include="Flux.cs" />
     <Compile Include="IOrderedItem.cs" />
     <Compile Include="ParallelFlux.cs" />
+    <Compile Include="parallel\ParallelOrderedFilter.cs" />
+    <Compile Include="parallel\ParallelOrderedFork.cs" />
     <Compile Include="parallel\ParallelUnorderedFork.cs" />
     <Compile Include="parallel\ParallelUnorderedJoin.cs" />
     <Compile Include="parallel\ParallelUnorderedFilter.cs" />
+    <Compile Include="parallel\ParallelOrderedMap.cs" />
     <Compile Include="parallel\ParallelUnorderedMap.cs" />
+    <Compile Include="parallel\ParallelOrderedRunOn.cs" />
+    <Compile Include="parallel\ParallelUnorderedRunOn.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="publisher\MonoPublishOn.cs" />
     <Compile Include="publisher\PublisherIgnoreBoth.cs" />
@@ -196,6 +201,7 @@
     <Compile Include="util\MultipleDisposable.cs" />
     <Compile Include="util\MultiSourceHelper.cs" />
     <Compile Include="util\ObjectHelper.cs" />
+    <Compile Include="util\OrderedItem.cs" />
     <Compile Include="util\QueueDrainHelper.cs" />
     <Compile Include="util\QueueHelper.cs" />
     <Compile Include="util\SpscArrayQueue.cs" />

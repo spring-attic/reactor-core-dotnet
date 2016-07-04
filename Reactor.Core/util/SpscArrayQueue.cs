@@ -23,18 +23,15 @@ namespace Reactor.Core.util
 
         readonly int mask;
 
-        long p2, p3, p4, p5, p6, p7;
-        long p8, p9, pA, pB, pC, pD, pE, pF;
+        Pad112 p0;
 
         long producerIndex;
 
-        long p11, p12, p13, p14, p15, p16, p17;
-        long p18, p19, p1A, p1B, p1C, p1D, p1E, p1F;
+        Pad120 p1;
 
         long consumerIndex;
 
-        long p21, p22, p23, p24, p25, p26, p27;
-        long p28, p29, p2A, p2B, p2C, p2D, p2E, p2F;
+        Pad120 p2;
 
         /// <summary>
         /// Constructs an instance with the given capacity rounded up to

@@ -54,52 +54,57 @@ namespace Reactor.Core.publisher
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        sealed class PublishOnSubscriber : ISubscriber<T>, IQueueSubscription<T>
+        abstract class BasePublishOnSubscriber : ISubscriber<T>, IQueueSubscription<T>
         {
-            // Cold fields
-            readonly ISubscriber<T> actual;
+            protected readonly Worker worker;
 
-            readonly Worker worker;
+            protected readonly bool delayError;
 
-            readonly bool delayError;
+            protected readonly int prefetch;
 
-            readonly int prefetch;
+            protected readonly int limit;
 
-            readonly int limit;
+            protected int sourceMode;
 
-            int sourceMode;
+            protected int outputMode;
 
-            int outputMode;
+            protected ISubscription s;
 
-            ISubscription s;
+            protected IQueue<T> queue;
 
-            IQueue<T> queue;
+            protected bool done;
 
-            bool done;
+            protected Exception error;
 
-            Exception error;
-
-            bool cancelled;
+            protected bool cancelled;
 
             // Hot fields
 
             Pad128 p1;
 
-            int wip;
+            protected int wip;
 
             Pad120 p2;
 
-            long requested;
+            protected long requested;
 
             Pad120 p3;
 
-            int produced;
+            /// <summary>
+            /// Number of items successfully emitted to downstream -
+            /// paired with the requested amount.
+            /// </summary>
+            protected long emitted;
+            /// <summary>
+            /// Number of items requested from upstream - reset to zero
+            /// when the <see cref="limit"/> is reached. 
+            /// </summary>
+            protected long polled;
 
-            Pad120 p4;
+            Pad112 p4;
 
-            internal PublishOnSubscriber(ISubscriber<T> actual, Worker worker, bool delayError, int prefetch)
+            internal BasePublishOnSubscriber(Worker worker, bool delayError, int prefetch)
             {
-                this.actual = actual;
                 this.worker = worker;
                 this.delayError = delayError;
                 this.prefetch = prefetch;
@@ -121,7 +126,7 @@ namespace Reactor.Core.publisher
                             this.queue = qs;
                             Volatile.Write(ref done, true);
 
-                            actual.OnSubscribe(this);
+                            SubscribeActual();
 
                             Schedule();
                             return;
@@ -132,7 +137,7 @@ namespace Reactor.Core.publisher
                             this.sourceMode = mode;
                             this.queue = qs;
 
-                            actual.OnSubscribe(this);
+                            SubscribeActual();
 
                             s.Request(prefetch < 0 ? long.MaxValue : prefetch);
 
@@ -142,20 +147,22 @@ namespace Reactor.Core.publisher
 
                     queue = QueueDrainHelper.CreateQueue<T>(prefetch);
 
-                    actual.OnSubscribe(this);
+                    SubscribeActual();
 
                     s.Request(prefetch < 0 ? long.MaxValue : prefetch);
                 }
             }
 
+            protected abstract void SubscribeActual();
+
             public void OnNext(T t)
             {
-                if (sourceMode != FuseableHelper.ASYNC)
+                if (sourceMode == FuseableHelper.NONE)
                 {
                     if (!queue.Offer(t))
                     {
                         s.Cancel();
-                        OnError(new InvalidOperationException("Queue is full?!"));
+                        OnError(BackpressureHelper.MissingBackpressureException("Queue is full?!"));
                         return;
                     }
                 }
@@ -213,18 +220,111 @@ namespace Reactor.Core.publisher
                 }
             }
 
-            void DrainSync()
+            void Drain()
+            {
+                if (outputMode == FuseableHelper.ASYNC)
+                {
+                    DrainOutput();
+                }
+                else
+                if (sourceMode == FuseableHelper.SYNC)
+                {
+                    DrainSync();
+                }
+                else
+                if (delayError)
+                {
+                    DrainAsyncDelay();
+                }
+                else
+                {
+                    DrainAsyncNoDelay();
+                }
+            }
+
+            public int RequestFusion(int mode)
+            {
+                int m = mode & FuseableHelper.ASYNC;
+                outputMode = m;
+                return m;
+            }
+
+            public bool Offer(T value)
+            {
+                return FuseableHelper.DontCallOffer();
+            }
+
+            public bool Poll(out T value)
+            {
+                if (queue.Poll(out value))
+                {
+                    if (sourceMode != FuseableHelper.SYNC)
+                    {
+                        long p = polled + 1;
+                        if (p == limit)
+                        {
+                            polled = 0;
+                            s.Request(p);
+                        }
+                        else
+                        {
+                            polled = p;
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            public bool IsEmpty()
+            {
+                return queue.IsEmpty();
+            }
+
+            public void Clear()
+            {
+                queue.Clear();
+            }
+
+            protected abstract void DrainSync();
+
+            protected abstract void DrainOutput();
+
+            protected abstract void DrainAsyncDelay();
+
+            protected abstract void DrainAsyncNoDelay();
+
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        sealed class PublishOnSubscriber : BasePublishOnSubscriber
+        {
+            // Cold fields
+            readonly ISubscriber<T> actual;
+
+            internal PublishOnSubscriber(ISubscriber<T> actual, 
+                Worker worker, bool delayError, int prefetch)
+                : base(worker, delayError, prefetch)
+            {
+                this.actual = actual;
+            }
+
+            protected override void SubscribeActual()
+            {
+                actual.OnSubscribe(this);
+            }
+
+            protected override void DrainSync()
             {
                 var a = actual;
                 var q = queue;
 
                 int missed = 1;
-
+                long e = emitted;
 
                 for (;;)
                 {
                     long r = Volatile.Read(ref requested);
-                    long e = 0L;
 
                     while (e != r)
                     {
@@ -303,6 +403,7 @@ namespace Reactor.Core.publisher
                         }
                     }
 
+                    emitted = e;
                     missed = QueueDrainHelper.Leave(ref wip, missed);
                     if (missed == 0)
                     {
@@ -311,12 +412,14 @@ namespace Reactor.Core.publisher
                 }
             }
 
-            void DrainAsyncDelay()
+            protected override void DrainAsyncDelay()
             {
                 var a = actual;
                 var q = queue;
 
-                int p = produced;
+                long e = emitted;
+                long p = polled;
+
                 int lim = limit;
 
                 int missed = 1;
@@ -325,7 +428,6 @@ namespace Reactor.Core.publisher
                 {
 
                     long r = Volatile.Read(ref requested);
-                    long e = 0L;
 
                     while (e != r)
                     {
@@ -390,16 +492,42 @@ namespace Reactor.Core.publisher
 
                         if (++p == lim)
                         {
-                            p = 0;
+                            p = 0L;
                             s.Request(lim);
                         }
                     }
 
-                    if (e == r && QueueDrainHelper.CheckTerminatedDelayed(ref cancelled, ref done, ref error, a, q, s, worker))
+                    if (e == r)
                     {
-                        return;
+                        if (Volatile.Read(ref cancelled))
+                        {
+                            q.Clear();
+                            return;
+                        }
+
+                        bool d = Volatile.Read(ref done);
+
+                        bool empty = q.IsEmpty();
+
+                        if (d && empty)
+                        {
+                            Exception ex = error;
+                            if (ex != null)
+                            {
+                                a.OnError(ex);
+                            }
+                            else
+                            {
+                                a.OnComplete();
+                            }
+
+                            worker.Dispose();
+                            return;
+                        }
                     }
 
+                    emitted = e;
+                    polled = p;
                     missed = QueueDrainHelper.Leave(ref wip, missed);
                     if (missed == 0)
                     {
@@ -408,12 +536,13 @@ namespace Reactor.Core.publisher
                 }
             }
 
-            void DrainAsyncNoDelay()
+            protected override void DrainAsyncNoDelay()
             {
                 var a = actual;
                 var q = queue;
 
-                int p = produced;
+                long e = emitted;
+                long p = polled;
                 int lim = limit;
 
                 int missed = 1;
@@ -422,7 +551,6 @@ namespace Reactor.Core.publisher
                 {
 
                     long r = Volatile.Read(ref requested);
-                    long e = 0L;
 
                     while (e != r)
                     {
@@ -487,19 +615,47 @@ namespace Reactor.Core.publisher
                         a.OnNext(v);
 
                         e++;
-                        
+
                         if (++p == lim)
                         {
-                            p = 0;
+                            p = 0L;
                             s.Request(lim);
                         }
                     }
 
-                    if (e == r && QueueDrainHelper.CheckTerminated(ref cancelled, ref done, ref error, a, q, s, worker))
+                    if (e == r)
                     {
-                        return;
+                        if (Volatile.Read(ref cancelled))
+                        {
+                            q.Clear();
+                            return;
+                        }
+
+                        bool d = Volatile.Read(ref done);
+
+                        if (d)
+                        {
+                            Exception ex = error;
+                            if (ex != null)
+                            {
+                                q.Clear();
+                                a.OnError(ex);
+
+                                worker.Dispose();
+                                return;
+                            }
+                            if (q.IsEmpty())
+                            {
+                                a.OnComplete();
+
+                                worker.Dispose();
+                                return;
+                            }
+                        }
                     }
 
+                    emitted = e;
+                    polled = p;
                     missed = QueueDrainHelper.Leave(ref wip, missed);
                     if (missed == 0)
                     {
@@ -509,7 +665,7 @@ namespace Reactor.Core.publisher
 
             }
 
-            void DrainOutput()
+            protected override void DrainOutput()
             {
                 var a = actual;
 
@@ -561,241 +717,37 @@ namespace Reactor.Core.publisher
                     }
                 }
             }
-
-            void Drain()
-            {
-                if (outputMode == FuseableHelper.ASYNC)
-                {
-                    DrainOutput();
-                }
-                else
-                if (sourceMode == FuseableHelper.SYNC)
-                {
-                    DrainSync();
-                }
-                else
-                if (delayError)
-                {
-                    DrainAsyncDelay();
-                }
-                else
-                {
-                    DrainAsyncNoDelay();
-                }
-            }
-
-            public int RequestFusion(int mode)
-            {
-                int m = mode & FuseableHelper.ASYNC;
-                outputMode = m;
-                return m;
-            }
-
-            public bool Offer(T value)
-            {
-                return FuseableHelper.DontCallOffer();
-            }
-
-            public bool Poll(out T value)
-            {
-                return queue.Poll(out value);
-            }
-
-            public bool IsEmpty()
-            {
-                return queue.IsEmpty();
-            }
-
-            public void Clear()
-            {
-                queue.Clear();
-            }
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        sealed class PublishOnConditionalSubscriber : ISubscriber<T>, IQueueSubscription<T>
+        sealed class PublishOnConditionalSubscriber : BasePublishOnSubscriber
         {
             // Cold fields
             readonly IConditionalSubscriber<T> actual;
 
-            readonly Worker worker;
-
-            readonly bool delayError;
-
-            readonly int prefetch;
-
-            readonly int limit;
-
-            int sourceMode;
-
-            int outputMode;
-
-            ISubscription s;
-
-            IQueue<T> queue;
-
-            bool done;
-
-            Exception error;
-
-            bool cancelled;
-
-            // Hot fields
-
-            long p00, p01, p02, p03, p04, p05, p06, p07;
-            long p10, p11, p12, p13, p14, p15, p16, p17;
-
-            int wip;
-
-            long p20, p21, p22, p23, p24, p25, p26;
-            long p30, p31, p32, p33, p34, p35, p36, p37;
-
-
-            long requested;
-
-            long p40, p41, p42, p43, p44, p45, p46;
-            long p50, p51, p52, p53, p54, p55, p56, p57;
-
-            int produced;
-
-            long p60, p61, p62, p63, p64, p65, p66;
-            long p70, p71, p72, p73, p74, p75, p76, p77;
-
-            internal PublishOnConditionalSubscriber(IConditionalSubscriber<T> actual, Worker worker, bool delayError, int prefetch)
+            internal PublishOnConditionalSubscriber(
+                IConditionalSubscriber<T> actual, Worker worker, bool delayError, int prefetch)
+                : base(worker, delayError, prefetch)
             {
                 this.actual = actual;
-                this.worker = worker;
-                this.delayError = delayError;
-                this.prefetch = prefetch;
-                this.limit = prefetch - (prefetch >> 2);
             }
 
-            public void OnSubscribe(ISubscription s)
+            protected override void SubscribeActual()
             {
-                if (SubscriptionHelper.Validate(ref this.s, s))
-                {
-                    var qs = s as IQueueSubscription<T>;
-                    if (qs != null)
-                    {
-                        int mode = qs.RequestFusion(FuseableHelper.ANY | FuseableHelper.BOUNDARY);
-
-                        if (mode == FuseableHelper.SYNC)
-                        {
-                            this.sourceMode = mode;
-                            this.queue = qs;
-                            Volatile.Write(ref done, true);
-
-                            actual.OnSubscribe(this);
-
-                            Schedule();
-                            return;
-                        }
-                        else
-                        if (mode == FuseableHelper.ASYNC)
-                        {
-                            this.sourceMode = mode;
-                            this.queue = qs;
-
-                            actual.OnSubscribe(this);
-
-                            s.Request(prefetch);
-
-                            return;
-                        }
-                    }
-
-                    if (prefetch < 0)
-                    {
-                        queue = new SpscLinkedArrayQueue<T>(-prefetch);
-                    }
-                    else
-                    {
-                        queue = new SpscArrayQueue<T>(prefetch);
-                    }
-
-                    actual.OnSubscribe(this);
-
-                    s.Request(prefetch);
-                }
+                actual.OnSubscribe(this);
             }
 
-            public void OnNext(T t)
-            {
-                if (sourceMode != FuseableHelper.ASYNC)
-                {
-                    if (!queue.Offer(t))
-                    {
-                        s.Cancel();
-                        OnError(new InvalidOperationException("Queue is full?!"));
-                        return;
-                    }
-                }
-                Schedule();
-            }
-
-            public void OnError(Exception e)
-            {
-                if (ExceptionHelper.AddError(ref error, e))
-                {
-                    Volatile.Write(ref done, true);
-                    Schedule();
-                }
-                else
-                {
-                    ExceptionHelper.OnErrorDropped(e);
-                }
-            }
-
-            public void OnComplete()
-            {
-                Volatile.Write(ref done, true);
-                Schedule();
-            }
-
-            public void Request(long n)
-            {
-                if (SubscriptionHelper.Validate(n))
-                {
-                    BackpressureHelper.GetAndAddCap(ref requested, n);
-                    Schedule();
-                }
-            }
-
-            public void Cancel()
-            {
-                if (Volatile.Read(ref cancelled))
-                {
-                    return;
-                }
-                Volatile.Write(ref cancelled, true);
-                worker.Dispose();
-                s.Cancel();
-                if (QueueDrainHelper.Enter(ref wip))
-                {
-                    queue.Clear();
-                }
-            }
-
-            void Schedule()
-            {
-                if (QueueDrainHelper.Enter(ref wip))
-                {
-                    worker.Schedule(Drain);
-                }
-            }
-
-            void DrainSync()
+            protected override void DrainSync()
             {
                 var a = actual;
                 var q = queue;
 
                 int missed = 1;
-
+                long e = emitted;
 
                 for (;;)
                 {
                     long r = Volatile.Read(ref requested);
-                    long e = 0L;
 
                     while (e != r)
                     {
@@ -847,24 +799,7 @@ namespace Reactor.Core.publisher
                             return;
                         }
 
-                        bool empty;
-
-                        try
-                        {
-                            empty = q.IsEmpty();
-                        }
-                        catch (Exception ex)
-                        {
-                            ExceptionHelper.ThrowIfFatal(ex);
-
-                            q.Clear();
-                            s.Cancel();
-
-                            a.OnError(ex);
-
-                            worker.Dispose();
-                            return;
-                        }
+                        bool empty = q.IsEmpty();
 
                         if (empty)
                         {
@@ -875,6 +810,7 @@ namespace Reactor.Core.publisher
                         }
                     }
 
+                    emitted = e;
                     missed = QueueDrainHelper.Leave(ref wip, missed);
                     if (missed == 0)
                     {
@@ -883,12 +819,14 @@ namespace Reactor.Core.publisher
                 }
             }
 
-            void DrainAsyncDelay()
+            protected override void DrainAsyncDelay()
             {
                 var a = actual;
                 var q = queue;
 
-                int p = produced;
+                long e = emitted;
+                long p = polled;
+
                 int lim = limit;
 
                 int missed = 1;
@@ -897,7 +835,6 @@ namespace Reactor.Core.publisher
                 {
 
                     long r = Volatile.Read(ref requested);
-                    long e = 0L;
 
                     while (e != r)
                     {
@@ -968,11 +905,37 @@ namespace Reactor.Core.publisher
                         }
                     }
 
-                    if (e == r && QueueDrainHelper.CheckTerminatedDelayed(ref cancelled, ref done, ref error, a, q, s, worker))
+                    if (e == r)
                     {
-                        return;
+                        if (Volatile.Read(ref cancelled))
+                        {
+                            q.Clear();
+                            return;
+                        }
+
+                        bool d = Volatile.Read(ref done);
+
+                        bool empty = q.IsEmpty();
+
+                        if (d && empty)
+                        {
+                            Exception ex = error;
+                            if (ex != null)
+                            {
+                                a.OnError(ex);
+                            }
+                            else
+                            {
+                                a.OnComplete();
+                            }
+
+                            worker.Dispose();
+                            return;
+                        }
                     }
 
+                    emitted = e;
+                    polled = p;
                     missed = QueueDrainHelper.Leave(ref wip, missed);
                     if (missed == 0)
                     {
@@ -981,12 +944,13 @@ namespace Reactor.Core.publisher
                 }
             }
 
-            void DrainAsyncNoDelay()
+            protected override void DrainAsyncNoDelay()
             {
                 var a = actual;
                 var q = queue;
 
-                int p = produced;
+                long e = emitted;
+                long p = polled;
                 int lim = limit;
 
                 int missed = 1;
@@ -995,7 +959,6 @@ namespace Reactor.Core.publisher
                 {
 
                     long r = Volatile.Read(ref requested);
-                    long e = 0L;
 
                     while (e != r)
                     {
@@ -1064,16 +1027,44 @@ namespace Reactor.Core.publisher
 
                         if (++p == lim)
                         {
-                            p = 0;
+                            p = 0L;
                             s.Request(lim);
                         }
                     }
 
-                    if (e == r && QueueDrainHelper.CheckTerminated(ref cancelled, ref done, ref error, a, q, s, worker))
+                    if (e == r)
                     {
-                        return;
+                        if (Volatile.Read(ref cancelled))
+                        {
+                            q.Clear();
+                            return;
+                        }
+
+                        bool d = Volatile.Read(ref done);
+
+                        if (d)
+                        {
+                            Exception ex = error;
+                            if (ex != null)
+                            {
+                                q.Clear();
+                                a.OnError(ex);
+
+                                worker.Dispose();
+                                return;
+                            }
+                            if (q.IsEmpty())
+                            {
+                                a.OnComplete();
+
+                                worker.Dispose();
+                                return;
+                            }
+                        }
                     }
 
+                    emitted = e;
+                    polled = p;
                     missed = QueueDrainHelper.Leave(ref wip, missed);
                     if (missed == 0)
                     {
@@ -1083,7 +1074,7 @@ namespace Reactor.Core.publisher
 
             }
 
-            void DrainOutput()
+            protected override void DrainOutput()
             {
                 var a = actual;
 
@@ -1141,55 +1132,6 @@ namespace Reactor.Core.publisher
                         break;
                     }
                 }
-            }
-
-            void Drain()
-            {
-                if (outputMode == FuseableHelper.ASYNC)
-                {
-                    DrainOutput();
-                }
-                else
-                if (sourceMode == FuseableHelper.SYNC)
-                {
-                    DrainSync();
-                }
-                else
-                if (delayError)
-                {
-                    DrainAsyncDelay();
-                }
-                else
-                {
-                    DrainAsyncNoDelay();
-                }
-            }
-
-            public int RequestFusion(int mode)
-            {
-                int m = mode & FuseableHelper.ASYNC;
-                outputMode = m;
-                return m;
-            }
-
-            public bool Offer(T value)
-            {
-                return FuseableHelper.DontCallOffer();
-            }
-
-            public bool Poll(out T value)
-            {
-                return queue.Poll(out value);
-            }
-
-            public bool IsEmpty()
-            {
-                return queue.IsEmpty();
-            }
-
-            public void Clear()
-            {
-                queue.Clear();
             }
         }
     }

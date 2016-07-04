@@ -61,8 +61,7 @@ namespace Reactor.Core
         {
             if (ordered)
             {
-                // TODO implement Map
-                throw new NotImplementedException();
+                return new ParallelOrderedFork<T>(source, parallelism, prefetch);
             }
             return new ParallelUnorderedFork<T>(source, parallelism, prefetch);
         }
@@ -82,7 +81,7 @@ namespace Reactor.Core
         {
             if (source.IsOrdered)
             {
-
+                return new ParallelOrderedMap<T, R>((ParallelOrderedFlux<T>)source, mapper);
             }
             return new ParallelUnorderedMap<T, R>(source, mapper);
         }
@@ -101,7 +100,7 @@ namespace Reactor.Core
         {
             if (source.IsOrdered)
             {
-
+                return new ParallelOrderedFilter<T>((ParallelOrderedFlux<T>)source, predicate);
             }
             return new ParallelUnorderedFilter<T>(source, predicate);
         }
@@ -158,10 +157,9 @@ namespace Reactor.Core
         {
             if (source.IsOrdered)
             {
-
+                return new ParallelOrderedRunOn<T>((ParallelOrderedFlux<T>)source, scheduler, prefetch);
             }
-            // TODO implement RunOn
-            throw new NotImplementedException();
+            return new ParallelUnorderedRunOn<T>(source, scheduler, prefetch);
         }
 
         /// <summary>
@@ -177,10 +175,6 @@ namespace Reactor.Core
         /// <returns>the new IFlux instance emitting the reduced value or empty if the IParallelPublisher was empty</returns>
         public static IFlux<T> Reduce<T>(this IParallelFlux<T> source, Func<T, T, T> reducer)
         {
-            if (source.IsOrdered)
-            {
-
-            }
             // TODO implement Reduce
             throw new NotImplementedException();
         }
