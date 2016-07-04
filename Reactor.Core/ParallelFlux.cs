@@ -223,14 +223,30 @@ namespace Reactor.Core
         {
             if (source.IsOrdered)
             {
-
+                return new ParallelOrderedJoin<T>((ParallelOrderedFlux<T>)source, prefetch);
             }
             return new ParallelUnorderedJoin<T>(source, prefetch);
         }
 
         /// <summary>
         /// Sorts the 'rails' of this ParallelPublisher and returns a Publisher that sequentially
-        /// icks the smallest next value from the rails.
+        /// picks the smallest next value from the rails based on the type-default comparer.
+        /// </summary>
+        /// <remarks>
+        /// This operator requires a finite source IParallelPublisher.
+        /// </remarks>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IParallelPublisher instance.</param>
+        /// <param name="capacityHint">the expected number of total elements</param>
+        /// <returns>The new IFlux instance</returns>
+        public static IFlux<T> Sorted<T>(this IParallelFlux<T> source, int capacityHint = 16)
+        {
+            return Sorted(source, Comparer<T>.Default, capacityHint);
+        }
+
+        /// <summary>
+        /// Sorts the 'rails' of this ParallelPublisher and returns a Publisher that sequentially
+        /// picks the smallest next value from the rails.
         /// </summary>
         /// <remarks>
         /// This operator requires a finite source IParallelPublisher.
@@ -242,12 +258,19 @@ namespace Reactor.Core
         /// <returns>The new IFlux instance</returns>
         public static IFlux<T> Sorted<T>(this IParallelFlux<T> source, IComparer<T> comparer, int capacityHint = 16)
         {
-            if (source.IsOrdered)
+            int ch = capacityHint / source.Parallelism + 1;
+            IParallelFlux<List<T>> lists = source.Reduce(() => new List<T>(ch), (a, b) =>
             {
+                a.Add(b);
+                return a;
+            })
+            .Map(v =>
+            {
+                v.Sort(comparer);
+                return v;
+            });
 
-            }
-            // TODO implement Sorted
-            throw new NotImplementedException();
+            return new ParallelSortedJoin<T>(lists, comparer);
         }
 
         /// <summary>
@@ -261,14 +284,9 @@ namespace Reactor.Core
         /// <param name="comparer">the IComparer to use</param>
         /// <param name="capacityHint">the expected number of total elements</param>
         /// <returns>The new IFlux instance</returns>
-        public static IFlux<List<T>> ToSortedList<T>(this IParallelFlux<T> source, IComparer<T> comparer, int capacityHint = 16)
+        public static IMono<IList<T>> ToSortedList<T>(this IParallelFlux<T> source, IComparer<T> comparer, int capacityHint = 16)
         {
-            if (source.IsOrdered)
-            {
-
-            }
-            // TODO implement Sorted
-            throw new NotImplementedException();
+            return Sorted<T>(source, comparer, capacityHint).CollectList(capacityHint);
         }
 
         /// <summary>
@@ -485,12 +503,7 @@ namespace Reactor.Core
         /// <returns>The new IParallelFlux instance</returns>
         public static IParallelFlux<C> Collect<T, C>(this IParallelFlux<T> source, Func<C> initialCollection, Action<C, T> collector)
         {
-            if (source.IsOrdered)
-            {
-
-            }
-            // TODO implement Collect
-            throw new NotImplementedException();
+            return Reduce<T, C>(source, initialCollection, (a, b) => { collector(a, b); return a; });
         }
 
         /// <summary>

@@ -126,7 +126,7 @@ namespace Reactor.Core.Test
         {
             for (int j = 1; j <= 32; j++)
             {
-                for (int i = 1; i <= 1000000; i *= 10)
+                for (int i = 1; i <= 100000; i *= 10)
                 {
                     var ts = Flux.Range(1, i)
                         .Map(v => (long)v)
@@ -147,7 +147,7 @@ namespace Reactor.Core.Test
         {
             for (int j = 1; j <= Environment.ProcessorCount; j++)
             {
-                for (int i = 1; i <= 1000000; i *= 10)
+                for (int i = 1; i <= 100000; i *= 10)
                 {
                     var ts = Flux.Range(1, i)
                         .Map(v => (long)v)
@@ -172,7 +172,7 @@ namespace Reactor.Core.Test
         {
             for (int j = 1; j <= 32; j++)
             {
-                for (int i = 1; i <= 1000000; i *= 10)
+                for (int i = 1; i <= 100000; i *= 10)
                 {
                     var ts = Flux.Range(1, i)
                         .Map(v => (long)v)
@@ -194,7 +194,7 @@ namespace Reactor.Core.Test
         {
             for (int j = 1; j <= Environment.ProcessorCount; j++)
             {
-                for (int i = 1; i <= 1000000; i *= 10)
+                for (int i = 1; i <= 100000; i *= 10)
                 {
                     var ts = Flux.Range(1, i)
                         .Map(v => (long)v)
@@ -210,6 +210,113 @@ namespace Reactor.Core.Test
                     ts
                         .AwaitTerminalEvent(TimeSpan.FromSeconds(20))
                         .AssertResult(result);
+                }
+            }
+        }
+
+        [Test]
+        public void Parallel_Ordered_Join_Just()
+        {
+            for (int j = 1; j <= 32; j++)
+            {
+                Flux.Just(1)
+                .Parallel(j)
+                .Sequential()
+                .Test()
+                .AssertResult(1);
+            }
+        }
+
+        [Test]
+        public void Parallel_Ordered_Join_Empty()
+        {
+            for (int j = 1; j <= 32; j++)
+            {
+                Flux.Empty<int>()
+                .Parallel(j)
+                .Sequential()
+                .Test()
+                .AssertResult();
+            }
+        }
+
+        [Test]
+        public void Parallel_Ordered_Join()
+        {
+            for (int j = 1; j <= 32; j++)
+            {
+                Flux.Range(1, 10)
+                    .Parallel(j, true)
+                    .Sequential()
+                    .Test()
+                    .AssertResult(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+            }
+        }
+
+        [Test]
+        public void Parallel_Ordered_Join_Async()
+        {
+            for (int j = 1; j <= Environment.ProcessorCount; j++)
+            {
+                for (int i = 1; i <= 100000; i *= 10)
+                {
+                    var ts = Flux.Range(1, i)
+                        .Parallel(j, true)
+                        .RunOn(DefaultScheduler.Instance)
+                        .Sequential()
+                        .Test();
+
+                    ts.AwaitTerminalEvent(TimeSpan.FromSeconds(20));
+
+                    ts.AssertValueCount(i)
+                        .AssertNoError()
+                        .AssertComplete();
+
+                    for (int k = 1; k <= i; k++)
+                    {
+                        Assert.AreEqual(k, ts.Values[k - 1]);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void Parallel_Sorted()
+        {
+            for (int i = 1; i <= 32; i++)
+            {
+                Flux.From(10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+                    .Parallel(i)
+                    .Sorted()
+                    .Test()
+                    .AssertResult(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+            }
+        }
+
+        [Test]
+        public void Parallel_Sorted_Async()
+        {
+            for (int j = 1; j <= Environment.ProcessorCount; j++)
+            {
+                for (int i = 1; i <= 100000; i *= 10)
+                {
+                    var ts = Flux.Range(1, i)
+                        .Map(v => i - v + 1)
+                        .Parallel(j, true)
+                        .RunOn(DefaultScheduler.Instance)
+                        .Sorted()
+                        .Test();
+
+                    ts.AwaitTerminalEvent(TimeSpan.FromSeconds(20));
+
+                    ts.AssertValueCount(i)
+                        .AssertNoError()
+                        .AssertComplete();
+
+                    for (int k = 1; k <= i; k++)
+                    {
+                        Assert.AreEqual(k, ts.Values[k - 1]);
+                    }
                 }
             }
         }

@@ -189,5 +189,16 @@ namespace Reactor.Core
             }
             return e;
         }
+
+        /// <summary>
+        /// Returns true if the given exception is the
+        /// terminated instance.
+        /// </summary>
+        /// <param name="e">The exception to check.</param>
+        /// <returns>True if the given exception is the terminated instance.</returns>
+        public static bool IsTerminated(Exception e)
+        {
+            return e == TERMINATED;
+        }
     }
 }
