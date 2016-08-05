@@ -2,6 +2,7 @@
 
 namespace Reactive.Streams
 {
+    /*
     /// <summary>
     /// <para>
     /// A <see cref="IPublisher{T}"/> is a provider of a potentially unbounded number of sequenced elements,
@@ -170,7 +171,7 @@ namespace Reactive.Streams
     {
 
     }
-
+    */
     /// <summary>
     /// A Processor represents a processing stage—which is both a <see cref="ISubscriber{T}"/>
     /// and a <see cref="IPublisher{T}"/> and obeys the contracts of both.
