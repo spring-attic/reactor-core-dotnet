@@ -73,13 +73,14 @@ namespace Reactor.Core.subscription
 
                     current = s;
 
-                    if (Interlocked.Decrement(ref wip) == 0)
+                    if (Interlocked.Decrement(ref wip) != 0)
                     {
-                        if (r != 0L)
-                        {
-                            s?.Request(r);
-                        }
-                        return;
+                        Drain();
+                    }
+
+                    if (r != 0L)
+                    {
+                        s?.Request(r);
                     }
 
                 }
@@ -93,8 +94,8 @@ namespace Reactor.Core.subscription
                 {
                     return;
                 }
+                Drain();
             }
-            Drain();
         }
 
         /// <summary>
@@ -128,11 +129,12 @@ namespace Reactor.Core.subscription
                     requested = BackpressureHelper.AddCap(r, n);
                 }
 
-                if (Interlocked.Decrement(ref wip) == 0)
+                if (Interlocked.Decrement(ref wip) != 0)
                 {
-                    curr?.Request(n);
-                    return;
+                    Drain();
                 }
+
+                curr?.Request(n);
             }
             else
             {
@@ -141,8 +143,8 @@ namespace Reactor.Core.subscription
                 {
                     return;
                 }
+                Drain();
             }
-            Drain();
         }
 
         /// <summary>
