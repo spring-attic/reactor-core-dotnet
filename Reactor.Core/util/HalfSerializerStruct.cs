@@ -125,7 +125,8 @@ namespace Reactor.Core.util
                 if (Interlocked.Increment(ref wip) == 1)
                 {
                     var e = ExceptionHelper.Terminate(ref this.error);
-                    if (e != null) {
+                    if (e != null)
+                    {
                         actual.OnError(e);
                     }
                     else

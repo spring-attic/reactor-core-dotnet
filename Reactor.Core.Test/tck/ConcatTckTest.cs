@@ -14,11 +14,9 @@ using Reactor.Core.util;
 
 namespace Reactor.Core.Test.tck
 {
-    /*
     class ConcatTest : FluxPublisherVerification<int>
     {
         public override IPublisher<int> CreatePublisher(long elements)
-            => Flux.From(Enumerate(elements/2)).ConcatWith(Flux.From(Enumerate((elements + 1)/2)));
+            => Flux.From(Enumerate(elements/2)).ConcatWith(Flux.From(Enumerate((elements + 1)/2))).Tck();
     }
-    */
 }

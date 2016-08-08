@@ -3656,6 +3656,18 @@ namespace Reactor.Core
         }
 
         /// <summary>
+        /// Makes sure the TCK's misbehaviors are handled according to the
+        /// TCK's expectations.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IFlux</param>
+        /// <returns>the new IFlux instance.</returns>
+        public static IFlux<T> Tck<T>(this IFlux<T> source)
+        {
+            return new PublisherTck<T>(source);
+        }
+
+        /// <summary>
         /// Returns an IMono that signals only the terminal signals from the source IFlux.
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>

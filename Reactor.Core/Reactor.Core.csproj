@@ -156,6 +156,7 @@
     <Compile Include="publisher\PublisherTakeUntil.cs" />
     <Compile Include="publisher\PublisherTakeWhile.cs" />
     <Compile Include="publisher\PublisherTakeUntilPredicate.cs" />
+    <Compile Include="publisher\PublisherTck.cs" />
     <Compile Include="publisher\PublisherThen.cs" />
     <Compile Include="publisher\PublisherTimeout.cs" />
     <Compile Include="publisher\PublisherUsing.cs" />

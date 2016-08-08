@@ -1395,6 +1395,18 @@ namespace Reactor.Core
         }
 
         /// <summary>
+        /// Makes sure the TCK's misbehaviors are handled according to the
+        /// TCK's expectations.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="source">The source IMono</param>
+        /// <returns>the new IMono instance.</returns>
+        public static IMono<T> Tck<T>(this IMono<T> source)
+        {
+            return new PublisherTck<T>(source);
+        }
+
+        /// <summary>
         /// Return a IMono of Void which only listens for complete and error 
         /// signals from this IMono completes.
         /// </summary>
