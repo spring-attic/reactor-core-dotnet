@@ -2,6 +2,7 @@
 using Reactor.Core.flow;
 using Reactor.Core.scheduler;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace Reactor.Core.Test
 {
@@ -160,5 +161,31 @@ namespace Reactor.Core.Test
             .AssertError(e => e.Message.Equals("Forced failure"))
             .AssertNotComplete();
         }
+
+        [Test]
+        public void ConcatMap_Take()
+        {
+            Flux.Range(1, 1000 * 1000 * 1000).ConcatMap(v => Flux.Just(v))
+                .Take(1000)
+                .Test().AssertValueCount(1000).AssertComplete();
+        }
+
+        static IEnumerable<int> Infinite()
+        {
+            int count = 0;
+            while (true)
+            {
+                yield return count++;
+            }
+        }
+
+        [Test]
+        public void Concat_Infinite()
+        {
+            Flux.From(Infinite()).ConcatWith(Flux.Empty<int>())
+                .Take(10)
+                .Test().AssertValueCount(10);
+        }
+
     }
 }

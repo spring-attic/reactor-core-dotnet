@@ -56,10 +56,16 @@ namespace Reactor.Core.subscription
             {
 
                 var c = current;
+                long r = requested;
 
                 if (SubscriptionHelper.IsCancelled(c))
                 {
                     s?.Cancel();
+
+                    if (Interlocked.Decrement(ref wip) == 0)
+                    {
+                        return;
+                    }
                 }
                 else
                 {
@@ -67,17 +73,17 @@ namespace Reactor.Core.subscription
 
                     current = s;
 
-                    long r = requested;
-                    if (r != 0L)
+                    if (Interlocked.Decrement(ref wip) == 0)
                     {
-                        s.Request(r);
+                        if (r != 0L)
+                        {
+                            s?.Request(r);
+                        }
+                        return;
                     }
+
                 }
 
-                if (Interlocked.Decrement(ref wip) == 0)
-                {
-                    return;
-                }
             }
             else
             {
@@ -115,15 +121,16 @@ namespace Reactor.Core.subscription
             {
                 long r = requested;
 
+                var curr = current;
+
                 if (r != long.MaxValue)
                 {
                     requested = BackpressureHelper.AddCap(r, n);
                 }
 
-                current?.Request(n);
-
                 if (Interlocked.Decrement(ref wip) == 0)
                 {
+                    curr?.Request(n);
                     return;
                 }
             }
@@ -185,6 +192,9 @@ namespace Reactor.Core.subscription
 
         void Drain()
         {
+            long requestAmount = 0L;
+            ISubscription requestTarget = null;
+
             int missed = 1;
             for (;;)
             {
@@ -248,23 +258,23 @@ namespace Reactor.Core.subscription
 
                         current = mSubscription;
 
-                        if (r != 0L)
-                        {
-                            mSubscription.Request(r);
-                        }
+                        requestAmount = r;
+                        requestTarget = mSubscription;
                     }
                     else
                     {
-                        if (mRequested != 0L)
-                        {
-                            current.Request(mRequested);
-                        }
+                        requestAmount = mRequested;
+                        requestTarget = current;
                     }
                 }
 
                 missed = QueueDrainHelper.Leave(ref wip, missed);
                 if (missed == 0)
                 {
+                    if (requestAmount != 0L)
+                    {
+                        requestTarget?.Request(requestAmount);
+                    }
                     break;
                 }
             }

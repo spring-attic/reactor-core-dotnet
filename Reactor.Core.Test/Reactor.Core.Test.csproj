@@ -44,6 +44,14 @@
       <HintPath>..\packages\Reactive.Streams.1.0.0-RC1\lib\portable-net45+netcore45\Reactive.Streams.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Reactive.Streams.Example.Unicast, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Reactive.Streams.TCK.1.0.0-RC1\lib\net45\Reactive.Streams.Example.Unicast.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Reactive.Streams.TCK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Reactive.Streams.TCK.1.0.0-RC1\lib\net45\Reactive.Streams.TCK.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -78,6 +86,8 @@
     <Compile Include="ParallelTest.cs" />
     <Compile Include="SampleTest.cs" />
     <Compile Include="SingleTest.cs" />
+    <Compile Include="tck\ConcatTckTest.cs" />
+    <Compile Include="tck\FluxPublisherVerification.cs" />
     <Compile Include="WithLatestFromTest.cs" />
     <Compile Include="TimeoutTest.cs" />
     <Compile Include="ThenManyTest.cs" />
@@ -120,6 +130,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Choose>
