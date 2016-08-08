@@ -260,12 +260,15 @@ namespace Reactor.Core.subscription
 
                         current = mSubscription;
 
-                        requestAmount = r;
-                        requestTarget = mSubscription;
+                        if (r != 0L)
+                        {
+                            requestAmount = BackpressureHelper.AddCap(requestAmount, r);
+                            requestTarget = mSubscription;
+                        }
                     }
                     else
-                    {
-                        requestAmount = mRequested;
+                    if (mRequested != 0) {
+                        requestAmount = BackpressureHelper.AddCap(requestAmount, mRequested);
                         requestTarget = current;
                     }
                 }
