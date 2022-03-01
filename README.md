@@ -1,3 +1,5 @@
+# reactor-core-dotnet is no longer actively maintained by VMware, Inc.
+
 # reactor-core-dotnet
 
 Fluent reactive programming library for C# on top of Reactive-Streams, mirroring the Reactor-Core for JVM.
